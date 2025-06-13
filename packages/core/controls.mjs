@@ -1,6 +1,6 @@
 /*
 controls.mjs - Registers audio controls for pattern manipulation and effects.
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/controls.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/controls.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -96,7 +96,7 @@ export const { source, src } = registerControl('source', 'src');
  * @example
  * s("bd sd [~ bd] sd,hh*6").n("<0 1>")
  */
-// also see https://github.com/tidalcycles/strudel/pull/63
+// also see https://codeberg.org/uzu/strudel/pulls/63
 export const { n } = registerControl('n');
 /**
  * Plays the given note name or midi number. A note name consists of
@@ -359,7 +359,7 @@ export const { bandf, bpf, bp } = registerControl(['bandf', 'bandq', 'bpenv'], '
  * s("bd sd [~ bd] sd").bpf(500).bpq("<0 1 2 3>")
  *
  */
-// currently an alias of 'bandq' https://github.com/tidalcycles/strudel/issues/496
+// currently an alias of 'bandq' https://codeberg.org/uzu/strudel/issues/496
 // ['bpq'],
 export const { bandq, bpq } = registerControl('bandq', 'bpq');
 /**
@@ -866,7 +866,7 @@ export const { fanchor } = registerControl('fanchor');
  * s("bd sd [~ bd] sd,hh*8").hpf("<2000 2000:25>")
  *
  */
-// currently an alias of 'hcutoff' https://github.com/tidalcycles/strudel/issues/496
+// currently an alias of 'hcutoff' https://codeberg.org/uzu/strudel/issues/496
 // ['hpf'],
 /**
  * Applies a vibrato to the frequency of the oscillator.
@@ -933,7 +933,7 @@ export const { hresonance, hpq } = registerControl('hresonance', 'hpq');
  * s("bd sd [~ bd] sd,hh*8").lpf(2000).lpq("<0 10 20 30>")
  *
  */
-// currently an alias of 'resonance' https://github.com/tidalcycles/strudel/issues/496
+// currently an alias of 'resonance' https://codeberg.org/uzu/strudel/issues/496
 export const { resonance, lpq } = registerControl('resonance', 'lpq');
 /**
  * DJ filter, below 0.5 is low pass filter, above is high pass filter.
@@ -1312,7 +1312,7 @@ export const { semitone } = registerControl('semitone');
 
 // TODO: synth param
 export const { voice } = registerControl('voice');
-// voicings // https://github.com/tidalcycles/strudel/issues/506
+// voicings // https://codeberg.org/uzu/strudel/issues/506
 // chord to voice, like C Eb Fm7 G7. the symbols can be defined via addVoicings
 export const { chord } = registerControl('chord');
 // which dictionary to use for the voicings

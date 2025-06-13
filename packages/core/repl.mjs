@@ -225,7 +225,7 @@ export function repl({
 export const getTrigger =
   ({ getTime, defaultOutput }) =>
   async (hap, deadline, duration, cps, t) => {
-    // TODO: get rid of deadline after https://github.com/tidalcycles/strudel/pull/1004
+    // TODO: get rid of deadline after https://codeberg.org/uzu/strudel/pulls/1004
     try {
       if (!hap.context.onTrigger || !hap.context.dominantTrigger) {
         await defaultOutput(hap, deadline, duration, cps, t);

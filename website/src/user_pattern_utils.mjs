@@ -96,7 +96,7 @@ export async function loadDBPatterns() {
   }
 }
 
-// reason: https://github.com/tidalcycles/strudel/issues/857
+// reason: https://codeberg.org/uzu/strudel/issues/857
 const $activePattern = sessionAtom('activePattern', '');
 
 export function setActivePattern(key) {

@@ -13,7 +13,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tidalcycles/strudel.git"
+    "url": "git+https://codeberg.org/uzu/strudel.git"
   },
   "keywords": [
     "tidalcycles",
@@ -28,9 +28,9 @@
   ],
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/tidalcycles/strudel/issues"
+    "url": "https://codeberg.org/uzu/strudel/issues"
   },
-  "homepage": "https://github.com/tidalcycles/strudel#readme",
+  "homepage": "https://codeberg.org/uzu/strudel#readme",
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.4",
     "@codemirror/commands": "^6.8.0",
