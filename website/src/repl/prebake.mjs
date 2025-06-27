@@ -28,7 +28,7 @@ export async function prebake() {
       prebake: true,
       tag: 'drum-machines',
     }),
-    samples(`${baseNoTrailing}/EmuSP12.json`, undefined, { prebake: true, tag: 'drum-machines' }),
+    samples(`${baseNoTrailing}/uzudrumkit.json`, undefined, { prebake: true, tag: 'drum-machines' }),
     samples(`${baseNoTrailing}/mridangam.json`, undefined, { prebake: true, tag: 'drum-machines' }),
     samples(
       {
