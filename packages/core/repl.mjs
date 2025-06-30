@@ -10,6 +10,7 @@ export function repl({
   defaultOutput,
   onEvalError,
   beforeEval,
+  beforeStart,
   afterEval,
   getTime,
   transpiler,
@@ -19,6 +20,8 @@ export function repl({
   sync = false,
   setInterval,
   clearInterval,
+  id,
+  mondo = false,
 }) {
   const state = {
     schedulerError: undefined,
@@ -30,6 +33,10 @@ export function repl({
     widgets: [],
     pending: false,
     started: false,
+  };
+
+  const transpilerOptions = {
+    id,
   };
 
   const updateState = (update) => {
@@ -48,6 +55,7 @@ export function repl({
     },
     setInterval,
     clearInterval,
+    beforeStart,
   };
 
   // NeoCyclist uses a shared worker to communicate between instances, which is not supported on mobile chrome
@@ -56,17 +64,20 @@ export function repl({
   let pPatterns = {};
   let anonymousIndex = 0;
   let allTransform;
+  let eachTransform;
 
   const hush = function () {
     pPatterns = {};
     anonymousIndex = 0;
     allTransform = undefined;
+    eachTransform = undefined;
     return silence;
   };
 
-  const setPattern = (pattern, autostart = true) => {
+  const setPattern = async (pattern, autostart = true) => {
     pattern = editPattern?.(pattern) || pattern;
-    scheduler.setPattern(pattern, autostart);
+    await scheduler.setPattern(pattern, autostart);
+    return pattern;
   };
   setTime(() => scheduler.now()); // TODO: refactor?
 
@@ -75,16 +86,55 @@ export function repl({
   const pause = () => scheduler.pause();
   const toggle = () => scheduler.toggle();
   const setCps = (cps) => scheduler.setCps(cps);
+
+  /**
+   * Changes the global tempo to the given cycles per minute
+   *
+   * @name setcpm
+   * @alias setCpm
+   * @param {number} cpm cycles per minute
+   * @example
+   * setcpm(140/4) // =140 bpm in 4/4
+   * $: s("bd*4,[- sd]*2").bank('tr707')
+   */
   const setCpm = (cpm) => scheduler.setCps(cpm / 60);
+
+  // TODO - not documented as jsdoc examples as the test framework doesn't simulate enough context for `each` and `all`..
+
+  /** Applies a function to all the running patterns. Note that the patterns are groups together into a single `stack` before the function is applied. This is probably what you want, but see `each` for
+   * a version that applies the function to each pattern separately.
+   * ```
+   * $: sound("bd - cp sd")
+   * $: sound("hh*8")
+   * all(fast("<2 3>"))
+   * ```
+   * ```
+   * $: sound("bd - cp sd")
+   * $: sound("hh*8")
+   * all(x => x.pianoroll())
+   * ```
+   */
+  let allTransforms = [];
   const all = function (transform) {
-    allTransform = transform;
+    allTransforms.push(transform);
+    return silence;
+  };
+  /** Applies a function to each of the running patterns separately. This is intended for future use with upcoming 'stepwise' features. See `all` for a version that applies the function to all the patterns stacked together into a single pattern.
+   * ```
+   * $: sound("bd - cp sd")
+   * $: sound("hh*8")
+   * each(fast("<2 3>"))
+   * ```
+   */
+  const each = function (transform) {
+    eachTransform = transform;
     return silence;
   };
 
   // set pattern methods that use this repl via closure
   const injectPatternMethods = () => {
     Pattern.prototype.p = function (id) {
-      if (id.startsWith('_') || id.endsWith('_')) {
+      if (typeof id === 'string' && (id.startsWith('_') || id.endsWith('_'))) {
         // allows muting a pattern x with x_ or _x
         return silence;
       }
@@ -123,6 +173,7 @@ export function repl({
     });
     return evalScope({
       all,
+      each,
       hush,
       cpm,
       setCps,
@@ -139,21 +190,36 @@ export function repl({
     try {
       updateState({ code, pending: true });
       await injectPatternMethods();
+      setTime(() => scheduler.now()); // TODO: refactor?
       await beforeEval?.({ code });
+      allTransforms = []; // reset all transforms
       shouldHush && hush();
-      let { pattern, meta } = await _evaluate(code, transpiler);
-      if (Object.keys(pPatterns).length) {
-        pattern = stack(...Object.values(pPatterns));
+
+      if (mondo) {
+        code = `mondolang\`${code}\``;
       }
-      if (allTransform) {
-        pattern = allTransform(pattern);
+      let { pattern, meta } = await _evaluate(code, transpiler, transpilerOptions);
+      if (Object.keys(pPatterns).length) {
+        let patterns = Object.values(pPatterns);
+        if (eachTransform) {
+          // Explicit lambda so only element (not index and array) are passed
+          patterns = patterns.map((x) => eachTransform(x));
+        }
+        pattern = stack(...patterns);
+      } else if (eachTransform) {
+        pattern = eachTransform(pattern);
+      }
+      if (allTransforms.length) {
+        for (let i in allTransforms) {
+          pattern = allTransforms[i](pattern);
+        }
       }
       if (!isPattern(pattern)) {
         const message = `got "${typeof evaluated}" instead of pattern`;
         throw new Error(message + (typeof evaluated === 'function' ? ', did you forget to call a function?' : '.'));
       }
       logger(`[eval] code updated`);
-      setPattern(pattern, autostart);
+      pattern = await setPattern(pattern, autostart);
       updateState({
         miniLocations: meta?.miniLocations || [],
         widgets: meta?.widgets || [],
@@ -178,8 +244,8 @@ export function repl({
 
 export const getTrigger =
   ({ getTime, defaultOutput }) =>
-  async (hap, deadline, duration, cps, t, cycle = 0) => {
-    // TODO: get rid of deadline after https://github.com/tidalcycles/strudel/pull/1004
+  async (hap, deadline, duration, cps, t) => {
+    // TODO: get rid of deadline after https://codeberg.org/uzu/strudel/pulls/1004
     try {
       if (!hap.context.onTrigger || !hap.context.dominantTrigger) {
         await defaultOutput(hap, deadline, duration, cps, t, cycle);

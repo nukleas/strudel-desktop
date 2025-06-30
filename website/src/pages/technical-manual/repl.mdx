@@ -17,7 +17,7 @@ Besides a UI for playback control and meta information, the main part of the REP
 2. While the REPL is running, the `Scheduler` queries the active `Pattern` by a regular interval, generating `Events` (also known as `Haps` in Strudel) for the next time span.
 3. For each scheduling tick, all generated `Events` are triggered by calling their `onTrigger` method, which is set by the output.
 
-<img src="https://github.com/tidalcycles/strudel/blob/talk/talk/public/strudelflow.png?raw=true" width="600" />
+<img src="https://codeberg.org/uzu/strudel/raw/branch/talk/talk/public/strudelflow.png" width="600" />
 
 ## User Code
 
@@ -75,7 +75,7 @@ The sum of both is passed to `withLoc` to tell each element its location, which 
 
 Another important part of the user code is the mini notation, which allows to express rhythms in a short manner.
 
-- the mini notation is [implemented as a PEG grammar](https://github.com/tidalcycles/strudel/blob/main/packages/mini/krill.pegjs), living in the [mini package](https://github.com/tidalcycles/strudel/tree/main/packages/mini)
+- the mini notation is [implemented as a PEG grammar](https://codeberg.org/uzu/strudel/src/branch/talk/packages/mini/krill.pegjs), living in the [mini package](https://codeberg.org/uzu/strudel/src/branch/main/packages/mini)
 - it is based on [krill](https://github.com/Mdashdotdashn/krill) by Mdashdotdashn
 - the peg grammar is used to generate a parser with [peggyjs](https://peggyjs.org/)
 - the generated parser takes a mini notation string and outputs an AST

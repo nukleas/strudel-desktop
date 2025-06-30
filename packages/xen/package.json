@@ -1,6 +1,6 @@
 {
   "name": "@strudel/xen",
-  "version": "1.0.1",
+  "version": "1.2.2",
   "description": "Xenharmonic API for strudel",
   "main": "index.mjs",
   "type": "module",
@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tidalcycles/strudel.git"
+    "url": "git+https://codeberg.org/uzu/strudel.git"
   },
   "keywords": [
     "tidalcycles",
@@ -26,14 +26,14 @@
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/tidalcycles/strudel/issues"
+    "url": "https://codeberg.org/uzu/strudel/issues"
   },
-  "homepage": "https://github.com/tidalcycles/strudel#readme",
+  "homepage": "https://codeberg.org/uzu/strudel#readme",
   "dependencies": {
     "@strudel/core": "workspace:*"
   },
   "devDependencies": {
-    "vite": "^5.0.10",
-    "vitest": "^1.1.0"
+    "vite": "^6.0.11",
+    "vitest": "^3.0.4"
   }
 }

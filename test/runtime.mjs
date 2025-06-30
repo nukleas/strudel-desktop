@@ -11,7 +11,7 @@ import * as webaudio from '@strudel/webaudio';
 import { mini, m } from '@strudel/mini/mini.mjs';
 // import * as voicingHelpers from '@strudel/tonal/voicings.mjs';
 // import euclid from '@strudel/core/euclid.mjs';
-// import '@strudel/midi/midi.mjs';
+//import '@strudel/midi/midi.mjs';
 import * as tonalHelpers from '@strudel/tonal';
 import '@strudel/xen/xen.mjs';
 // import '@strudel/xen/tune.mjs';
@@ -21,6 +21,9 @@ import '@strudel/xen/xen.mjs';
 // import '@strudel/webaudio/webaudio.mjs';
 // import '@strudel/serial/serial.mjs';
 import '../website/src/repl/piano';
+//import * as motionHelpers from '../packages/motion/index.mjs';
+//import * as geolocationHelpers from '../packages/geolocation/index.mjs';
+import * as gamepadHelpers from '../packages/gamepad/index.mjs';
 
 class MockedNode {
   chain() {
@@ -74,53 +77,32 @@ const toneHelpersMocked = {
   highpass: mockNode,
 };
 
-strudel.Pattern.prototype.osc = function () {
-  return this;
-};
-strudel.Pattern.prototype.csound = function () {
-  return this;
-};
-strudel.Pattern.prototype.tone = function () {
-  return this;
-};
-strudel.Pattern.prototype.webdirt = function () {
-  return this;
-};
-
-// draw mock
-strudel.Pattern.prototype.pianoroll = function () {
-  return this;
-};
-
-// speak mock
-strudel.Pattern.prototype.speak = function () {
-  return this;
-};
-
-// webaudio mock
-strudel.Pattern.prototype.wave = function () {
-  return this;
-};
-strudel.Pattern.prototype.filter = function () {
-  return this;
-};
-strudel.Pattern.prototype.adsr = function () {
-  return this;
-};
-strudel.Pattern.prototype.webaudio = function () {
-  return this;
-};
-strudel.Pattern.prototype.soundfont = function () {
-  return this;
-};
-// tune mock
-strudel.Pattern.prototype.tune = function () {
-  return this;
-};
-
-strudel.Pattern.prototype.midi = function () {
-  return this;
-};
+[
+  'osc',
+  'csound',
+  'tone',
+  'webdirt',
+  'pianoroll',
+  'speak',
+  'wave',
+  'filter',
+  'adsr',
+  'webaudio',
+  'soundfont',
+  'tune',
+  'midi',
+  '_scope',
+  '_spiral',
+  '_pitchwheel',
+  '_pianoroll',
+  '_spectrum',
+  'markcss',
+  'p',
+].forEach((mock) => {
+  strudel.Pattern.prototype[mock] = function () {
+    return this;
+  };
+});
 
 const uiHelpersMocked = {
   backgroundImage: id,
@@ -145,6 +127,12 @@ const loadCsound = () => {};
 const loadCSound = () => {};
 const loadcsound = () => {};
 
+const midin = () => {
+  return (ccNum) => strudel.ref(() => 0); // returns ref with default value 0
+};
+
+const sysex = ([id, data]) => {};
+
 // TODO: refactor to evalScope
 evalScope(
   // Tone,
@@ -153,6 +141,7 @@ evalScope(
   uiHelpersMocked,
   webaudio,
   tonalHelpers,
+  gamepadHelpers,
   /*
   toneHelpers,
   voicingHelpers,
@@ -160,6 +149,8 @@ evalScope(
   uiHelpers,
   */
   {
+    midin,
+    sysex,
     // gist,
     // euclid,
     csound: id,
@@ -173,11 +164,12 @@ evalScope(
     loadCsound,
     loadcsound,
     setcps: id,
+    setcpm: id,
     Clock: {}, // whatever
-    // Tone,
   },
 );
 
+// TBD: use transpiler to support labeled statements
 export const queryCode = async (code, cycles = 1) => {
   const { pattern } = await evaluate(code);
   const haps = pattern.sortHapsByPart().queryArc(0, cycles);

@@ -1,6 +1,6 @@
 /*
 fraction.mjs - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/fraction.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/fraction.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -119,10 +119,10 @@ export const lcm = (...fractions) => {
   if (fractions.length === 0) {
     return undefined;
   }
-
+  const x = fractions.pop();
   return fractions.reduce(
     (lcm, fraction) => (lcm === undefined || fraction === undefined ? undefined : lcm.lcm(fraction)),
-    fraction(1),
+    x,
   );
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "@strudel/soundfonts",
-  "version": "1.0.1",
+  "version": "1.2.3",
   "description": "Soundsfont support for strudel",
   "main": "index.mjs",
   "publishConfig": {
@@ -13,7 +13,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tidalcycles/strudel.git"
+    "url": "git+https://codeberg.org/uzu/strudel.git"
   },
   "keywords": [
     "tidalcycles",
@@ -25,17 +25,17 @@
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/tidalcycles/strudel/issues"
+    "url": "https://codeberg.org/uzu/strudel/issues"
   },
-  "homepage": "https://github.com/tidalcycles/strudel#readme",
+  "homepage": "https://codeberg.org/uzu/strudel#readme",
   "dependencies": {
     "@strudel/core": "workspace:*",
     "@strudel/webaudio": "workspace:*",
     "sfumato": "^0.1.2",
-    "soundfont2": "^0.4.0"
+    "soundfont2": "^0.5.0"
   },
   "devDependencies": {
     "node-fetch": "^3.3.2",
-    "vite": "^5.0.10"
+    "vite": "^6.0.11"
   }
 }

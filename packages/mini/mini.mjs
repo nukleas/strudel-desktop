@@ -1,6 +1,6 @@
 /*
 mini.mjs - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/mini/mini.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/mini/mini.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -14,7 +14,7 @@ const applyOptions = (parent, enter) => (pat, i) => {
   const ast = parent.source_[i];
   const options = ast.options_;
   const ops = options?.ops;
-
+  const steps_source = pat.__steps_source;
   if (ops) {
     for (const op of ops) {
       switch (op.type_) {
@@ -69,7 +69,7 @@ const applyOptions = (parent, enter) => (pat, i) => {
       }
     }
   }
-
+  pat.__steps_source = pat.__steps_source || steps_source;
   return pat;
 };
 
@@ -82,20 +82,20 @@ export function patternifyAST(ast, code, onEnter, offset = 0) {
       // resolveReplications(ast);
       const children = ast.source_.map((child) => enter(child)).map(applyOptions(ast, enter));
       const alignment = ast.arguments_.alignment;
-      const with_tactus = children.filter((child) => child.__tactus_source);
+      const with_steps = children.filter((child) => child.__steps_source);
       let pat;
       switch (alignment) {
         case 'stack': {
           pat = strudel.stack(...children);
-          if (with_tactus.length) {
-            pat.tactus = lcm(...with_tactus.map((x) => Fraction(x.tactus)));
+          if (with_steps.length) {
+            pat._steps = lcm(...with_steps.map((x) => Fraction(x._steps)));
           }
           break;
         }
         case 'polymeter_slowcat': {
           pat = strudel.stack(...children.map((child) => child._slow(child.__weight)));
-          if (with_tactus.length) {
-            pat.tactus = lcm(...with_tactus.map((x) => Fraction(x.tactus)));
+          if (with_steps.length) {
+            pat._steps = lcm(...with_steps.map((x) => Fraction(x._steps)));
           }
           break;
         }
@@ -111,8 +111,8 @@ export function patternifyAST(ast, code, onEnter, offset = 0) {
         }
         case 'rand': {
           pat = strudel.chooseInWith(strudel.rand.early(randOffset * ast.arguments_.seed).segment(1), children);
-          if (with_tactus.length) {
-            pat.tactus = lcm(...with_tactus.map((x) => Fraction(x.tactus)));
+          if (with_steps.length) {
+            pat._steps = lcm(...with_steps.map((x) => Fraction(x._steps)));
           }
           break;
         }
@@ -131,21 +131,21 @@ export function patternifyAST(ast, code, onEnter, offset = 0) {
               ...ast.source_.map((child, i) => [child.options_?.weight || strudel.Fraction(1), children[i]]),
             );
             pat.__weight = weightSum; // for polymeter
-            pat.tactus = weightSum;
-            if (with_tactus.length) {
-              pat.tactus = pat.tactus.mul(lcm(...with_tactus.map((x) => Fraction(x.tactus))));
+            pat._steps = weightSum;
+            if (with_steps.length) {
+              pat._steps = pat._steps.mul(lcm(...with_steps.map((x) => Fraction(x._steps))));
             }
           } else {
             pat = strudel.sequence(...children);
-            pat.tactus = children.length;
+            pat._steps = children.length;
           }
-          if (ast.arguments_.tactus) {
-            pat.__tactus_source = true;
+          if (ast.arguments_._steps) {
+            pat.__steps_source = true;
           }
         }
       }
-      if (with_tactus.length) {
-        pat.__tactus_source = true;
+      if (with_steps.length) {
+        pat.__steps_source = true;
       }
       return pat;
     }

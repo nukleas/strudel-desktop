@@ -1,5 +1,5 @@
 import { tags as t } from '@lezer/highlight';
-import { createTheme } from '@uiw/codemirror-themes';
+import { createTheme } from './theme-helper.mjs';
 
 let colorA = '#6edee4';
 //let colorB = 'magenta';
@@ -17,7 +17,7 @@ export const settings = {
   lineBackground: '#00000040',
   gutterBackground: 'transparent',
   gutterForeground: '#8a919966',
-  customStyle: '.cm-line { line-height: 1 }',
+  // customStyle: '.cm-line { line-height: 1 }',
 };
 
 let punctuation = colorD;

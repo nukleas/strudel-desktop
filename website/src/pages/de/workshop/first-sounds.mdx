@@ -168,9 +168,14 @@ Korrekt, der echte Vorteil dieser Schreibweise zeigt sich wenn du Elemente entfe
 
 </Box>
 
-**Tempo ändern mit `cpm`**
+**Tempo ändern mit `setcpm`**
 
-<MiniRepl client:visible tune={`sound("<bd hh rim hh>*8").cpm(90/4)`} punchcard />
+<MiniRepl
+  client:visible
+  tune={`setcpm(90/4)
+sound("<bd hh rim hh>*8")`}
+  punchcard
+/>
 
 <Box>
 
@@ -233,8 +238,9 @@ Bolero:
 
 <MiniRepl
   client:visible
-  tune={`sound("sd sd*3 sd sd*3 sd sd sd sd*3 sd sd*3 sd*3 sd*3")
-.cpm(10)`}
+  tune={`
+setcpm(10)
+sound("sd sd*3 sd sd*3 sd sd sd sd*3 sd sd*3 sd*3 sd*3")`}
   punchcard
 />
 
@@ -313,18 +319,23 @@ Das haben wir bisher gelernt:
 Die mit Apostrophen umgebene Mini-Notation benutzt man normalerweise in einer sogenannten Funktion.
 Die folgenden Funktionen haben wir bereits gesehen:
 
-| Name  | Description                            | Example                                                                 |
-| ----- | -------------------------------------- | ----------------------------------------------------------------------- |
-| sound | Spielt den Sound mit dem Namen         | <MiniRepl client:visible tune={`sound("bd sd")`} />                     |
-| bank  | Wählt die Soundbank / Drum Machine     | <MiniRepl client:visible tune={`sound("bd sd").bank("RolandTR909")`} /> |
-| cpm   | Tempo in **C**ycles **p**ro **M**inute | <MiniRepl client:visible tune={`sound("bd sd").cpm(90)`} />             |
-| n     | Sample Nummer                          | <MiniRepl client:visible tune={`n("0 1 4 2").sound("jazz")`} />         |
+| Name   | Description                            | Example                                                                 |
+| ------ | -------------------------------------- | ----------------------------------------------------------------------- |
+| sound  | Spielt den Sound mit dem Namen         | <MiniRepl client:visible tune={`sound("bd sd")`} />                     |
+| bank   | Wählt die Soundbank / Drum Machine     | <MiniRepl client:visible tune={`sound("bd sd").bank("RolandTR909")`} /> |
+| setcpm | Tempo in **C**ycles **p**ro **M**inute | <MiniRepl client:visible tune={`setcpm(90); sound("bd sd")`} />         |
+| n      | Sample Nummer                          | <MiniRepl client:visible tune={`n("0 1 4 2").sound("jazz")`} />         |
 
 ## Beispiele
 
 **Einfacher Rock Beat**
 
-<MiniRepl client:visible tune={`sound("bd sd, hh*4").bank("RolandTR505").cpm(100/2)`} punchcard />
+<MiniRepl
+  client:visible
+  tune={`setcpm(100/2)
+sound("bd sd, hh*4").bank("RolandTR505")`}
+  punchcard
+/>
 
 **Klassischer House**
 
@@ -339,7 +350,12 @@ Bestimmte Drum Patterns werden oft genreübergreifend wiederverwendet.
 
 We Will Rock you
 
-<MiniRepl client:visible tune={`sound("bd*2 cp").bank("RolandTR707").cpm(81/2)`} punchcard />
+<MiniRepl
+  client:visible
+  tune={`setcpm(81/2)
+sound("bd*2 cp").bank("RolandTR707")`}
+  punchcard
+/>
 
 **Yellow Magic Orchestra - Firecracker**
 
@@ -354,12 +370,13 @@ We Will Rock you
 
 <MiniRepl
   client:visible
-  tune={`sound(\`
+  tune={`setcpm(90/4)
+sound(\`
 [-  -  oh - ] [-  -  -  - ] [-  -  -  - ] [-  -  -  - ],
 [hh hh -  - ] [hh -  hh - ] [hh -  hh - ] [hh -  hh - ],
 [-  -  -  - ] [cp -  -  - ] [-  -  -  - ] [cp -  -  - ],
 [bd -  -  - ] [-  -  -  bd] [-  -  bd - ] [-  -  -  bd]
-\`).cpm(90/4)`}
+\`)`}
   punchcard
 />
 
@@ -367,12 +384,13 @@ We Will Rock you
 
 <MiniRepl
   client:visible
-  tune={`sound(\`
+  tune={`setcpm(88/4)
+sound(\`
 [-  -  -  - ] [-  -  -  - ] [-  -  -  - ] [-  -  oh:1 - ],
 [hh hh hh hh] [hh hh hh hh] [hh hh hh hh] [hh hh -  - ],
 [-  -  -  - ] [cp -  -  - ] [-  -  -  - ] [-  cp -  - ],
 [bd bd -  - ] [-  -  bd - ] [bd bd - bd ] [-  -  -  - ]
-\`).bank("RolandTR808").cpm(88/4)`}
+\`).bank("RolandTR808")`}
   punchcard
 />
 
@@ -380,11 +398,11 @@ We Will Rock you
 
 <MiniRepl
   client:visible
-  tune={`s(\`jazz*2, 
+  tune={`setcpm(100/2)
+s(\`jazz*2, 
 insect [crow metal] - -, 
 - space:4 - space:1,
-- wind\`)
-.cpm(100/2)`}
+- wind\`)`}
   punchcard
 />
 

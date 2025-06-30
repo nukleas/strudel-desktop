@@ -1,6 +1,6 @@
 /*
-cyclist.mjs - event scheduler for a single strudel instance. for multi-instance scheduler, see - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/neocyclist.mjs>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/cyclist.mjs>
+cyclist.mjs - event scheduler for a single strudel instance. for multi-instance scheduler, see - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/neocyclist.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/cyclist.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -8,8 +8,19 @@ import createClock from './zyklus.mjs';
 import { logger } from './logger.mjs';
 
 export class Cyclist {
-  constructor({ interval = 0.05, onTrigger, onToggle, onError, getTime, latency = 0.1, setInterval, clearInterval }) {
+  constructor({
+    interval,
+    onTrigger,
+    onToggle,
+    onError,
+    getTime,
+    latency = 0.1,
+    setInterval,
+    clearInterval,
+    beforeStart,
+  }) {
     this.started = false;
+    this.beforeStart = beforeStart;
     this.cps = 0.5;
     this.time_at_last_tick_message = 0;
     this.cycle = 0;
@@ -50,9 +61,29 @@ export class Cyclist {
             const duration = hap.duration / this.cps;
             onTrigger?.(hap, tickdeadline, duration, this.cps, targetTime, this.cycle - cycle_gap);
           }
-        });
-        this.time_at_last_tick_message = time;
-        this.num_ticks_since_cps_change++;
+
+          // query the pattern for events
+          const haps = this.pattern.queryArc(begin, end, { _cps: this.cps });
+
+          haps.forEach((hap) => {
+            if (hap.hasOnset()) {
+              const targetTime =
+                (hap.whole.begin - this.num_cycles_at_cps_change) / this.cps + this.seconds_at_cps_change + latency;
+              const duration = hap.duration / this.cps;
+              // the following line is dumb and only here for backwards compatibility
+              // see https://codeberg.org/uzu/strudel/pulls/1004
+              const deadline = targetTime - phase;
+              onTrigger?.(hap, deadline, duration, this.cps, targetTime);
+              if (hap.value.cps !== undefined && this.cps != hap.value.cps) {
+                this.cps = hap.value.cps;
+                this.num_ticks_since_cps_change = 0;
+              }
+            }
+          });
+        } catch (e) {
+          logger(`[cyclist] error: ${e.message}`);
+          onError?.(e);
+        }
       },
       interval, // duration of each cycle
       0.1,
@@ -79,7 +110,8 @@ export class Cyclist {
     this.setCycle(0);
     this.onToggle?.(v);
   }
-  start() {
+  async start() {
+    await this.beforeStart?.();
     this.num_ticks_since_cps_change = 0;
     this.num_cycles_at_cps_change = 0;
 
@@ -101,10 +133,10 @@ export class Cyclist {
     this.lastEnd = 0;
     this.setStarted(false);
   }
-  setPattern(pat, autostart = false) {
+  async setPattern(pat, autostart = false) {
     this.pattern = pat;
     if (autostart && !this.started) {
-      this.start();
+      await this.start();
     }
   }
   setCps(cps = 0.5) {

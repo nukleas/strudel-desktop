@@ -166,9 +166,14 @@ Try also changing the number at the end to change the tempo!
 
 </Box>
 
-**changing the tempo with cpm**
+**changing the tempo with setcpm**
 
-<MiniRepl client:visible tune={`sound("<bd hh rim hh>*8").cpm(90/4)`} punchcard />
+<MiniRepl
+  client:visible
+  tune={`setcpm(90/4)
+sound("<bd hh rim hh>*8")`}
+  punchcard
+/>
 
 <Box>
 
@@ -283,12 +288,12 @@ This is what we've learned so far:
 
 The Mini-Notation is usually used inside some function. These are the functions we've seen so far:
 
-| Name  | Description                         | Example                                                                           |
-| ----- | ----------------------------------- | --------------------------------------------------------------------------------- |
-| sound | plays the sound of the given name   | <MiniRepl client:visible tune={`sound("bd sd [- bd] sd")`} />                     |
-| bank  | selects the sound bank              | <MiniRepl client:visible tune={`sound("bd sd [- bd] sd").bank("RolandTR909")`} /> |
-| cpm   | sets the tempo in cycles per minute | <MiniRepl client:visible tune={`sound("bd sd [- bd] sd").cpm(45)`} />             |
-| n     | select sample number                | <MiniRepl client:visible tune={`n("0 1 4 2 0 6 3 2").sound("jazz")`} />           |
+| Name   | Description                         | Example                                                                           |
+| ------ | ----------------------------------- | --------------------------------------------------------------------------------- |
+| sound  | plays the sound of the given name   | <MiniRepl client:visible tune={`sound("bd sd [- bd] sd")`} />                     |
+| bank   | selects the sound bank              | <MiniRepl client:visible tune={`sound("bd sd [- bd] sd").bank("RolandTR909")`} /> |
+| setcpm | sets the tempo in cycles per minute | <MiniRepl client:visible tune={`setcpm(45); sound("bd sd [- bd] sd")`} />         |
+| n      | select sample number                | <MiniRepl client:visible tune={`n("0 1 4 2 0 6 3 2").sound("jazz")`} />           |
 
 ## Examples
 
@@ -296,8 +301,8 @@ The Mini-Notation is usually used inside some function. These are the functions 
 
 <MiniRepl
   client:visible
-  tune={`sound("[bd sd]*2, hh*8").bank("RolandTR505")
-.cpm(100/4)`}
+  tune={`setcpm(100/4)
+sound("[bd sd]*2, hh*8").bank("RolandTR505")`}
   punchcard
 />
 
@@ -314,14 +319,20 @@ Certain drum patterns are reused across genres.
 
 We Will Rock you
 
-<MiniRepl client:visible tune={`sound("bd*2 cp").bank("RolandTR707").cpm(81/2)`} punchcard />
+<MiniRepl
+  client:visible
+  tune={`setcpm(81/2)
+sound("bd*2 cp").bank("RolandTR707")`}
+  punchcard
+/>
 
 **Yellow Magic Orchestra - Firecracker**
 
 <MiniRepl
   client:visible
-  tune={`sound("bd sd, - - - hh - hh - -, - perc - perc:1*2")
-  .bank("RolandCompurhythm1000").cpm(120/2)`}
+  tune={`setcpm(120/2)
+sound("bd sd, - - - hh - hh - -, - perc - perc:1*2")
+.bank("RolandCompurhythm1000")`}
   punchcard
 />
 
@@ -329,12 +340,14 @@ We Will Rock you
 
 <MiniRepl
   client:visible
-  tune={`sound(\`
+  tune={`
+setcpm(90/4)
+sound(\`
 [-  -  oh - ] [-  -  -  - ] [-  -  -  - ] [-  -  -  - ],
 [hh hh -  - ] [hh -  hh - ] [hh -  hh - ] [hh -  hh - ],
 [-  -  -  - ] [cp -  -  - ] [-  -  -  - ] [cp -  -  - ],
 [bd -  -  - ] [-  -  -  bd] [-  -  bd - ] [-  -  -  bd]
-\`).cpm(90/4)`}
+\`)`}
   punchcard
 />
 
@@ -342,12 +355,13 @@ We Will Rock you
 
 <MiniRepl
   client:visible
-  tune={`sound(\`
+  tune={`setcpm(88/4)
+sound(\`
 [-  -  -  - ] [-  -  -  - ] [-  -  -  - ] [-  -  oh:1 - ],
 [hh hh hh hh] [hh hh hh hh] [hh hh hh hh] [hh hh -  - ],
 [-  -  -  - ] [cp -  -  - ] [-  -  -  - ] [~  cp -  - ],
 [bd bd -  - ] [-  -  bd - ] [bd bd - bd ] [-  -  -  - ]
-\`).bank("RolandTR808").cpm(88/4)`}
+\`).bank("RolandTR808")`}
   punchcard
 />
 
@@ -355,11 +369,11 @@ We Will Rock you
 
 <MiniRepl
   client:visible
-  tune={`s(\`jazz*2, 
+  tune={`setcpm(100/2)
+s(\`jazz*2, 
 insect [crow metal] - -, 
 - space:4 - space:1,
-- wind\`)
-.cpm(100/2)`}
+- wind\`)`}
   punchcard
 />
 

@@ -1,6 +1,6 @@
 /*
 mini.test.mjs - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/mini/test/mini.test.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/mini/test/mini.test.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -208,14 +208,16 @@ describe('mini', () => {
   it('_ and @ are almost interchangeable', () => {
     expect(minS('a @ b @ @')).toEqual(minS('a _2 b _3'));
   });
-  it('supports ^ tactus marking', () => {
-    expect(mini('a [^b c]').tactus).toEqual(Fraction(4));
-    expect(mini('[a b c] [d [e f]]').tactus).toEqual(Fraction(2));
-    expect(mini('^[a b c] [d [e f]]').tactus).toEqual(Fraction(2));
-    expect(mini('[a b c] [d [^e f]]').tactus).toEqual(Fraction(8));
-    expect(mini('[a b c] [^d [e f]]').tactus).toEqual(Fraction(4));
-    expect(mini('[^a b c] [^d [e f]]').tactus).toEqual(Fraction(12));
-    expect(mini('[^a b c] [d [^e f]]').tactus).toEqual(Fraction(24));
+  it('supports ^ step marking', () => {
+    expect(mini('a [^b c]')._steps).toEqual(Fraction(4));
+    expect(mini('[^b c]!3')._steps).toEqual(Fraction(6));
+    expect(mini('[a b c] [d [e f]]')._steps).toEqual(Fraction(2));
+    expect(mini('^[a b c] [d [e f]]')._steps).toEqual(Fraction(2));
+    expect(mini('[a b c] [d [^e f]]')._steps).toEqual(Fraction(8));
+    expect(mini('[a b c] [^d [e f]]')._steps).toEqual(Fraction(4));
+    expect(mini('[^a b c] [^d [e f]]')._steps).toEqual(Fraction(12));
+    expect(mini('[^a b c] [d [^e f]]')._steps).toEqual(Fraction(24));
+    expect(mini('[^a b c d e]')._steps).toEqual(Fraction(5));
   });
 });
 

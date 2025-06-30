@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import cowsay from 'cowsay';
-import { createReadStream } from 'fs';
+import { createReadStream, existsSync } from 'fs';
 import { readdir } from 'fs/promises';
 import http from 'http';
-import { join } from 'path';
+import { join, sep } from 'path';
 import os from 'os';
 
 // eslint-disable-next-line
@@ -45,15 +45,16 @@ async function getFilesInDirectory(directory) {
 }
 
 async function getBanks(directory) {
-  // const directory = resolve(__dirname, '.');
   let files = await getFilesInDirectory(directory);
   let banks = {};
-  files = files.map((url) => {
-    const [bank] = url.split('/').slice(-2);
+  directory = directory.split(sep).join('/');
+  files = files.map((path) => {
+    path = path.split(sep).join('/');
+    const [bank] = path.split('/').slice(-2);
     banks[bank] = banks[bank] || [];
-    url = url.replace(directory, '');
-    banks[bank].push(url);
-    return url;
+    const relativeUrl = path.replace(directory, '');
+    banks[bank].push(relativeUrl);
+    return relativeUrl;
   });
   banks._base = `http://localhost:5432`;
   return { banks, files };
@@ -69,12 +70,15 @@ const server = http.createServer(async (req, res) => {
     return res.end(JSON.stringify(banks));
   }
   let subpath = decodeURIComponent(req.url);
-  if (!files.includes(subpath)) {
+  const filePath = join(directory, subpath.split('/').join(sep));
+
+  //console.log('GET:', filePath);
+  const isFound = existsSync(filePath);
+  if (!isFound) {
     res.statusCode = 404;
     res.end('File not found');
     return;
   }
-  const filePath = join(directory, subpath);
   const readStream = createReadStream(filePath);
   readStream.on('error', (err) => {
     res.statusCode = 500;
@@ -98,12 +102,6 @@ Object.keys(networkInterfaces).forEach((key) => {
   });
 });
 
-if (!IP) {
-  console.error("Unable to determine server's IP address.");
-  // eslint-disable-next-line
-  process.exit(1);
-}
-
 server.listen(PORT, IP_ADDRESS, () => {
   console.log(`@strudel/sampler is now serving audio files from:
  ${directory}
@@ -112,6 +110,6 @@ To use them in the Strudel REPL, run:
  samples('http://localhost:${PORT}')
 
 Or on a machine in the same network:
- samples('http://${IP}:${PORT}')
+ ${IP ? `samples('http://${IP}:${PORT}')` : `Unable to determine server's IP address.`}
 `);
 });

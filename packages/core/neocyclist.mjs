@@ -1,10 +1,11 @@
 /*
 neocyclist.mjs - event scheduler like cyclist, except recieves clock pulses from clockworker in order to sync across multiple instances.
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/neocyclist.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/neocyclist.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import { logger } from './logger.mjs';
+import { ClockCollator, cycleToSeconds } from './util.mjs';
 
 export class NeoCyclist {
   constructor({ onTrigger, onToggle, getTime }) {
@@ -12,78 +13,39 @@ export class NeoCyclist {
     this.cps = 0.5;
     this.getTime = getTime; // get absolute time
     this.time_at_last_tick_message = 0;
+    // the clock of the worker and the audio context clock can drift apart over time
+    // aditionally, the message time of the worker pinging the callback to process haps can be inconsistent.
+    // we need to keep a rolling average of the time difference between the worker clock and audio context clock
+    // in order to schedule events consistently.
+    this.collator = new ClockCollator({ getTargetClockTime: getTime });
     this.onToggle = onToggle;
     this.latency = 0.1; // fixed trigger time offset
     this.cycle = 0;
     this.id = Math.round(Date.now() * Math.random());
-    this.worker_time_dif;
     this.worker = new SharedWorker(new URL('./clockworker.js', import.meta.url));
     this.worker.port.start();
-
     this.channel = new BroadcastChannel('strudeltick');
-    let weight = 0; // the amount of weight that is applied to the current average when averaging a new time dif
-    const maxWeight = 20;
-    const precision = 10 ** 3; //round off time diff to prevent accumulating outliers
-
-    // the clock of the worker and the audio context clock can drift apart over time
-    // aditionally, the message time of the worker pinging the callback to process haps can be inconsistent.
-    // we need to keep a rolling weighted average of the time difference between the worker clock and audio context clock
-    // in order to schedule events consistently.
-    const setTimeReference = (num_seconds_at_cps_change, num_seconds_since_cps_change, tickdeadline) => {
-      const time_dif = getTime() - (num_seconds_at_cps_change + num_seconds_since_cps_change) + tickdeadline;
-      if (this.worker_time_dif == null) {
-        this.worker_time_dif = time_dif;
-      } else {
-        const w = 1; //weight of new time diff;
-        const new_dif =
-          Math.round(((this.worker_time_dif * weight + time_dif * w) / (weight + w)) * precision) / precision;
-
-        if (new_dif != this.worker_time_dif) {
-          // reset the weight so the clock recovers faster from an audio context freeze/dropout if it happens
-          weight = 4;
-        }
-        this.worker_time_dif = new_dif;
-      }
-      weight = Math.min(weight + 1, maxWeight);
-    };
-
     const tickCallback = (payload) => {
-      const {
-        num_cycles_at_cps_change,
-        cps,
-        num_seconds_at_cps_change,
-        num_seconds_since_cps_change,
-        begin,
-        end,
-        tickdeadline,
-        cycle,
-      } = payload;
+      const { cps, begin, end, cycle, time } = payload;
       this.cps = cps;
       this.cycle = cycle;
-
-      setTimeReference(num_seconds_at_cps_change, num_seconds_since_cps_change, tickdeadline);
-
-      processHaps(begin, end, num_cycles_at_cps_change, num_seconds_at_cps_change);
-
-      this.time_at_last_tick_message = this.getTime();
+      const currentTime = this.collator.calculateOffset(time) + time;
+      processHaps(begin, end, currentTime);
+      this.time_at_last_tick_message = currentTime;
     };
 
-    const processHaps = (begin, end, num_cycles_at_cps_change, seconds_at_cps_change) => {
+    const processHaps = (begin, end, currentTime) => {
       if (this.started === false) {
         return;
       }
 
       const haps = this.pattern.queryArc(begin, end, { _cps: this.cps });
-
       haps.forEach((hap) => {
         if (hap.hasOnset()) {
-          const targetTime =
-            (hap.whole.begin - num_cycles_at_cps_change) / this.cps +
-            seconds_at_cps_change +
-            this.latency +
-            this.worker_time_dif;
-          const duration = hap.duration / this.cps;
-          onTrigger?.(hap, 0, duration, this.cps, targetTime, this.cycle);
+          const timeUntilTrigger = cycleToSeconds(hap.whole.begin - this.cycle, this.cps);
+          const targetTime = timeUntilTrigger + currentTime + this.latency;
+          const duration = cycleToSeconds(hap.duration, this.cps);
+          onTrigger?.(hap, 0, duration, this.cps, targetTime);
         }
       });
     };
@@ -126,8 +88,8 @@ export class NeoCyclist {
     this.setStarted(true);
   }
   stop() {
-    this.worker_time_dif = null;
     logger('[cyclist] stop');
+    this.collator.reset();
     this.setStarted(false);
   }
   setPattern(pat, autostart = false) {

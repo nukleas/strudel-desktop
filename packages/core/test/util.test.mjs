@@ -1,26 +1,30 @@
 /*
 util.test.mjs - Tests for the core 'util' module
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/test/util.test.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/test/util.test.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 import { pure } from '../pattern.mjs';
 import {
-  isNote,
-  tokenizeNote,
-  noteToMidi,
-  midiToFreq,
-  freqToMidi,
   _mod,
   compose,
+  flatten,
+  fractionalArgs,
+  freqToMidi,
   getFrequency,
   getPlayableNoteValue,
-  parseNumeral,
-  parseFractional,
+  isNote,
+  midiToFreq,
+  noteToMidi,
   numeralArgs,
-  fractionalArgs,
+  parseFractional,
+  parseNumeral,
+  rotate,
+  splitAt,
+  tokenizeNote,
+  zipWith,
 } from '../util.mjs';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 describe('isNote', () => {
   it('should recognize notes without accidentals', () => {
@@ -231,5 +235,48 @@ describe('fractionalArgs', () => {
   it('should convert function arguments to numbers', () => {
     const add = fractionalArgs((a, b) => a + b);
     expect(add('q', 2)).toBe(2.25);
+  });
+});
+
+describe('rotate', () => {
+  it('should rotate array to the left', () => {
+    expect(rotate([0, 1, 2, 3], 2)).toStrictEqual([2, 3, 0, 1]);
+    expect(rotate([0, 1, 2, 3], 0)).toStrictEqual([0, 1, 2, 3]);
+    expect(rotate([0, 1, 2, 3], -3)).toStrictEqual([1, 2, 3, 0]);
+    expect(rotate([0, 1, 2, 3], 3)).toStrictEqual([3, 0, 1, 2]);
+    expect(rotate([0], 3)).toStrictEqual([0]);
+    expect(rotate([], 3)).toStrictEqual([]);
+  });
+});
+
+describe('flatten', () => {
+  it('should flatten array by one level', () => {
+    expect(flatten([0, 1, 2, 3])).toStrictEqual([0, 1, 2, 3]);
+    expect(flatten([0, 1, [2, 3]])).toStrictEqual([0, 1, 2, 3]);
+    expect(flatten([0, [1, [2, 3]]])).toStrictEqual([0, 1, [2, 3]]);
+    expect(flatten([0])).toStrictEqual([0]);
+    expect(flatten([])).toStrictEqual([]);
+  });
+});
+
+describe('splitAt', () => {
+  it('should split array into two', () => {
+    expect(splitAt(2, [0, 1, 2, 3])).toStrictEqual([
+      [0, 1],
+      [2, 3],
+    ]);
+    expect(splitAt(0, [0, 1, 2, 3])).toStrictEqual([[], [0, 1, 2, 3]]);
+    expect(splitAt(-3, [0, 1, 2, 3])).toStrictEqual([[0], [1, 2, 3]]);
+    expect(splitAt(3, [0, 1, 2, 3])).toStrictEqual([[0, 1, 2], [3]]);
+  });
+});
+
+describe('zipWith', () => {
+  it('should use the function to combine the two arrays element-wise', () => {
+    expect(zipWith((a, b) => a + b, [0, 1, 2, 3], [0, 1, 2, 3])).toStrictEqual([0, 2, 4, 6]);
+    expect(zipWith((a, b) => a + b, [0, 1, 2, 3], [0, 1, 2])).toStrictEqual([0, 2, 4, NaN]);
+    expect(zipWith((a, b) => a + b, [0, 1, 2], [0, 1, 2, 3])).toStrictEqual([0, 2, 4]);
+    expect(zipWith((a) => a, [0, 1, 2], [1, 2, 3, 0])).toStrictEqual([0, 1, 2]);
+    expect(zipWith((a, b) => b, [0, 1, 2], [1, 2, 3, 0])).toStrictEqual([1, 2, 3]);
   });
 });

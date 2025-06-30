@@ -1,6 +1,6 @@
 /*
 krill.pegjs - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/mini/krill.pegjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/mini/krill.pegjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -19,10 +19,10 @@ This program is free software: you can redistribute it and/or modify it under th
     this.location_ = location();
   }
 
-  var PatternStub = function(source, alignment, seed, tactus)
+  var PatternStub = function(source, alignment, seed, _steps)
   {
     this.type_ = "pattern";
-    this.arguments_ = { alignment: alignment, tactus: tactus };
+    this.arguments_ = { alignment: alignment, _steps: _steps };
     if (seed !== undefined) {
       this.arguments_.seed = seed;
     }
@@ -172,8 +172,8 @@ slice_with_ops = s:slice ops:slice_op*
   }
 
 // a sequence is a combination of one or more successive slices (as an array)
-sequence = tactus:'^'? s:(slice_with_ops)+
-  { return new PatternStub(s, 'fastcat', undefined, !!tactus); }
+sequence = _steps:'^'? s:(slice_with_ops)+
+  { return new PatternStub(s, 'fastcat', undefined, !!_steps); }
 
 // a stack is a series of vertically aligned sequence, separated by a comma
 stack_tail = tail:(comma @sequence)+

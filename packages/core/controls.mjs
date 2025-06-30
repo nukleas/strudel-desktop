@@ -1,16 +1,17 @@
 /*
-controls.mjs - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/controls.mjs>
+controls.mjs - Registers audio controls for pattern manipulation and effects.
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/controls.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { Pattern, register, sequence } from './pattern.mjs';
+import { Pattern, register, reify } from './pattern.mjs';
 
 export function createParam(names) {
   let isMulti = Array.isArray(names);
   names = !isMulti ? [names] : names;
   const name = names[0];
 
+  // todo: make this less confusing
   const withVal = (xs) => {
     let bag;
     // check if we have an object with an unnamed control (.value)
@@ -35,24 +36,37 @@ export function createParam(names) {
     }
   };
 
-  const func = (...pats) => sequence(...pats).withValue(withVal);
-
-  const setter = function (...pats) {
-    if (!pats.length) {
-      return this.fmap(withVal);
+  // todo: make this less confusing
+  const func = function (value, pat) {
+    if (!pat) {
+      return reify(value).withValue(withVal);
     }
-    return this.set(func(...pats));
+    if (typeof value === 'undefined') {
+      return pat.fmap(withVal);
+    }
+    return pat.set(reify(value).withValue(withVal));
   };
-  Pattern.prototype[name] = setter;
+  Pattern.prototype[name] = function (value) {
+    return func(value, this);
+  };
   return func;
 }
 
-function registerControl(names, ...aliases) {
+// maps control alias names to the "main" control name
+const controlAlias = new Map();
+
+export function isControlName(name) {
+  return controlAlias.has(name);
+}
+
+export function registerControl(names, ...aliases) {
   const name = Array.isArray(names) ? names[0] : names;
   let bag = {};
   bag[name] = createParam(names);
+  controlAlias.set(name, name);
   aliases.forEach((alias) => {
     bag[alias] = bag[name];
+    controlAlias.set(alias, name);
     Pattern.prototype[alias] = Pattern.prototype[name];
   });
   return bag;
@@ -92,7 +106,7 @@ export const { source, src } = registerControl('source', 'src');
  * @example
  * s("bd sd [~ bd] sd,hh*6").n("<0 1>")
  */
-// also see https://github.com/tidalcycles/strudel/pull/63
+// also see https://codeberg.org/uzu/strudel/pulls/63
 export const { n } = registerControl('n');
 /**
  * Plays the given note name or midi number. A note name consists of
@@ -191,7 +205,7 @@ export const { attack, att } = registerControl('attack', 'att');
  * note("c e g b g e")
  * .fm(4)
  * .fmh("<1 2 1.5 1.61>")
- * .scope()
+ * ._scope()
  *
  */
 export const { fmh } = registerControl(['fmh', 'fmi'], 'fmh');
@@ -205,7 +219,7 @@ export const { fmh } = registerControl(['fmh', 'fmi'], 'fmh');
  * @example
  * note("c e g b g e")
  * .fm("<0 1 2 8 32>")
- * .scope()
+ * ._scope()
  *
  */
 export const { fmi, fm } = registerControl(['fmi', 'fmh'], 'fm');
@@ -221,7 +235,7 @@ export const { fmi, fm } = registerControl(['fmi', 'fmh'], 'fm');
  * .fmdecay(.2)
  * .fmsustain(0)
  * .fmenv("<exp lin>")
- * .scope()
+ * ._scope()
  *
  */
 export const { fmenv } = registerControl('fmenv');
@@ -234,7 +248,7 @@ export const { fmenv } = registerControl('fmenv');
  * note("c e g b g e")
  * .fm(4)
  * .fmattack("<0 .05 .1 .2>")
- * .scope()
+ * ._scope()
  *
  */
 export const { fmattack } = registerControl('fmattack');
@@ -248,7 +262,7 @@ export const { fmattack } = registerControl('fmattack');
  * .fm(4)
  * .fmdecay("<.01 .05 .1 .2>")
  * .fmsustain(.4)
- * .scope()
+ * ._scope()
  *
  */
 export const { fmdecay } = registerControl('fmdecay');
@@ -262,7 +276,7 @@ export const { fmdecay } = registerControl('fmdecay');
  * .fm(4)
  * .fmdecay(.1)
  * .fmsustain("<1 .75 .5 0>")
- * .scope()
+ * ._scope()
  *
  */
 export const { fmsustain } = registerControl('fmsustain');
@@ -344,7 +358,7 @@ export const { bandf, bpf, bp } = registerControl(['bandf', 'bandq', 'bpenv'], '
  * s("bd sd [~ bd] sd").bpf(500).bpq("<0 1 2 3>")
  *
  */
-// currently an alias of 'bandq' https://github.com/tidalcycles/strudel/issues/496
+// currently an alias of 'bandq' https://codeberg.org/uzu/strudel/issues/496
 // ['bpq'],
 export const { bandq, bpq } = registerControl('bandq', 'bpq');
 /**
@@ -392,7 +406,7 @@ export const { loop } = registerControl('loop');
  * @synonyms loopb
  * @example
  * s("space").loop(1)
- * .loopBegin("<0 .125 .25>").scope()
+ * .loopBegin("<0 .125 .25>")._scope()
  */
 export const { loopBegin, loopb } = registerControl('loopBegin', 'loopb');
 /**
@@ -405,7 +419,7 @@ export const { loopBegin, loopb } = registerControl('loopBegin', 'loopb');
  * @synonyms loope
  * @example
  * s("space").loop(1)
- * .loopEnd("<1 .75 .5 .25>").scope()
+ * .loopEnd("<1 .75 .5 .25>")._scope()
  */
 export const { loopEnd, loope } = registerControl('loopEnd', 'loope');
 /**
@@ -485,6 +499,43 @@ export const { amphase } = registerControl('amphase');
  */
 export const { amshape } = registerControl('amshape');
 /**
+ * filter overdrive for supported filter types
+ *
+ * @name drive
+ * @param {number | Pattern} amount
+ * @example
+ * note("{f g g c d a a#}%16".sub(17)).s("supersaw").lpenv(8).lpf(150).lpq(.8).ftype('ladder').drive("<.5 4>")
+ *
+ */
+export const { drive } = registerControl('drive');
+
+/**
+ * Create byte beats with custom expressions
+ *
+ * @name byteBeatExpression
+ * @synonyms bbexpr
+ *
+ * @param {number | Pattern} byteBeatExpression bitwise expression for creating bytebeat
+ * @example
+ * s("bytebeat").bbexpr('t*(t>>15^t>>66)')
+ *
+ */
+export const { byteBeatExpression, bbexpr } = registerControl('byteBeatExpression', 'bbexpr');
+
+/**
+ * Create byte beats with custom expressions
+ *
+ * @name byteBeatStartTime
+ * @synonyms bbst
+ *
+ * @param {number | Pattern} byteBeatStartTime in samples (t)
+ * @example
+ * note("c3!8".add("{0 0 12 0 7 5 3}%8")).s("bytebeat:5").bbst("<3 1>".mul(10000))._scope()
+ *
+ */
+export const { byteBeatStartTime, bbst } = registerControl('byteBeatStartTime', 'bbst');
+
+/**
  * Allows you to set the output channels on the interface
  *
  * @name channels
@@ -497,8 +548,40 @@ export const { amshape } = registerControl('amshape');
  */
 export const { channels, ch } = registerControl('channels', 'ch');
 
-// superdirt only
-export const { phaserrate, phasr } = registerControl('phaserrate', 'phasr');
+/**
+ * controls the pulsewidth of the pulse oscillator
+ *
+ * @name pw
+ * @param {number | Pattern} pulsewidth
+ * @example
+ * note("{f a c e}%16").s("pulse").pw(".8:1:.2")
+ * @example
+ * n(run(8)).scale("D:pentatonic").s("pulse").pw("0 .75 .5 1")
+ */
+export const { pw } = registerControl(['pw', 'pwrate', 'pwsweep']);
+
+/**
+ * controls the lfo rate for the pulsewidth of the pulse oscillator
+ *
+ * @name pwrate
+ * @param {number | Pattern} rate
+ * @example
+ * n(run(8)).scale("D:pentatonic").s("pulse").pw("0.5").pwrate("<5 .1 25>").pwsweep("<0.3 .8>")
+
+ *
+ */
+export const { pwrate } = registerControl('pwrate');
+
+/**
+ * controls the lfo sweep for the pulsewidth of the pulse oscillator
+ *
+ * @name pwsweep
+ * @param {number | Pattern} sweep
+ * @example
+ * n(run(8)).scale("D:pentatonic").s("pulse").pw("0.5").pwrate("<5 .1 25>").pwsweep("<0.3 .8>")
+ *
+ */
+export const { pwsweep } = registerControl('pwsweep');
 
 /**
  * Phaser audio effect that approximates popular guitar pedals.
@@ -511,7 +594,11 @@ export const { phaserrate, phasr } = registerControl('phaserrate', 'phasr');
  * .phaser("<1 2 4 8>")
  *
  */
-export const { phaser, ph } = registerControl(['phaser', 'phaserdepth', 'phasercenter', 'phasersweep'], 'ph');
+export const { phaserrate, ph, phaser } = registerControl(
+  ['phaserrate', 'phaserdepth', 'phasercenter', 'phasersweep'],
+  'ph',
+  'phaser',
+);
 
 /**
  * The frequency sweep range of the lfo for the phaser effect. Defaults to 2000
@@ -596,7 +683,7 @@ export const { cutoff, ctf, lpf, lp } = registerControl(['cutoff', 'resonance', 
  * @example
  * note("c2 e2 f2 g2")
  * .sound('sawtooth')
- * .lpf(500)
+ * .lpf(300)
  * .lpa(.5)
  * .lpenv("<4 2 1 0 -1 -2 -4>/4")
  */
@@ -635,7 +722,7 @@ export const { bpenv, bpe } = registerControl('bpenv', 'bpe');
  * @example
  * note("c2 e2 f2 g2")
  * .sound('sawtooth')
- * .lpf(500)
+ * .lpf(300)
  * .lpa("<.5 .25 .1 .01>/4")
  * .lpenv(4)
  */
@@ -674,9 +761,8 @@ export const { bpattack, bpa } = registerControl('bpattack', 'bpa');
  * @example
  * note("c2 e2 f2 g2")
  * .sound('sawtooth')
- * .lpf(500)
+ * .lpf(300)
  * .lpd("<.5 .25 .1 0>/4")
- * .lps(0.2)
  * .lpenv(4)
  */
 export const { lpdecay, lpd } = registerControl('lpdecay', 'lpd');
@@ -716,7 +802,7 @@ export const { bpdecay, bpd } = registerControl('bpdecay', 'bpd');
  * @example
  * note("c2 e2 f2 g2")
  * .sound('sawtooth')
- * .lpf(500)
+ * .lpf(300)
  * .lpd(.5)
  * .lps("<0 .25 .5 1>/4")
  * .lpenv(4)
@@ -759,7 +845,7 @@ export const { bpsustain, bps } = registerControl('bpsustain', 'bps');
  * note("c2 e2 f2 g2")
  * .sound('sawtooth')
  * .clip(.5)
- * .lpf(500)
+ * .lpf(300)
  * .lpenv(4)
  * .lpr("<.5 .25 .1 0>/4")
  * .release(.5)
@@ -796,17 +882,28 @@ export const { hprelease, hpr } = registerControl('hprelease', 'hpr');
  */
 export const { bprelease, bpr } = registerControl('bprelease', 'bpr');
 /**
- * Sets the filter type. The 24db filter is more aggressive. More types might be added in the future.
+ * Sets the filter type. The ladder filter is more aggressive. More types might be added in the future.
  * @name ftype
- * @param {number | Pattern} type 12db (default) or 24db
+ * @param {number | Pattern} type 12db (0), ladder (1), or 24db (2)
  * @example
- * note("c2 e2 f2 g2")
+ * note("{f g g c d a a#}%8").s("sawtooth").lpenv(4).lpf(500).ftype("<0 1 2>").lpq(1)
+ * @example
+ * note("c f g g a c d4").fast(2)
  * .sound('sawtooth')
- * .lpf(500)
- * .bpenv(4)
- * .ftype("12db 24db")
+ * .lpf(200).fanchor(0)
+ * .lpenv(3).lpq(1)
+ * .ftype("<ladder 12db 24db>")
  */
 export const { ftype } = registerControl('ftype');
+
+/**
+ * controls the center of the filter envelope. 0 is unipolar positive, .5 is bipolar, 1 is unipolar negative
+ * @name fanchor
+ * @param {number | Pattern} center 0 to 1
+ * @example
+ * note("{f g g c d a a#}%8").s("sawtooth").lpf("{1000}%2")
+ * .lpenv(8).fanchor("<0 .5 1>")
+ */
 export const { fanchor } = registerControl('fanchor');
 /**
  * Applies the cutoff frequency of the **h**igh-**p**ass **f**ilter.
@@ -822,7 +919,7 @@ export const { fanchor } = registerControl('fanchor');
  * s("bd sd [~ bd] sd,hh*8").hpf("<2000 2000:25>")
  *
  */
-// currently an alias of 'hcutoff' https://github.com/tidalcycles/strudel/issues/496
+// currently an alias of 'hcutoff' https://codeberg.org/uzu/strudel/issues/496
 // ['hpf'],
 /**
  * Applies a vibrato to the frequency of the oscillator.
@@ -833,10 +930,12 @@ export const { fanchor } = registerControl('fanchor');
  * @example
  * note("a e")
  * .vib("<.5 1 2 4 8 16>")
+ * ._scope()
  * @example
  * // change the modulation depth with ":"
  * note("a e")
  * .vib("<.5 1 2 4 8 16>:12")
+ * ._scope()
  */
 export const { vib, vibrato, v } = registerControl(['vib', 'vibmod'], 'vibrato', 'v');
 /**
@@ -857,10 +956,12 @@ export const { noise } = registerControl('noise');
  * @example
  * note("a e").vib(4)
  * .vibmod("<.25 .5 1 2 12>")
+ * ._scope()
  * @example
  * // change the vibrato frequency with ":"
  * note("a e")
  * .vibmod("<.25 .5 1 2 12>:8")
+ * ._scope()
  */
 export const { vibmod, vmod } = registerControl(['vibmod', 'vib'], 'vmod');
 export const { hcutoff, hpf, hp } = registerControl(['hcutoff', 'hresonance', 'hpenv'], 'hpf', 'hp');
@@ -885,7 +986,7 @@ export const { hresonance, hpq } = registerControl('hresonance', 'hpq');
  * s("bd sd [~ bd] sd,hh*8").lpf(2000).lpq("<0 10 20 30>")
  *
  */
-// currently an alias of 'resonance' https://github.com/tidalcycles/strudel/issues/496
+// currently an alias of 'resonance' https://codeberg.org/uzu/strudel/issues/496
 export const { resonance, lpq } = registerControl('resonance', 'lpq');
 /**
  * DJ filter, below 0.5 is low pass filter, above is high pass filter.
@@ -938,15 +1039,31 @@ export const { delayfeedback, delayfb, dfb } = registerControl('delayfeedback', 
  *
  */
 export const { delaytime, delayt, dt } = registerControl('delaytime', 'delayt', 'dt');
-/* // TODO: test
+
+/**
+ * Sets the time of the delay effect in cycles.
+ *
+ * @name delaysync
+ * @param {number | Pattern} cycles delay length in cycles
+ * @synonyms delayt, dt
+ * @example
+ * s("bd bd").delay(.25).delaysync("<1 2 3 5>".div(8))
+ *
+ */
+export const { delaysync } = registerControl('delaysync');
+
+/**
  * Specifies whether delaytime is calculated relative to cps.
  *
  * @name lock
  * @param {number | Pattern} enable When set to 1, delaytime is a direct multiple of a cycle.
+ * @superdirtOnly
  * @example
  * s("sd").delay().lock(1).osc()
  *
+ *
  */
+
 export const { lock } = registerControl('lock');
 /**
  * Set detune for stacked voices of supported oscillators
@@ -1251,7 +1368,7 @@ export const { semitone } = registerControl('semitone');
 
 // TODO: synth param
 export const { voice } = registerControl('voice');
-// voicings // https://github.com/tidalcycles/strudel/issues/506
+// voicings // https://codeberg.org/uzu/strudel/issues/506
 // chord to voice, like C Eb Fm7 G7. the symbols can be defined via addVoicings
 export const { chord } = registerControl('chord');
 // which dictionary to use for the voicings
@@ -1412,6 +1529,17 @@ export const { compressorRelease } = registerControl('compressorRelease');
  *
  */
 export const { speed } = registerControl('speed');
+
+/**
+ * Changes the speed of sample playback, i.e. a cheap way of changing pitch.
+ *
+ * @name stretch
+ * @param {number | Pattern} factor -inf to inf, negative numbers play the sample backwards.
+ * @example
+ * s("gm_flute").stretch("1 2 .5")
+ *
+ */
+export const { stretch } = registerControl('stretch');
 /**
  * Used in conjunction with `speed`, accepts values of "r" (rate, default behavior), "c" (cycles), or "s" (seconds). Using `unit "c"` means `speed` will be interpreted in units of cycles, e.g. `speed "1"` means samples will be stretched to fill a cycle. Using `unit "s"` means the playback speed will be adjusted so that the duration is the number of seconds specified by `speed`.
  *
@@ -1422,6 +1550,7 @@ export const { speed } = registerControl('speed');
  * @superdirtOnly
  *
  */
+
 export const { unit } = registerControl('unit');
 /**
  * Made by Calum Gunn. Reminiscent of some weird mixture of filter, ring-modulator and pitch-shifter. The SuperCollider manual defines Squiz as:
@@ -1473,7 +1602,7 @@ export const { vowel } = registerControl('vowel');
  * @name waveloss
  */
 export const { waveloss } = registerControl('waveloss');
-/*
+/**
  * Noise crackle density
  *
  * @name density
@@ -1525,20 +1654,11 @@ export const { scram } = registerControl('scram');
 export const { binshift } = registerControl('binshift');
 export const { hbrick } = registerControl('hbrick');
 export const { lbrick } = registerControl('lbrick');
-export const { midichan } = registerControl('midichan');
-export const { control } = registerControl('control');
-export const { ccn } = registerControl('ccn');
-export const { ccv } = registerControl('ccv');
-export const { polyTouch } = registerControl('polyTouch');
-export const { midibend } = registerControl('midibend');
-export const { miditouch } = registerControl('miditouch');
-export const { ctlNum } = registerControl('ctlNum');
+
 export const { frameRate } = registerControl('frameRate');
 export const { frames } = registerControl('frames');
 export const { hours } = registerControl('hours');
-export const { midicmd } = registerControl('midicmd');
 export const { minutes } = registerControl('minutes');
-export const { progNum } = registerControl('progNum');
 export const { seconds } = registerControl('seconds');
 export const { songPtr } = registerControl('songPtr');
 export const { uid } = registerControl('uid');
@@ -1629,3 +1749,203 @@ export const ar = register('ar', (t, pat) => {
   const [attack, release = attack] = t;
   return pat.set({ attack, release });
 });
+
+//MIDI
+
+/**
+ * MIDI channel: Sets the MIDI channel for the event.
+ *
+ * @name midichan
+ * @param {number | Pattern} channel MIDI channel number (0-15)
+ * @example
+ * note("c4").midichan(1).midi()
+ */
+export const { midichan } = registerControl('midichan');
+
+export const { midimap } = registerControl('midimap');
+
+/**
+ * MIDI port: Sets the MIDI port for the event.
+ *
+ * @name midiport
+ * @param {number | Pattern} port MIDI port
+ * @example
+ * note("c a f e").midiport("<0 1 2 3>").midi()
+ */
+export const { midiport } = registerControl('midiport');
+
+/**
+ * MIDI command: Sends a MIDI command message.
+ *
+ * @name midicmd
+ * @param {number | Pattern} command MIDI command
+ * @example
+ * midicmd("clock*48,<start stop>/2").midi()
+ */
+export const { midicmd } = registerControl('midicmd');
+
+/**
+ * MIDI control: Sends a MIDI control change message.
+ *
+ * @name control
+ * @param {number | Pattern}  MIDI control number (0-127)
+ * @param {number | Pattern}  MIDI controller value (0-127)
+ */
+export const control = register('control', (args, pat) => {
+  if (!Array.isArray(args)) {
+    throw new Error('control expects an array of [ccn, ccv]');
+  }
+  const [_ccn, _ccv] = args;
+  return pat.ccn(_ccn).ccv(_ccv);
+});
+
+/**
+ * MIDI control number: Sends a MIDI control change message.
+ *
+ * @name ccn
+ * @param {number | Pattern}  MIDI control number (0-127)
+ */
+export const { ccn } = registerControl('ccn');
+/**
+ * MIDI control value: Sends a MIDI control change message.
+ *
+ * @name ccv
+ * @param {number | Pattern}  MIDI control value (0-127)
+ */
+export const { ccv } = registerControl('ccv');
+export const { ctlNum } = registerControl('ctlNum');
+// TODO: ctlVal?
+
+/**
+ * MIDI NRPN non-registered parameter number: Sends a MIDI NRPN non-registered parameter number message.
+ * @name nrpnn
+ * @param {number | Pattern} nrpnn MIDI NRPN non-registered parameter number (0-127)
+ * @example
+ * note("c4").nrpnn("1:8").nrpv("123").midichan(1).midi()
+ */
+export const { nrpnn } = registerControl('nrpnn');
+/**
+ * MIDI NRPN non-registered parameter value: Sends a MIDI NRPN non-registered parameter value message.
+ * @name nrpv
+ * @param {number | Pattern} nrpv MIDI NRPN non-registered parameter value (0-127)
+ * @example
+ * note("c4").nrpnn("1:8").nrpv("123").midichan(1).midi()
+ */
+export const { nrpv } = registerControl('nrpv');
+
+/**
+ * MIDI program number: Sends a MIDI program change message.
+ *
+ * @name progNum
+ * @param {number | Pattern} program MIDI program number (0-127)
+ * @example
+ * note("c4").progNum(10).midichan(1).midi()
+ */
+export const { progNum } = registerControl('progNum');
+
+/**
+ * MIDI sysex: Sends a MIDI sysex message.
+ * @name sysex
+ * @param {number | Pattern} id Sysex ID
+ * @param {number | Pattern} data Sysex data
+ * @example
+ * note("c4").sysex(["0x77", "0x01:0x02:0x03:0x04"]).midichan(1).midi()
+ */
+export const sysex = register('sysex', (args, pat) => {
+  if (!Array.isArray(args)) {
+    throw new Error('sysex expects an array of [id, data]');
+  }
+  const [id, data] = args;
+  return pat.sysexid(id).sysexdata(data);
+});
+/**
+ * MIDI sysex ID: Sends a MIDI sysex identifier message.
+ * @name sysexid
+ * @param {number | Pattern} id Sysex ID
+ * @example
+ * note("c4").sysexid("0x77").sysexdata("0x01:0x02:0x03:0x04").midichan(1).midi()
+ */
+export const { sysexid } = registerControl('sysexid');
+/**
+ * MIDI sysex data: Sends a MIDI sysex message.
+ * @name sysexdata
+ * @param {number | Pattern} data Sysex data
+ * @example
+ * note("c4").sysexid("0x77").sysexdata("0x01:0x02:0x03:0x04").midichan(1).midi()
+ */
+export const { sysexdata } = registerControl('sysexdata');
+
+/**
+ * MIDI pitch bend: Sends a MIDI pitch bend message.
+ * @name midibend
+ * @param {number | Pattern} midibend MIDI pitch bend (-1 - 1)
+ * @example
+ * note("c4").midibend(sine.slow(4).range(-0.4,0.4)).midi()
+ */
+export const { midibend } = registerControl('midibend');
+/**
+ * MIDI key after touch: Sends a MIDI key after touch message.
+ * @name miditouch
+ * @param {number | Pattern} miditouch MIDI key after touch (0-1)
+ * @example
+ * note("c4").miditouch(sine.slow(4).range(0,1)).midi()
+ */
+export const { miditouch } = registerControl('miditouch');
+
+// TODO: what is this?
+export const { polyTouch } = registerControl('polyTouch');
+
+export const getControlName = (alias) => {
+  if (controlAlias.has(alias)) {
+    return controlAlias.get(alias);
+  }
+  return alias;
+};
+
+/**
+ * Sets properties in a batch.
+ *
+ * @name as
+ * @param {String | Array} mapping the control names that are set
+ * @example
+ * "c:.5 a:1 f:.25 e:.8".as("note:clip")
+ * @example
+ * "{0@2 0.25 0 0.5 .3 .5}%8".as("begin").s("sax_vib").clip(1)
+ */
+export const as = register('as', (mapping, pat) => {
+  mapping = Array.isArray(mapping) ? mapping : [mapping];
+  return pat.fmap((v) => {
+    v = Array.isArray(v) ? v : [v];
+    v = Object.fromEntries(mapping.map((prop, i) => [getControlName(prop), v[i]]));
+    return v;
+  });
+});
+
+/**
+ * Allows you to scrub an audio file like a tape loop by passing values that represents the position in the audio file
+ * in the optional array syntax ex: "0.5:2", the second value controls the speed of playback
+ * @name scrub
+ * @memberof Pattern
+ * @returns Pattern
+ * @example
+ * samples('github:switchangel/pad')
+ * s("swpad:0").scrub("{0.1!2 .25@3 0.7!2 <0.8:1.5>}%8")
+ * @example
+ * samples('github:yaxu/clean-breaks/main');
+ * s("amen/4").fit().scrub("{0@3 0@2 4@3}%8".div(16))
+ */
+
+export const scrub = register(
+  'scrub',
+  (beginPat, pat) => {
+    return beginPat.outerBind((v) => {
+      if (!Array.isArray(v)) {
+        v = [v];
+      }
+      const [beginVal, speedMultiplier = 1] = v;
+
+      return pat.begin(beginVal).mul(speed(speedMultiplier)).clip(1);
+    });
+  },
+  false,
+);

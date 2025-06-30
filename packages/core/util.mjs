@@ -1,6 +1,6 @@
 /*
 util.mjs - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/util.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/util.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -91,6 +91,9 @@ export const midi2note = (n) => {
 // modulo that works with negative numbers e.g. _mod(-1, 3) = 2. Works on numbers (rather than patterns of numbers, as @mod@ from pattern.mjs does)
 export const _mod = (n, m) => ((n % m) + m) % m;
 
+// average numbers in an array
+export const averageArray = (arr) => arr.reduce((a, b) => a + b) / arr.length;
+
 export function nanFallback(value, fallback = 0) {
   if (isNaN(Number(value))) {
     logger(`"${value}" is not a number, falling back to ${fallback}`, 'warning');
@@ -159,6 +162,7 @@ export const compose = (...funcs) => pipe(...funcs.reverse());
 // Removes 'None' values from given list
 export const removeUndefineds = (xs) => xs.filter((x) => x != undefined);
 
+// flattens by one level
 export const flatten = (arr) => [].concat(...arr);
 
 export const id = (a) => a;
@@ -234,6 +238,7 @@ export const splitAt = function (index, value) {
   return [value.slice(0, index), value.slice(index)];
 };
 
+// Uses the function f to combine the arrays xs, ys element-wise
 export const zipWith = (f, xs, ys) => xs.map((n, i) => f(n, ys[i]));
 
 export const pairs = function (xs) {
@@ -359,6 +364,108 @@ export function objectMap(obj, fn) {
     return obj.map(fn);
   }
   return Object.fromEntries(Object.entries(obj).map(([k, v], i) => [k, fn(v, k, i)]));
+}
+export function cycleToSeconds(cycle, cps) {
+  return cycle / cps;
+}
+
+// utility for averaging two clocks together to account for drift
+export class ClockCollator {
+  constructor({
+    getTargetClockTime = getUnixTimeSeconds,
+    weight = 16,
+    offsetDelta = 0.005,
+    checkAfterTime = 2,
+    resetAfterTime = 8,
+  }) {
+    this.offsetTime;
+    this.timeAtPrevOffsetSample;
+    this.prevOffsetTimes = [];
+    this.getTargetClockTime = getTargetClockTime;
+    this.weight = weight;
+    this.offsetDelta = offsetDelta;
+    this.checkAfterTime = checkAfterTime;
+    this.resetAfterTime = resetAfterTime;
+    this.reset = () => {
+      this.prevOffsetTimes = [];
+      this.offsetTime = null;
+      this.timeAtPrevOffsetSample = null;
+    };
+  }
+  calculateOffset(currentTime) {
+    const targetClockTime = this.getTargetClockTime();
+    const diffBetweenTimeSamples = targetClockTime - this.timeAtPrevOffsetSample;
+    const newOffsetTime = targetClockTime - currentTime;
+    // recalcuate the diff from scratch if the clock has been paused for some time.
+    if (diffBetweenTimeSamples > this.resetAfterTime) {
+      this.reset();
+    }
+
+    if (this.offsetTime == null) {
+      this.offsetTime = newOffsetTime;
+    }
+    this.prevOffsetTimes.push(newOffsetTime);
+    if (this.prevOffsetTimes.length > this.weight) {
+      this.prevOffsetTimes.shift();
+    }
+
+    // after X time has passed, the average of the previous weight offset times is calculated and used as a stable reference
+    // for calculating the timestamp
+    if (this.timeAtPrevOffsetSample == null || diffBetweenTimeSamples > this.checkAfterTime) {
+      this.timeAtPrevOffsetSample = targetClockTime;
+      const rollingOffsetTime = averageArray(this.prevOffsetTimes);
+      //when the clock offsets surpass the delta, set the new reference time
+      if (Math.abs(rollingOffsetTime - this.offsetTime) > this.offsetDelta) {
+        this.offsetTime = rollingOffsetTime;
+      }
+    }
+
+    return this.offsetTime;
+  }
+
+  calculateTimestamp(currentTime, targetTime) {
+    return this.calculateOffset(currentTime) + targetTime;
+  }
+}
+
+export function getPerformanceTimeSeconds() {
+  return performance.now() * 0.001;
+}
+
+function getUnixTimeSeconds() {
+  return Date.now() * 0.001;
+}
+
+export const keyAlias = new Map([
+  ['control', 'Control'],
+  ['ctrl', 'Control'],
+  ['alt', 'Alt'],
+  ['shift', 'Shift'],
+  ['down', 'ArrowDown'],
+  ['up', 'ArrowUp'],
+  ['left', 'ArrowLeft'],
+  ['right', 'ArrowRight'],
+]);
+let keyState;
+
+export function getCurrentKeyboardState() {
+  if (keyState == null) {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    keyState = {};
+    // Listen for the keydown event to mark the key as pressed
+    window.addEventListener('keydown', (event) => {
+      keyState[event.key] = true; // Mark the key as pressed
+    });
+
+    // Listen for the keyup event to mark the key as released
+    window.addEventListener('keyup', (event) => {
+      keyState[event.key] = false; // Mark the key as released
+    });
+  }
+
+  return { ...keyState }; // Return a shallow copy of the key state object
 }
 
 // Floating point versions, see Fraction for rational versions

@@ -1,8 +1,9 @@
 # strudel
 
-[![Strudel test status](https://github.com/tidalcycles/strudel/actions/workflows/test.yml/badge.svg)](https://github.com/tidalcycles/strudel/actions)
+Live coding patterns on the web
+https://strudel.cc/
 
-An experiment in making a [Tidal](https://github.com/tidalcycles/tidal/) using web technologies. This software is a bit more stable now, but please continue to tread carefully.
+Development is moving to https://codeberg.org/uzu/strudel
 
 - Try it here: <https://strudel.cc>
 - Docs: <https://strudel.cc/learn>
@@ -14,10 +15,16 @@ An experiment in making a [Tidal](https://github.com/tidalcycles/tidal/) using w
 
 After cloning the project, you can run the REPL locally:
 
-```bash
-pnpm i
-pnpm dev
-```
+1. Install [Node.js](https://nodejs.org/)
+2. Install [pnpm](https://pnpm.io/installation)
+3. Install dependencies by running the following command:
+   ```bash
+   pnpm i
+   ```
+4. Run the development server:
+   ```bash
+   pnpm dev
+   ```
 
 ## Using Strudel In Your Project
 
@@ -25,11 +32,15 @@ This project is organized into many [packages](./packages), which are also avail
 
 Read more about how to use these in your own project [here](https://strudel.cc/technical-manual/project-start).
 
+You will need to abide by the terms of the [GNU Affero Public Licence v3](LICENSE). As such, Strudel code can only be shared within free/open source projects under the same license -- see the license for details.
+
+Licensing info for the default sound banks can be found over on the [dough-samples](https://github.com/felixroos/dough-samples/blob/main/README.md) repository.
+
 ## Contributing
 
 There are many ways to contribute to this project! See [contribution guide](./CONTRIBUTING.md).
 
-<a href="https://github.com/tidalcycles/strudel/graphs/contributors">
+<a href="https://codeberg.org/uzu/strudel/activity/contributors">
   <img src="https://contrib.rocks/image?repo=tidalcycles/strudel" />
 </a>
 

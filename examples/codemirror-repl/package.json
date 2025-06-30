@@ -9,11 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^5.0.10"
+    "vite": "^6.0.11"
   },
   "dependencies": {
     "@strudel/codemirror": "workspace:*",
     "@strudel/core": "workspace:*",
+    "@strudel/draw": "workspace:*",
     "@strudel/mini": "workspace:*",
     "@strudel/soundfonts": "workspace:*",
     "@strudel/tonal": "workspace:*",

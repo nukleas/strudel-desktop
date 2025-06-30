@@ -56,13 +56,13 @@ Diese Seite ist eine Auflistung aller im Workshop vorgestellten Funktionen.
 
 ## Pattern-Effekte
 
-| Name | Beschreibung                      | Beispiel                                                                            |
-| ---- | --------------------------------- | ----------------------------------------------------------------------------------- |
-| cpm  | Tempo in Cycles pro Minute        | <MiniRepl client:visible tune={`sound("bd sd").cpm(90)`} />                         |
-| fast | schneller                         | <MiniRepl client:visible tune={`sound("bd sd").fast(2)`} />                         |
-| slow | langsamer                         | <MiniRepl client:visible tune={`sound("bd sd").slow(2)`} />                         |
-| rev  | rückwärts                         | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").rev()`} />            |
-| jux  | einen Stereo-Kanal modifizieren   | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").jux(rev)`} />         |
-| add  | addiert Zahlen oder Noten         | <MiniRepl client:visible tune={`n("0 2 4 6".add("<0 1 2 1>")).scale("C:minor")`} /> |
-| ply  | jedes Element schneller machen    | <MiniRepl client:visible tune={`s("bd sd").ply("<1 2 3>")`} />                      |
-| off  | verzögert eine modifizierte Kopie | <MiniRepl client:visible tune={`s("bd sd, hh*4").off(1/8, x=>x.speed(2))`} />       |
+| Name   | Beschreibung                      | Beispiel                                                                            |
+| ------ | --------------------------------- | ----------------------------------------------------------------------------------- |
+| setcpm | Tempo in Cycles pro Minute        | <MiniRepl client:visible tune={`setcpm(90); sound("bd sd")`} />                     |
+| fast   | schneller                         | <MiniRepl client:visible tune={`sound("bd sd").fast(2)`} />                         |
+| slow   | langsamer                         | <MiniRepl client:visible tune={`sound("bd sd").slow(2)`} />                         |
+| rev    | rückwärts                         | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").rev()`} />            |
+| jux    | einen Stereo-Kanal modifizieren   | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").jux(rev)`} />         |
+| add    | addiert Zahlen oder Noten         | <MiniRepl client:visible tune={`n("0 2 4 6".add("<0 1 2 1>")).scale("C:minor")`} /> |
+| ply    | jedes Element schneller machen    | <MiniRepl client:visible tune={`s("bd sd").ply("<1 2 3>")`} />                      |
+| off    | verzögert eine modifizierte Kopie | <MiniRepl client:visible tune={`s("bd sd, hh*4").off(1/8, x=>x.speed(2))`} />       |

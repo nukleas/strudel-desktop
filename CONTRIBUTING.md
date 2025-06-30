@@ -2,12 +2,22 @@
 
 Thanks for wanting to contribute!!! There are many ways you can add value to this project
 
+## Move to codeberg
+
+We are currently in the process of moving from github to codeberg -- not everything is working, please bear with us.
+
+To update your local clone, you can run this command:
+
+```
+git remote set-url origin git@codeberg.org:uzu/strudel.git
+```
+
+
 ## Communication Channels
 
 To get in touch with the contributors, either
 
-- open a [github discussion](https://github.com/tidalcycles/strudel/discussions) or
-- [join the Tidal Discord Channel](https://discord.gg/remJ6gQA) and go to the #strudel channel
+- [join the Tidal Discord Channel](https://discord.com/invite/HGEdXmRkzT) and go to the #strudel channel
 - Find related discussions on the [tidal club forum](https://club.tidalcycles.org/)
 
 ## Ask a Question
@@ -32,7 +42,7 @@ Use one of the Communication Channels listed above.
 ## Improve the Docs
 
 If you find some weak spots in the [docs](https://strudel.cc/workshop/getting-started/),
-you can edit each file directly on github via the "Edit this page" link located in the right sidebar.
+you can edit each file directly on codeburg. (we are currently fixing the "Edit this page" links in the right sidebar)
 
 ## Propose a Feature
 
@@ -41,7 +51,7 @@ Maybe you even want to help with the implementation of that feature!
 
 ## Report a Bug
 
-If you've found a bug, or some behaviour that does not seem right, you are welcome to file an [issue](https://github.com/tidalcycles/strudel/issues).
+If you've found a bug, or some behaviour that does not seem right, you are welcome to file an [issue](https://codeberg.org/uzu/strudel/issues).
 Please check that it has not been reported before.
 
 ## Fix a Bug
@@ -71,7 +81,7 @@ To get the project up and running for development, make sure you have installed:
 then, do the following:
 
 ```sh
-git clone https://github.com/tidalcycles/strudel.git && cd strudel
+git clone https://codeberg.org/uzu/strudel.git && cd strudel
 pnpm i # install at root to symlink packages
 pnpm start # start repl
 ```
@@ -113,7 +123,7 @@ You can run the same check with `pnpm check`
 
 ## Package Workflow
 
-The project is split into multiple [packages](https://github.com/tidalcycles/strudel/tree/main/packages) with independent versioning.
+The project is split into multiple [packages](https://codeberg.org/uzu/strudel/src/branch/main/packages) with independent versioning.
 When you run `pnpm i` on the root folder, [pnpm workspaces](https://pnpm.io/workspaces) will install all dependencies of all subpackages. This will allow any js file to import `@strudel/<package-name>` to get the local version,
 allowing to develop multiple packages at the same time.
 
@@ -130,20 +140,26 @@ npx lerna version --no-private
 # publish all packages inside /packages using pnpm! don't use lerna to publish!!
 pnpm --filter "./packages/**" publish --dry-run
 
-# the last command was only a dry-run, make sure everything looks ok, if yes, run the same command without flag
+# the last command was only a dry-run. if everything looks ok, run this:
+
+pnpm --filter "./packages/**" publish --access public
 ```
 
 To manually publish a single package, increase the version in the `package.json`, then run `pnpm publish`.
 Important: Always publish with `pnpm`, as `npm` does not support overriding main files in `publishConfig`, which is done in all the packages.
 
-### New Packages
 
-To add a new package, you have to publish it manually the first time, using:
-
+## useful commands
 ```sh
-cd packages/<package-name> && pnpm publish --access public
-```
+#regenerate the test snapshots (ex: when updating or creating new pattern functions)
+pnpm snapshot 
 
+#start the OSC server
+pnpm run osc
+
+#build the standalone version
+pnpm tauri build
+```
 ## Have Fun
 
 Remember to have fun, and that this project is driven by the passion of volunteers!
