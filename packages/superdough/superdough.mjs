@@ -7,7 +7,7 @@ This program is free software: you can redistribute it and/or modify it under th
 import './feedbackdelay.mjs';
 import './reverb.mjs';
 import './vowel.mjs';
-import { clamp, nanFallback, _mod, cycleToSeconds } from './util.mjs';
+import { clamp, nanFallback, _mod, cycleToSeconds, secondsToCycle } from './util.mjs';
 import workletsUrl from './worklets.mjs?audioworklet';
 import { createFilter, gainNode, getCompressor, getWorklet } from './helpers.mjs';
 import { map } from 'nanostores';
@@ -482,6 +482,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
     amdepth = 1,
     amskew = 0.5,
     amphase = 0,
+    amshape = 1,
     s = getDefaultValue('s'),
     bank,
     source,
@@ -707,19 +708,35 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
   crush !== undefined && chain.push(getWorklet(ac, 'crush-processor', { crush }));
   shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
   distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
-  am !== undefined &&
-    chain.push(
-      getWorklet(ac, 'am-processor', {
-        speed: am,
-        depth: amdepth,
-        skew: amskew,
-        phaseoffset: amphase,
-        // shape: amshape,
+  // am !== undefined &&
+  //   chain.push(
+  //     getWorklet(ac, 'am-processor', {
+  //       speed: am,
+  //       depth: amdepth,
+  //       skew: amskew,
+  //       phaseoffset: amphase,
+  //       // shape: amshape,
 
-        cps,
-        cycle,
-      }),
-    );
+  //       cps,
+  //       cycle,
+  //     }),
+  //   );
+
+  if (am !== undefined) {
+    const amGain = new GainNode(ac, { gain: 1 });
+    const frequency = cycleToSeconds(am, cps)
+    const phaseoffset = cycleToSeconds(amphase, cps)
+    const lfo = getLfo(ac, t, t + hapDuration, {
+      skew: amskew, 
+      frequency: am * cps,
+       depth: amdepth, 
+      //  dcoffset: 0, 
+       shape: amshape, 
+       phaseoffset
+      })
+    lfo.connect(amGain.gain)
+    chain.push(amGain)
+  }
 
   compressorThreshold !== undefined &&
     chain.push(

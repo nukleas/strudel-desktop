@@ -248,11 +248,11 @@ export const getTrigger =
     // TODO: get rid of deadline after https://codeberg.org/uzu/strudel/pulls/1004
     try {
       if (!hap.context.onTrigger || !hap.context.dominantTrigger) {
-        await defaultOutput(hap, deadline, duration, cps, t, cycle);
+        await defaultOutput(hap, deadline, duration, cps, t);
       }
       if (hap.context.onTrigger) {
         // call signature of output / onTrigger is different...
-        await hap.context.onTrigger(getTime() + deadline, hap, getTime(), cps, t, cycle);
+        await hap.context.onTrigger(getTime() + deadline, hap, getTime(), cps, t);
       }
     } catch (err) {
       logger(`[cyclist] error: ${err.message}`, 'error');
