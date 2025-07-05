@@ -23,7 +23,7 @@ export const csound = register('csound', (instrument, pat) => {
   instrument = instrument || 'triangle';
   init(); // not async to support csound inside other patterns + to be able to call pattern methods after it
   // TODO: find a alternative way to wait for csound to load (to wait with first time playback)
-  return pat.onTrigger((time_deprecate, hap, currentTime, _cps, targetTime) => {
+  return pat.onTrigger((hap, currentTime, _cps, targetTime) => {
     if (!_csound) {
       logger('[csound] not loaded yet', 'warning');
       return;
@@ -142,7 +142,7 @@ export const csoundm = register('csoundm', (instrument, pat) => {
     p1 = `"${instrument}"`;
   }
   init(); // not async to support csound inside other patterns + to be able to call pattern methods after it
-  return pat.onTrigger((tidal_time, hap) => {
+  return pat.onTrigger((hap, currentTime, _cps, targetTime) => {
     if (!_csound) {
       logger('[csound] not loaded yet', 'warning');
       return;
@@ -151,7 +151,7 @@ export const csoundm = register('csoundm', (instrument, pat) => {
       throw new Error('csound only support objects as hap values');
     }
     // Time in seconds counting from now.
-    const p2 = tidal_time - getAudioContext().currentTime;
+    const p2 = targetTime - currentTime;
     const p3 = hap.duration.valueOf() + 0;
     const frequency = getFrequency(hap);
     let { gain = 1, velocity = 0.9 } = hap.value;

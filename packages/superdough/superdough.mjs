@@ -451,8 +451,8 @@ function mapChannelNumbers(channels) {
 }
 
 export const superdough = async (value, t, hapDuration, cps = 0.5) => {
+  // new: t is always expected to be the absolute target onset time
   const ac = getAudioContext();
-  t = typeof t === 'string' && t.startsWith('=') ? Number(t.slice(1)) : ac.currentTime + t;
   let { stretch } = value;
   if (stretch != null) {
     //account for phase vocoder latency

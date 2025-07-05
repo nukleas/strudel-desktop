@@ -647,7 +647,6 @@
     "evaluate"
   ],
   "/packages/webaudio/webaudio.mjs": [
-    "webaudioOutputTrigger",
     "webaudioOutput",
     "webaudioRepl"
   ],

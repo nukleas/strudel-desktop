@@ -3263,7 +3263,7 @@ export const slice = register(
  * s("bd!8").onTriggerTime((hap) => {console.info(hap)})
  */
 Pattern.prototype.onTriggerTime = function (func) {
-  return this.onTrigger((t_deprecate, hap, currentTime, cps = 1, targetTime) => {
+  return this.onTrigger((hap, currentTime, _cps, targetTime) => {
     const diff = targetTime - currentTime;
     window.setTimeout(() => {
       func(hap);

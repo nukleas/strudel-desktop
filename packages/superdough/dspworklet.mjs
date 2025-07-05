@@ -74,6 +74,6 @@ export const dough = async (code) => {
   worklet.node.connect(ac.destination);
 };
 
-export function doughTrigger(time_deprecate, hap, currentTime, cps, targetTime) {
+export function doughTrigger(hap, currentTime, cps, targetTime) {
   window.postMessage({ time: targetTime, dough: hap.value, currentTime, duration: hap.duration, cps });
 }
