@@ -85,6 +85,7 @@ const waveShapeNames = Object.keys(waveshapes);
 class LFOProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
+      { name: 'begin', defaultValue: 0 },
       { name: 'time', defaultValue: 0 },
       { name: 'end', defaultValue: 0 },
       { name: 'frequency', defaultValue: 0.5 },
@@ -109,9 +110,13 @@ class LFOProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
+    const begin = parameters['begin'][0]
     // eslint-disable-next-line no-undef
     if (currentTime >= parameters.end[0]) {
       return false;
+    }
+    if (currentTime <= begin) {
+      return true;
     }
 
     const output = outputs[0];
@@ -158,6 +163,8 @@ class CoarseProcessor extends AudioWorkletProcessor {
   process(inputs, outputs, parameters) {
     const input = inputs[0];
     const output = outputs[0];
+
+    
 
     const hasInput = !(input[0] === undefined);
     if (this.started && !hasInput) {
@@ -899,6 +906,7 @@ registerProcessor('byte-beat-processor', ByteBeatProcessor);
 class AMProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
+      { name: 'begin', defaultValue: 0 },
       { name: 'cps', defaultValue: 0.5 },
       { name: 'speed', defaultValue: 0.5 },
       { name: 'cycle', defaultValue: 0 },
@@ -925,10 +933,15 @@ class AMProcessor extends AudioWorkletProcessor {
     const input = inputs[0];
     const output = outputs[0];
     const hasInput = !(input[0] === undefined);
+  
+    
     if (this.started && !hasInput) {
       return false;
     }
     this.started = hasInput;
+    if (currentTime <= parameters.begin[0]) {
+      return true;
+    }
 
     const speed = parameters['speed'][0];
     const cps = parameters['cps'][0];
@@ -937,7 +950,7 @@ class AMProcessor extends AudioWorkletProcessor {
     const skew = parameters['skew'][0];
     const phaseoffset = parameters['phaseoffset'][0];
 
-    const frequency = speed * cps;
+    const frequency = cps / speed
     if (this.phase == null) {
       const secondsPassed = cycle / cps;
       this.phase = _mod(secondsPassed * frequency + phaseoffset, 1);

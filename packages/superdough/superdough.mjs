@@ -45,6 +45,8 @@ export function setGainCurve(newGainCurveFunc) {
   gainCurveFunc = newGainCurveFunc;
 }
 
+
+
 function aliasBankMap(aliasMap) {
   // Make all bank keys lower case for case insensitivity
   for (const key in aliasMap) {
@@ -325,9 +327,26 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
   return delays[orbit];
 }
 
-export function getLfo(audioContext, time, end, properties = {}) {
+export function getLfo(audioContext, begin, end, properties = {}) {
   return getWorklet(audioContext, 'lfo-processor', {
     frequency: 1,
+    depth: 1,
+    skew: 0,
+    phaseoffset: 0,
+    time: begin,
+    begin,
+    end,
+    shape: 1,
+    dcoffset: -0.5,
+    ...properties,
+  });
+}
+
+export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {
+ const frequency = cycle/cps
+
+  return getWorklet(audioContext, 'lfo-processor', {
+    frequency,
     depth: 1,
     skew: 0,
     phaseoffset: 0,
@@ -450,9 +469,10 @@ function mapChannelNumbers(channels) {
   return (Array.isArray(channels) ? channels : [channels]).map((ch) => ch - 1);
 }
 
-export const superdough = async (value, t, hapDuration, cps = 0.5) => {
+export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
   // new: t is always expected to be the absolute target onset time
   const ac = getAudioContext();
+
   let { stretch } = value;
   if (stretch != null) {
     //account for phase vocoder latency
@@ -707,11 +727,12 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
   coarse !== undefined && chain.push(getWorklet(ac, 'coarse-processor', { coarse }));
   crush !== undefined && chain.push(getWorklet(ac, 'crush-processor', { crush }));
   shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
-  distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
+  // distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
   // am !== undefined &&
   //   chain.push(
   //     getWorklet(ac, 'am-processor', {
   //       speed: am,
+  //       begin: t,
   //       depth: amdepth,
   //       skew: amskew,
   //       phaseoffset: amphase,
@@ -724,12 +745,21 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
 
   if (am !== undefined) {
     const amGain = new GainNode(ac, { gain: 1 });
-    const frequency = cycleToSeconds(am, cps)
+    const frequency = cps / am
     const phaseoffset = cycleToSeconds(amphase, cps)
+
+    
+    const time = cycle / cps
+  
+    // console.info(cycle, time, frequency)
+  
+    
+
     const lfo = getLfo(ac, t, t + hapDuration, {
       skew: amskew, 
-      frequency: am * cps,
-       depth: amdepth, 
+      frequency,
+      depth: amdepth,
+      time,
       //  dcoffset: 0, 
        shape: amshape, 
        phaseoffset
