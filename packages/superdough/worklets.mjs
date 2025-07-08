@@ -93,7 +93,10 @@ class LFOProcessor extends AudioWorkletProcessor {
       { name: 'depth', defaultValue: 1 },
       { name: 'phaseoffset', defaultValue: 0 },
       { name: 'shape', defaultValue: 0 },
+      { name: 'curve', defaultValue: 1 },
       { name: 'dcoffset', defaultValue: 0 },
+      { name: 'min', defaultValue: 0 },
+      { name: 'max', defaultValue: 1 },
     ];
   }
 
@@ -110,7 +113,7 @@ class LFOProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    const begin = parameters['begin'][0]
+    const begin = parameters['begin'][0];
     // eslint-disable-next-line no-undef
     if (currentTime >= parameters.end[0]) {
       return false;
@@ -126,6 +129,9 @@ class LFOProcessor extends AudioWorkletProcessor {
     const depth = parameters['depth'][0];
     const skew = parameters['skew'][0];
     const phaseoffset = parameters['phaseoffset'][0];
+    const min = parameters['min'][0];
+    const max = parameters['max'][0];
+    const curve = parameters['curve'][0];
 
     const dcoffset = parameters['dcoffset'][0];
     const shape = waveShapeNames[parameters['shape'][0]];
@@ -140,7 +146,7 @@ class LFOProcessor extends AudioWorkletProcessor {
     for (let n = 0; n < blockSize; n++) {
       for (let i = 0; i < output.length; i++) {
         const modval = (waveshapes[shape](this.phase, skew) + dcoffset) * depth;
-        output[i][n] = modval;
+        output[i][n] = clamp(Math.pow(modval, curve), min, max);
       }
       this.incrementPhase(dt);
     }
@@ -163,8 +169,6 @@ class CoarseProcessor extends AudioWorkletProcessor {
   process(inputs, outputs, parameters) {
     const input = inputs[0];
     const output = outputs[0];
-
-    
 
     const hasInput = !(input[0] === undefined);
     if (this.started && !hasInput) {
@@ -901,70 +905,3 @@ class ByteBeatProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor('byte-beat-processor', ByteBeatProcessor);
-
-
-class AMProcessor extends AudioWorkletProcessor {
-  static get parameterDescriptors() {
-    return [
-      { name: 'begin', defaultValue: 0 },
-      { name: 'cps', defaultValue: 0.5 },
-      { name: 'speed', defaultValue: 0.5 },
-      { name: 'cycle', defaultValue: 0 },
-      { name: 'skew', defaultValue: 0.5 },
-      { name: 'depth', defaultValue: 1 },
-      { name: 'phaseoffset', defaultValue: 0 },
-    ];
-  }
-
-  constructor() {
-    super();
-    this.phase;
-    this.started = false;
-  }
-
-  incrementPhase(dt) {
-    this.phase += dt;
-    if (this.phase > 1.0) {
-      this.phase = this.phase - 1;
-    }
-  }
-
-  process(inputs, outputs, parameters) {
-    const input = inputs[0];
-    const output = outputs[0];
-    const hasInput = !(input[0] === undefined);
-  
-    
-    if (this.started && !hasInput) {
-      return false;
-    }
-    this.started = hasInput;
-    if (currentTime <= parameters.begin[0]) {
-      return true;
-    }
-
-    const speed = parameters['speed'][0];
-    const cps = parameters['cps'][0];
-    const cycle = parameters['cycle'][0];
-    const depth = parameters['depth'][0];
-    const skew = parameters['skew'][0];
-    const phaseoffset = parameters['phaseoffset'][0];
-
-    const frequency = cps / speed
-    if (this.phase == null) {
-      const secondsPassed = cycle / cps;
-      this.phase = _mod(secondsPassed * frequency + phaseoffset, 1);
-    }
-    // eslint-disable-next-line no-undef
-    const dt = frequency / sampleRate;
-    for (let n = 0; n < blockSize; n++) {
-      for (let i = 0; i < input.length; i++) {
-        const modval = clamp(waveshapes.tri(this.phase, skew) * depth + (1 - depth), 0, 1);
-        output[i][n] = input[i][n] * modval;
-      }
-      this.incrementPhase(dt);
-    }
-    return true;
-  }
-}
-registerProcessor('am-processor', AMProcessor);

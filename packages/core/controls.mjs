@@ -448,12 +448,13 @@ export const { coarse } = registerControl('coarse');
  * modulate the amplitude of a sound with a continuous waveform
  *
  * @name am
+ * @synonym tremolo
  * @param {number | Pattern} speed modulation speed in HZ
  * @example
  * s("triangle").am("2").amshape("<tri saw ramp square>").amdepth(.5)
  *
  */
-export const { am, } = registerControl(['am', 'amdepth', 'amskew', 'amphase'],);
+export const { am, tremolo } = registerControl(['am', 'amdepth', 'amskew', 'amphase'], 'tremolo');
 
 /**
  * modulate the amplitude of a sound with a continuous waveform
@@ -461,7 +462,7 @@ export const { am, } = registerControl(['am', 'amdepth', 'amskew', 'amphase'],);
  * @name amsync
  * @param {number | Pattern} cycles modulation speed in cycles
  * @example
- * s("triangle").am("2").amshape("<tri saw ramp square>").amdepth(.5)
+ * s("supersaw").amsync(1/4).amskew("<0 .5 1>").amdepth(2)
  *
  */
 export const { amsync } = registerControl(['amsync', 'amdepth', 'amskew', 'amphase']);
@@ -482,7 +483,7 @@ export const { amdepth } = registerControl('amdepth');
  * @name amskew
  * @param {number | Pattern} amount between 0 & 1, the shape of the waveform
  * @example
- * note("{f a c e}%16").am(4).amskew("<.5 0 1>")
+ * note("{f a c e}%16").am(5).amskew(.5).amdepth("<1 0.5 2>").att(.01).rel(.03)
  *
  */
 export const { amskew } = registerControl('amskew');
@@ -493,7 +494,7 @@ export const { amskew } = registerControl('amskew');
  * @name amphase
  * @param {number | Pattern} offset the offset in cycles of the modulation
  * @example
- * note("{f a c e}%16").am(4).amphase("<0 .25 .66>")
+ * note("{f a c e}%16").s("sawtooth").am(4).amphase("<0 .25 .66>")
  *
  */
 export const { amphase } = registerControl('amphase');
@@ -517,6 +518,30 @@ export const { amshape } = registerControl('amshape');
  * note("{f g g c d a a#}%16".sub(17)).s("supersaw").lpenv(8).lpf(150).lpq(.8).ftype('ladder').drive("<.5 4>")
  *
  */
+
+// TODO: SUPRADOUGH implement post orbit "pump" sidechain effect
+// /**
+//  * modulate the amplitude of an orbit to create a "sidechain" like effect
+//  *
+//  * @name pump
+//  * @param {number | Pattern} speed modulation speed in cycles
+//  * @example
+//  * note("{f g c d}%16").s("sawtooth").pump(".25:.75")
+//  *
+//  */
+// export const { pump } = registerControl(['pump', 'pumpdepth']);
+
+// /**
+//  * modulate the amplitude of an orbit to create a "sidechain" like effect
+//  *
+//  * @name pumpdepth
+//  * @param {number | Pattern} depth depth of modulation from 0 to 1
+//  * @example
+//  * note("{f g c d}%16").s("sawtooth").pump(".25").depth("<.25 .5 .75 1>")
+//  *
+//  */
+// export const { pumpdepth } = registerControl('pumpdepth');
+
 export const { drive } = registerControl('drive');
 
 /**

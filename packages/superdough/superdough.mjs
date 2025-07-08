@@ -45,8 +45,6 @@ export function setGainCurve(newGainCurveFunc) {
   gainCurveFunc = newGainCurveFunc;
 }
 
-
-
 function aliasBankMap(aliasMap) {
   // Make all bank keys lower case for case insensitivity
   for (const key in aliasMap) {
@@ -328,22 +326,26 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
 }
 
 export function getLfo(audioContext, begin, end, properties = {}) {
+  const { dcoffset = -0.5, depth = 1 } = properties;
   return getWorklet(audioContext, 'lfo-processor', {
     frequency: 1,
-    depth: 1,
+    depth,
     skew: 0,
     phaseoffset: 0,
     time: begin,
     begin,
     end,
     shape: 1,
-    dcoffset: -0.5,
+    dcoffset,
+    min: dcoffset - depth * 0.5,
+    max: dcoffset + depth * 0.5,
+    curve: 1,
     ...properties,
   });
 }
 
 export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {
- const frequency = cycle/cps
+  const frequency = cycle / cps;
 
   return getWorklet(audioContext, 'lfo-processor', {
     frequency,
@@ -499,10 +501,11 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
   // destructure
   let {
     am,
+    amsync,
     amdepth = 1,
-    amskew = 0.5,
+    amskew = 1,
     amphase = 0,
-    amshape = 1,
+    amshape = 0,
     s = getDefaultValue('s'),
     bank,
     source,
@@ -512,6 +515,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
     // filters
     fanchor = getDefaultValue('fanchor'),
     drive = 0.69,
+    release = 0,
     // low pass
     cutoff,
     lpenv,
@@ -587,8 +591,11 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
   distortvol = applyGainCurve(distortvol);
   delay = applyGainCurve(delay);
   velocity = applyGainCurve(velocity);
+  amdepth = applyGainCurve(amdepth);
   gain *= velocity; // velocity currently only multiplies with gain. it might do other things in the future
 
+  const end = t + hapDuration;
+  const endWithRelease = end + release;
   const chainID = Math.round(Math.random() * 1000000);
 
   // oldest audio nodes will be destroyed if maximum polyphony is exceeded
@@ -663,7 +670,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
         lprelease,
         lpenv,
         t,
-        t + hapDuration,
+        end,
         fanchor,
         ftype,
         drive,
@@ -687,7 +694,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
         hprelease,
         hpenv,
         t,
-        t + hapDuration,
+        end,
         fanchor,
       );
     chain.push(hp());
@@ -698,20 +705,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
 
   if (bandf !== undefined) {
     let bp = () =>
-      createFilter(
-        ac,
-        'bandpass',
-        bandf,
-        bandq,
-        bpattack,
-        bpdecay,
-        bpsustain,
-        bprelease,
-        bpenv,
-        t,
-        t + hapDuration,
-        fanchor,
-      );
+      createFilter(ac, 'bandpass', bandf, bandq, bpattack, bpdecay, bpsustain, bprelease, bpenv, t, end, fanchor);
     chain.push(bp());
     if (ftype === '24db') {
       chain.push(bp());
@@ -727,45 +721,32 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
   coarse !== undefined && chain.push(getWorklet(ac, 'coarse-processor', { coarse }));
   crush !== undefined && chain.push(getWorklet(ac, 'crush-processor', { crush }));
   shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
-  // distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
-  // am !== undefined &&
-  //   chain.push(
-  //     getWorklet(ac, 'am-processor', {
-  //       speed: am,
-  //       begin: t,
-  //       depth: amdepth,
-  //       skew: amskew,
-  //       phaseoffset: amphase,
-  //       // shape: amshape,
+  distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
 
-  //       cps,
-  //       cycle,
-  //     }),
-  //   );
-
+  if (amsync != null) {
+    am = cps / amsync;
+  }
   if (am !== undefined) {
-    const amGain = new GainNode(ac, { gain: 1 });
-    const frequency = cps / am
-    const phaseoffset = cycleToSeconds(amphase, cps)
+    // Allow clipping of modulator for more dynamic possiblities, and to prevent speaker overload
+    // EX:  a triangle waveform will clip like this /-\ when the depth is above 1
+    const gain = Math.max(1 - amdepth, 0);
+    const amGain = new GainNode(ac, { gain });
 
-    
-    const time = cycle / cps
-  
-    // console.info(cycle, time, frequency)
-  
-    
-
-    const lfo = getLfo(ac, t, t + hapDuration, {
-      skew: amskew, 
-      frequency,
+    const time = cycle / cps;
+    const lfo = getLfo(ac, t, endWithRelease, {
+      skew: amskew,
+      frequency: am,
       depth: amdepth,
       time,
-      //  dcoffset: 0, 
-       shape: amshape, 
-       phaseoffset
-      })
-    lfo.connect(amGain.gain)
-    chain.push(amGain)
+      dcoffset: 0,
+      shape: amshape,
+      phaseoffset: amphase,
+      min: 0,
+      max: 1,
+      curve: 1.5,
+    });
+    lfo.connect(amGain.gain);
+    chain.push(amGain);
   }
 
   compressorThreshold !== undefined &&
@@ -781,7 +762,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle) => {
   }
   // phaser
   if (phaser !== undefined && phaserdepth > 0) {
-    const phaserFX = getPhaser(t, t + hapDuration, phaser, phaserdepth, phasercenter, phasersweep);
+    const phaserFX = getPhaser(t, endWithRelease, phaser, phaserdepth, phasercenter, phasersweep);
     chain.push(phaserFX);
   }
 

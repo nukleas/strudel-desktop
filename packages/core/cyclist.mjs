@@ -38,16 +38,13 @@ export class Cyclist {
         const end = begin + eventLength;
         this.cycle = begin + secondsSinceLastTick * this.cps;
 
-        //account for latency and tick duration when using cycle calculations for audio downstream
-        const cycle_gap = (this.latency - duration) * this.cps;
-
         const haps = this.pattern.queryArc(begin, end, { _cps: this.cps });
         haps.forEach((hap) => {
           if (hap.hasOnset()) {
             let targetTime = (hap.whole.begin - this.num_cycles_at_cps_change) / this.cps;
             targetTime = targetTime + this.latency + tickdeadline + time - num_seconds_since_cps_change;
             const duration = hap.duration / this.cps;
-            onTrigger?.(hap, tickdeadline, duration, this.cps, targetTime, this.cycle - cycle_gap);
+            onTrigger?.(hap, tickdeadline, duration, this.cps, targetTime);
           }
         });
         this.time_at_last_tick_message = time;
