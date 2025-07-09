@@ -23,8 +23,7 @@ export const webaudioOutput = (hap, _deadline, hapDuration, cps, t) => {
     t,
     hapDuration,
     cps,
-    hap.whole.begin.valueOf(),
-    //  cycle
+    hap.whole?.begin.valueOf(),
   );
 };
 
