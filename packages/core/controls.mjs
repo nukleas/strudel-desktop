@@ -448,7 +448,7 @@ export const { coarse } = registerControl('coarse');
  * modulate the amplitude of a sound with a continuous waveform
  *
  * @name am
- * @synonym tremolo
+ * @synonyms tremolo
  * @param {number | Pattern} speed modulation speed in HZ
  * @example
  * s("triangle").am("2").amshape("<tri saw ramp square>").amdepth(.5)
