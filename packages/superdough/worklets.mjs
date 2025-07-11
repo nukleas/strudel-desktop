@@ -31,7 +31,7 @@ function polyBlep(phase, dt) {
     return 0;
   }
 }
-
+// The order is important for dough integration
 const waveshapes = {
   tri(phase, skew = 0.5) {
     const x = 1 - skew;

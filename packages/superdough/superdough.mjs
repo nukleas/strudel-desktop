@@ -28,6 +28,13 @@ export function setMultiChannelOrbits(bool) {
   multiChannelOrbits = bool == true;
 }
 
+function getModulationShapeInput(val) {
+  if (typeof val === 'number') {
+    return val % 5;
+  }
+  return { tri: 0, triangle: 0, sine: 1, ramp: 2, saw: 3, square: 4 }[val] ?? 0;
+}
+
 export const soundMap = map();
 
 export function registerSound(key, onTrigger, data = {}) {
@@ -337,6 +344,7 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
 }
 
 export function getLfo(audioContext, begin, end, properties = {}) {
+  const { shape = 0, ...props } = properties;
   const { dcoffset = -0.5, depth = 1 } = properties;
   return getWorklet(audioContext, 'lfo-processor', {
     frequency: 1,
@@ -346,12 +354,12 @@ export function getLfo(audioContext, begin, end, properties = {}) {
     time: begin,
     begin,
     end,
-    shape: 1,
+    shape: getModulationShapeInput(shape),
     dcoffset,
     min: dcoffset - depth * 0.5,
     max: dcoffset + depth * 0.5,
     curve: 1,
-    ...properties,
+    ...props,
   });
 }
 
@@ -514,9 +522,9 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     am,
     amsync,
     amdepth = 1,
-    amskew = 1,
+    amskew,
     amphase = 0,
-    amshape = 0,
+    amshape,
     s = getDefaultValue('s'),
     bank,
     source,
@@ -745,7 +753,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
 
     const time = cycle / cps;
     const lfo = getLfo(ac, t, endWithRelease, {
-      skew: amskew,
+      skew: amskew ?? (amshape != null ? 0.5 : 1),
       frequency: am,
       depth: amdepth,
       time,
