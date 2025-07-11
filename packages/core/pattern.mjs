@@ -2522,7 +2522,7 @@ export const { fastchunk, fastChunk } = register(
 /**
  * Like `chunk`, but the function is applied to a looped subcycle of the source pattern.
  * @name chunkInto
- * @synonym chunkinto
+ * @synonyms chunkinto
  * @memberof Pattern
  * @example
  * sound("bd sd ht lt bd - cp lt").chunkInto(4, hurry(2))
@@ -2535,7 +2535,7 @@ export const { chunkinto, chunkInto } = register(['chunkinto', 'chunkInto'], fun
 /**
  * Like `chunkInto`, but moves backwards through the chunks.
  * @name chunkBackInto
- * @synonym chunkbackinto
+ * @synonyms chunkbackinto
  * @memberof Pattern
  * @example
  * sound("bd sd ht lt bd - cp lt").chunkInto(4, hurry(2))
@@ -2565,7 +2565,7 @@ export const bypass = register(
  * Loops the pattern inside an `offset` for `cycles`.
  * If you think of the entire span of time in cycles as a ribbon, you can cut a single piece and loop it.
  * @name ribbon
- * @synonym rib
+ * @synonyms rib
  * @param {number} offset start point of loop in cycles
  * @param {number} cycles loop length in cycles
  * @example
