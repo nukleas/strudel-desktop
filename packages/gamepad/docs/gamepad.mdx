@@ -56,14 +56,15 @@ You can use button inputs to control different aspects of your music, such as ga
 <MiniRepl
   client:idle
   tune={`const gp = gamepad(0)
-  // Use button values to control amplitude
+setcpm(120) 
+// Use button values to control amplitude
 $: stack(
   s("[[hh hh] oh hh oh]/2").mask(gp.tglX).bank("RolandTR909"), // X btn for HH
    s("cr*1").mask(gp.Y).bank("RolandTR909"), // LB btn for CR
   s("bd").mask(gp.tglA).bank("RolandTR909"), // A btn for BD
   s("[ht - - mt - - lt - ]/2").mask(gp.tglB).bank("RolandTR909"), // B btn for Toms
   s("sd*4").mask(gp.RB).bank("RolandTR909"), // RB btn for SD
-).cpm(120)
+)
 `}
 />
 
@@ -74,14 +75,13 @@ Analog sticks can be used for continuous control, such as pitch shifting or pann
 <MiniRepl
   client:idle
   tune={`const gp = gamepad(0)
-  // Use analog stick for continuous control
+setcpm(120)
+// Use analog stick for continuous control
 $: note("c4 d3 a3 e3").sound("sawtooth") 
   .lpf(gp.x1.range(100,4000)) 
   .lpq(gp.y1.range(5,30))
   .decay(gp.y2.range(0.1,2))
-  .lpenv(gp.x2.range(-5,5))
-  .cpm(120)
-  `}
+  .lpenv(gp.x2.range(-5,5))`}
 />
 
 ### Button Sequences
@@ -89,6 +89,7 @@ $: note("c4 d3 a3 e3").sound("sawtooth")
 You can define button sequences to trigger specific actions, like playing a sound when a sequence is detected.
 
 <MiniRepl client:idle tune={`const gp = gamepad(0)
+setcpm(120)
 // Define button sequences
 const HADOUKEN = [
   'd',               // Down
@@ -99,7 +100,7 @@ const KONAMI = 'uuddlrlrba' //Konami Code ↑↑↓↓←→←→BA
 
 // Check butto-n sequence (returns 1 while detected, 0 when not within last 1 second)
 $: s("free_hadouken -").slow(2)
-.mask(gp.btnSequence(HADOUKEN)).room(1).cpm(120)
+.mask(gp.btnSequence(HADOUKEN)).room(1)
 
 // hadouken.wav by Syna-Max
 //https://freesound.org/people/Syna-Max/sounds/67674/

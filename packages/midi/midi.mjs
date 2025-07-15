@@ -333,7 +333,7 @@ Pattern.prototype.midi = function (midiport, options = {}) {
       logger(`Midi device disconnected! Available: ${getMidiDeviceNamesString(outputs)}`),
   });
 
-  return this.onTrigger((time_deprecate, hap, currentTime, cps, targetTime) => {
+  return this.onTrigger((hap, currentTime, cps, targetTime) => {
     if (!WebMidi.enabled) {
       logger('Midi not enabled');
       return;

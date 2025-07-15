@@ -139,6 +139,14 @@ export const euclid = register('euclid', function (pulses, steps, pat) {
   return pat.struct(_euclidRot(pulses, steps, 0));
 });
 
+export const e = register('e', function (euc, pat) {
+  if (!Array.isArray(euc)) {
+    euc = [euc];
+  }
+  const [pulses, steps = pulses, rot = 0] = euc;
+  return pat.struct(_euclidRot(pulses, steps, rot));
+});
+
 export const { euclidrot, euclidRot } = register(['euclidrot', 'euclidRot'], function (pulses, steps, rotation, pat) {
   return pat.struct(_euclidRot(pulses, steps, rotation));
 });

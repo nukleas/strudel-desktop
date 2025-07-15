@@ -56,13 +56,13 @@ This page is just a listing of all functions covered in the workshop!
 
 ## Pattern Effects
 
-| name | description                         | example                                                                             |
-| ---- | ----------------------------------- | ----------------------------------------------------------------------------------- |
-| cpm  | sets the tempo in cycles per minute | <MiniRepl client:visible tune={`sound("bd sd [~ bd] sd").cpm(45)`} />               |
-| fast | speed up                            | <MiniRepl client:visible tune={`sound("bd sd [~ bd] sd").fast(2)`} />               |
-| slow | slow down                           | <MiniRepl client:visible tune={`sound("bd sd [~ bd] sd").slow(2)`} />               |
-| rev  | reverse                             | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").rev()`} />            |
-| jux  | split left/right, modify right      | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").jux(rev)`} />         |
-| add  | add numbers / notes                 | <MiniRepl client:visible tune={`n("0 2 4 6".add("<0 1 2 1>")).scale("C:minor")`} /> |
-| ply  | speed up each event n times         | <MiniRepl client:visible tune={`s("bd sd").ply("<1 2 3>")`} />                      |
-| off  | copy, shift time & modify           | <MiniRepl client:visible tune={`s("bd sd, hh*4").off(1/8, x=>x.speed(2))`} />       |
+| name   | description                         | example                                                                             |
+| ------ | ----------------------------------- | ----------------------------------------------------------------------------------- |
+| setcpm | sets the tempo in cycles per minute | <MiniRepl client:visible tune={`setcpm(45); sound("bd sd [~ bd] sd")`} />           |
+| fast   | speed up                            | <MiniRepl client:visible tune={`sound("bd sd [~ bd] sd").fast(2)`} />               |
+| slow   | slow down                           | <MiniRepl client:visible tune={`sound("bd sd [~ bd] sd").slow(2)`} />               |
+| rev    | reverse                             | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").rev()`} />            |
+| jux    | split left/right, modify right      | <MiniRepl client:visible tune={`n("0 2 4 6").scale("C:minor").jux(rev)`} />         |
+| add    | add numbers / notes                 | <MiniRepl client:visible tune={`n("0 2 4 6".add("<0 1 2 1>")).scale("C:minor")`} /> |
+| ply    | speed up each event n times         | <MiniRepl client:visible tune={`s("bd sd").ply("<1 2 3>")`} />                      |
+| off    | copy, shift time & modify           | <MiniRepl client:visible tune={`s("bd sd, hh*4").off(1/8, x=>x.speed(2))`} />       |

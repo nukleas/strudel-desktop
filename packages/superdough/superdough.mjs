@@ -7,7 +7,7 @@ This program is free software: you can redistribute it and/or modify it under th
 import './feedbackdelay.mjs';
 import './reverb.mjs';
 import './vowel.mjs';
-import { clamp, nanFallback, _mod } from './util.mjs';
+import { clamp, nanFallback, _mod, cycleToSeconds } from './util.mjs';
 import workletsUrl from './worklets.mjs?audioworklet';
 import { createFilter, gainNode, getCompressor, getWorklet } from './helpers.mjs';
 import { map } from 'nanostores';
@@ -107,6 +107,10 @@ export async function aliasBank(...args) {
 }
 
 export function getSound(s) {
+  if (typeof s !== 'string') {
+    console.warn(`getSound: expected string got "${s}". fall back to triangle`);
+    return soundMap.get().triangle; // is this good?
+  }
   return soundMap.get()[s.toLowerCase()];
 }
 
@@ -122,7 +126,7 @@ export const getAudioDevices = async () => {
   return devicesMap;
 };
 
-const defaultDefaultValues = {
+let defaultDefaultValues = {
   s: 'triangle',
   gain: 0.8,
   postgain: 1,
@@ -139,12 +143,23 @@ const defaultDefaultValues = {
   delay: 0,
   byteBeatExpression: '0',
   delayfeedback: 0.5,
-  delaytime: 0.25,
+  delaysync: 3 / 16,
   orbit: 1,
   i: 1,
   velocity: 1,
   fft: 8,
 };
+
+const defaultDefaultDefaultValues = Object.freeze({ ...defaultDefaultValues });
+
+export function setDefault(control, value) {
+  // const main = getControlName(control); // we cant do this because superdough is independent of strudel/core
+  defaultDefaultValues[control] = value;
+}
+
+export function resetDefaults() {
+  defaultDefaultValues = { ...defaultDefaultDefaultValues };
+}
 
 let defaultControls = new Map(Object.entries(defaultDefaultValues));
 
@@ -452,9 +467,9 @@ function mapChannelNumbers(channels) {
   return (Array.isArray(channels) ? channels : [channels]).map((ch) => ch - 1);
 }
 
-export const superdough = async (value, t, hapDuration, cps) => {
+export const superdough = async (value, t, hapDuration, cps = 0.5) => {
+  // new: t is always expected to be the absolute target onset time
   const ac = getAudioContext();
-  t = typeof t === 'string' && t.startsWith('=') ? Number(t.slice(1)) : ac.currentTime + t;
   let { stretch } = value;
   if (stretch != null) {
     //account for phase vocoder latency
@@ -530,7 +545,8 @@ export const superdough = async (value, t, hapDuration, cps) => {
     vowel,
     delay = getDefaultValue('delay'),
     delayfeedback = getDefaultValue('delayfeedback'),
-    delaytime = getDefaultValue('delaytime'),
+    delaysync = getDefaultValue('delaysync'),
+    delaytime,
     orbit = getDefaultValue('orbit'),
     room,
     roomfade,
@@ -548,6 +564,8 @@ export const superdough = async (value, t, hapDuration, cps) => {
     compressorAttack,
     compressorRelease,
   } = value;
+
+  delaytime = delaytime ?? cycleToSeconds(delaysync, cps);
 
   const orbitChannels = mapChannelNumbers(
     multiChannelOrbits && orbit > 0 ? [orbit * 2 - 1, orbit * 2] : getDefaultValue('channels'),
@@ -577,6 +595,9 @@ export const superdough = async (value, t, hapDuration, cps) => {
 
   let audioNodes = [];
 
+  if (['-', '~', '_'].includes(s)) {
+    return;
+  }
   if (bank && s) {
     s = `${bank}_${s}`;
     value.s = s;
@@ -724,8 +745,8 @@ export const superdough = async (value, t, hapDuration, cps) => {
   // delay
   let delaySend;
   if (delay > 0 && delaytime > 0 && delayfeedback > 0) {
-    const delyNode = getDelay(orbit, delaytime, delayfeedback, t, orbitChannels);
-    delaySend = effectSend(post, delyNode, delay);
+    const delayNode = getDelay(orbit, delaytime, delayfeedback, t, orbitChannels);
+    delaySend = effectSend(post, delayNode, delay);
     audioNodes.push(delaySend);
   }
   // reverb

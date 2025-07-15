@@ -68,9 +68,10 @@ Try commenting out one or more by adding `//` before a line
 
 <MiniRepl
   client:visible
-  tune={`note("c2 [eb3,g3] ".add("<0 <1 -1>>"))
+  tune={`setcpm(60)
+note("c2 [eb3,g3] ".add("<0 <1 -1>>"))
 .color("<cyan <magenta yellow>>").adsr("[.1 0]:.2:[1 0]")
-.sound("gm_acoustic_bass").room(.5).cpm(60)`}
+.sound("gm_acoustic_bass").room(.5)`}
   punchcard
 />
 
@@ -84,9 +85,10 @@ We can add as often as we like:
 
 <MiniRepl
   client:visible
-  tune={`note("c2 [eb3,g3]".add("<0 <1 -1>>").add("0,7"))
+  tune={`setcpm(60)
+note("c2 [eb3,g3]".add("<0 <1 -1>>").add("0,7"))
 .color("<cyan <magenta yellow>>").adsr("[.1 0]:.2:[1 0]")
-.sound("gm_acoustic_bass").room(.5).cpm(60)`}
+.sound("gm_acoustic_bass").room(.5)`}
   punchcard
 />
 

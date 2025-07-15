@@ -216,8 +216,9 @@ Finding the right notes can be difficult.. Scales are here to help:
 
 <MiniRepl
   client:visible
-  tune={`n("0 2 4 <[6,8] [7,9]>")
-.scale("C:minor").sound("piano").cpm(60)`}
+  tune={`setcpm(60)
+n("0 2 4 <[6,8] [7,9]>")
+.scale("C:minor").sound("piano")`}
   punchcard
 />
 
@@ -242,9 +243,10 @@ Just like anything, we can automate the scale with a pattern:
 
 <MiniRepl
   client:visible
-  tune={`n("<0 -3>, 2 4 <[6,8] [7,9]>")
+  tune={`setcpm(60)
+n("<0 -3>, 2 4 <[6,8] [7,9]>")
 .scale("<C:major D:mixolydian>/4")
-.sound("piano").cpm(60)`}
+.sound("piano")`}
   punchcard
 />
 
@@ -275,9 +277,10 @@ Try changing that number!
 
 <MiniRepl
   client:visible
-  tune={`n("<[4@2 4] [5@2 5] [6@2 6] [5@2 5]>*2")
+  tune={`setcpm(60)
+n("<[4@2 4] [5@2 5] [6@2 6] [5@2 5]>*2")
 .scale("<C2:mixolydian F2:mixolydian>/4")
-.sound("gm_acoustic_bass").cpm(60)`}
+.sound("gm_acoustic_bass")`}
   punchcard
 />
 
@@ -291,7 +294,12 @@ This is also sometimes called triplet swing. You'll often find it in blues and j
 
 **Replicate**
 
-<MiniRepl client:visible tune={`note("c!2 [eb,<g a bb a>]").sound("piano").cpm(60)`} punchcard />
+<MiniRepl
+  client:visible
+  tune={`setcpm(60)
+note("c!2 [eb,<g a bb a>]").sound("piano")`}
+  punchcard
+/>
 
 <Box>
 

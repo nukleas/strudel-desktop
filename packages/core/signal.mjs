@@ -71,7 +71,6 @@ export const sine2 = signal((t) => Math.sin(Math.PI * 2 * t));
 
 /**
  *  A sine signal between 0 and 1.
- *
  * @return {Pattern}
  * @example
  * n(sine.segment(16).range(0,15))
@@ -100,7 +99,6 @@ export const cosine2 = sine2._early(Fraction(1).div(4));
 
 /**
  *  A square signal between 0 and 1.
- *
  * @return {Pattern}
  * @example
  * n(square.segment(4).range(0,7)).scale("C:minor")
@@ -266,7 +264,7 @@ export const randrun = (n) => {
     const rands = timeToRands(t.floor().add(0.5), n);
     const nums = rands
       .map((n, i) => [n, i])
-      .sort((a, b) => a[0] > b[0] - a[0] < b[0])
+      .sort((a, b) => (a[0] > b[0]) - (a[0] < b[0]))
       .map((x) => x[1]);
     const i = t.cyclePos().mul(n).floor() % n;
     return nums[i];
@@ -285,7 +283,7 @@ const _rearrangeWith = (ipat, n, pat) => {
  * @example
  * note("c d e f").sound("piano").shuffle(4)
  * @example
- * note("c d e f".shuffle(4), "g").sound("piano")
+ * seq("c d e f".shuffle(4), "g").note().sound("piano")
  */
 export const shuffle = register('shuffle', (n, pat) => {
   return _rearrangeWith(randrun(n), n, pat);
@@ -298,7 +296,7 @@ export const shuffle = register('shuffle', (n, pat) => {
  * @example
  * note("c d e f").sound("piano").scramble(4)
  * @example
- * note("c d e f".scramble(4), "g").sound("piano")
+ * seq("c d e f".scramble(4), "g").note().sound("piano")
  */
 export const scramble = register('scramble', (n, pat) => {
   return _rearrangeWith(_irand(n)._segment(n), n, pat);
@@ -397,6 +395,10 @@ export const chooseInWith = (pat, xs) => {
  * note("c2 g2!2 d2 f1").s(choose("sine", "triangle", "bd:6"))
  */
 export const choose = (...xs) => chooseWith(rand, xs);
+
+// todo: doc
+export const chooseIn = (...xs) => chooseInWith(rand, xs);
+export const chooseOut = choose;
 
 /**
  * Chooses from the given list of values (or patterns of values), according

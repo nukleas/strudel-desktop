@@ -21,7 +21,11 @@ export function Reference() {
         return true;
       }
 
-      return entry.name.includes(search) || (entry.synonyms?.some((s) => s.includes(search)) ?? false);
+      const lowCaseSearch = search.toLowerCase();
+      return (
+        entry.name.toLowerCase().includes(lowCaseSearch) ||
+        (entry.synonyms?.some((s) => s.includes(lowCaseSearch)) ?? false)
+      );
     });
   }, [search]);
 
@@ -70,7 +74,7 @@ export function Reference() {
               <ul>
                 {entry.params?.map(({ name, type, description }, i) => (
                   <li key={i}>
-                    {name} : {type.names?.join(' | ')} {description ? <> - {getInnerText(description)}</> : ''}
+                    {name} : {type?.names?.join(' | ')} {description ? <> - {getInnerText(description)}</> : ''}
                   </li>
                 ))}
               </ul>

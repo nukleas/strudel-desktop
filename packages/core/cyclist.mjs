@@ -67,6 +67,7 @@ export class Cyclist {
               // the following line is dumb and only here for backwards compatibility
               // see https://codeberg.org/uzu/strudel/pulls/1004
               const deadline = targetTime - phase;
+              // this onTrigger has another signature
               onTrigger?.(hap, deadline, duration, this.cps, targetTime);
               if (hap.value.cps !== undefined && this.cps != hap.value.cps) {
                 this.cps = hap.value.cps;

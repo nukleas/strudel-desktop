@@ -14,7 +14,7 @@ function scaleStep(step, scale) {
   scale = scale.replaceAll(':', ' ');
   step = Math.ceil(step);
   let { intervals, tonic, empty } = Scale.get(scale);
-  if ((empty && isNote(scale)) || (!empty && !tonic)) {
+  if ((empty && isNote(scale)) || (empty && !tonic)) {
     throw new Error(`incomplete scale. Make sure to use ":" instead of spaces, example: .scale("C:major")`);
   } else if (empty) {
     throw new Error(`invalid scale "${scale}"`);

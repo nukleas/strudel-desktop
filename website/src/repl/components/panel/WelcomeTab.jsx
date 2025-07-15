@@ -20,7 +20,7 @@ export function WelcomeTab({ context }) {
       </p>
       <p>
         {/* To learn more about what this all means, check out the{' '} */}
-        To get started, check out the
+        To get started, check out the{' '}
         <a href={`${baseNoTrailing}/workshop/getting-started/`} target="_blank">
           interactive tutorial
         </a>
@@ -38,12 +38,12 @@ export function WelcomeTab({ context }) {
         </a>
         , which is a popular live coding language for music, written in Haskell. Strudel is free/open source software:
         you can redistribute and/or modify it under the terms of the{' '}
-        <a href="https://github.com/tidalcycles/strudel/blob/main/LICENSE" target="_blank">
+        <a href="https://codeberg.org/uzu/strudel/src/branch/main/LICENSE" target="_blank">
           GNU Affero General Public License
         </a>
         . You can find the source code at{' '}
-        <a href="https://github.com/tidalcycles/strudel" target="_blank">
-          github
+        <a href="https://codeberg.org/uzu/strudel" target="_blank">
+          codeberg
         </a>
         . You can also find <a href="https://github.com/felixroos/dough-samples/blob/main/README.md">licensing info</a>{' '}
         for the default sound banks there. Please consider to{' '}
