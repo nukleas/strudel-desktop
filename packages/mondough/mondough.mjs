@@ -42,6 +42,7 @@ lib['%'] = pace;
 lib['?'] = degradeBy; // todo: default 0.5 not working..
 lib[':'] = tail;
 lib['..'] = range;
+lib['def'] = () => silence;
 lib['or'] = (...children) => chooseIn(...children); // always has structure but is cyclewise.. e.g. "s oh*8.dec[.04 | .5]"
 //lib['or'] = (...children) => chooseOut(...children); // "s oh*8.dec[.04 | .5]" is better but "dec[.04 | .5].s oh*8" has no struct
 
