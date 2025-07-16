@@ -23,20 +23,20 @@ import { completionKeymap, closeBracketsKeymap } from '@codemirror/autocomplete'
 // Taken + slightly modified from https://github.com/codemirror/basic-setup/blob/main/src/codemirror.ts
 
 export const basicSetup = (() => [
-  lineNumbers(),
-  highlightActiveLineGutter(),
+  //   lineNumbers(),
+  //   highlightActiveLineGutter(),
   highlightSpecialChars(),
   history(),
-  foldGutter(),
+  //   foldGutter(),
   drawSelection(),
   dropCursor(),
   // EditorState.allowMultipleSelections.of(true),
   // indentOnInput(),
-  syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+  //   syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
   // autocompletion(),
   rectangularSelection(),
   crosshairCursor(),
-  highlightActiveLine(),
+  //   highlightActiveLine(),
   highlightSelectionMatches(),
   keymap.of([
     ...closeBracketsKeymap,
