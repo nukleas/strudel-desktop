@@ -1,7 +1,7 @@
 import { closeBrackets } from '@codemirror/autocomplete';
 export { toggleComment, toggleBlockComment, toggleLineComment, toggleBlockCommentByLine } from '@codemirror/commands';
 // import { search, highlightSelectionMatches } from '@codemirror/search';
-import { history, indentWithTab } from '@codemirror/commands';
+import { indentWithTab } from '@codemirror/commands';
 import { javascript, javascriptLanguage } from '@codemirror/lang-javascript';
 import { defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
 import { Compartment, EditorState, Prec } from '@codemirror/state';
@@ -97,7 +97,6 @@ export function initEditor({ initialCode = '', onChange, onEvaluate, onStop, roo
       // indentOnInput(), // works without. already brought with javascript extension?
       // bracketMatching(), // does not do anything
       syntaxHighlighting(defaultHighlightStyle),
-      history(),
       EditorView.updateListener.of((v) => onChange(v)),
       drawSelection({ cursorBlinkRate: 0 }),
       Prec.highest(

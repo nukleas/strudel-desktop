@@ -28,5 +28,5 @@ const keymaps = {
 
 export function keybindings(name) {
   const active = keymaps[name];
-  return [active ? active() : []];
+  return [active ? Prec.high(active()) : []];
 }
