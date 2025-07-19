@@ -176,3 +176,16 @@ $ chord <Dm9!3 Db7> # voicing
 />
 
 The `$` sign is an alias for `,` so it will create a stack behind the scenes.
+
+## variables
+
+using the `def` keyword, you can define variables:
+
+<MiniRepl
+  client:idle
+  mondo
+  tune={`
+$ def melody [0 1 2 3]
+$ n melody # scale C:minor
+`}
+/>
