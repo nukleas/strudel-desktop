@@ -7,7 +7,7 @@ This program is free software: you can redistribute it and/or modify it under th
 import './feedbackdelay.mjs';
 import './reverb.mjs';
 import './vowel.mjs';
-import { clamp, nanFallback, _mod, cycleToSeconds } from './util.mjs';
+import { clamp, nanFallback, _mod, cycleToSeconds, secondsToCycle } from './util.mjs';
 import workletsUrl from './worklets.mjs?audioworklet';
 import { createFilter, gainNode, getCompressor, getWorklet } from './helpers.mjs';
 import { map } from 'nanostores';
@@ -26,6 +26,13 @@ export function setMaxPolyphony(polyphony) {
 let multiChannelOrbits = false;
 export function setMultiChannelOrbits(bool) {
   multiChannelOrbits = bool == true;
+}
+
+function getModulationShapeInput(val) {
+  if (typeof val === 'number') {
+    return val % 5;
+  }
+  return { tri: 0, triangle: 0, sine: 1, ramp: 2, saw: 3, square: 4 }[val] ?? 0;
 }
 
 export const soundMap = map();
@@ -336,9 +343,31 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
   return delays[orbit];
 }
 
-export function getLfo(audioContext, time, end, properties = {}) {
+export function getLfo(audioContext, begin, end, properties = {}) {
+  const { shape = 0, ...props } = properties;
+  const { dcoffset = -0.5, depth = 1 } = properties;
   return getWorklet(audioContext, 'lfo-processor', {
     frequency: 1,
+    depth,
+    skew: 0,
+    phaseoffset: 0,
+    time: begin,
+    begin,
+    end,
+    shape: getModulationShapeInput(shape),
+    dcoffset,
+    min: dcoffset - depth * 0.5,
+    max: dcoffset + depth * 0.5,
+    curve: 1,
+    ...props,
+  });
+}
+
+export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {
+  const frequency = cycle / cps;
+
+  return getWorklet(audioContext, 'lfo-processor', {
+    frequency,
     depth: 1,
     skew: 0,
     phaseoffset: 0,
@@ -461,9 +490,10 @@ function mapChannelNumbers(channels) {
   return (Array.isArray(channels) ? channels : [channels]).map((ch) => ch - 1);
 }
 
-export const superdough = async (value, t, hapDuration, cps = 0.5) => {
+export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) => {
   // new: t is always expected to be the absolute target onset time
   const ac = getAudioContext();
+
   let { stretch } = value;
   if (stretch != null) {
     //account for phase vocoder latency
@@ -489,6 +519,12 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
   }
   // destructure
   let {
+    tremolo,
+    tremolosync,
+    tremolodepth = 1,
+    tremoloskew,
+    tremolophase = 0,
+    tremoloshape,
     s = getDefaultValue('s'),
     bank,
     source,
@@ -498,6 +534,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
     // filters
     fanchor = getDefaultValue('fanchor'),
     drive = 0.69,
+    release = 0,
     // low pass
     cutoff,
     lpenv,
@@ -530,6 +567,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
     phasercenter,
     //
     coarse,
+
     crush,
     shape,
     shapevol = getDefaultValue('shapevol'),
@@ -572,8 +610,11 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
   distortvol = applyGainCurve(distortvol);
   delay = applyGainCurve(delay);
   velocity = applyGainCurve(velocity);
+  tremolodepth = applyGainCurve(tremolodepth);
   gain *= velocity; // velocity currently only multiplies with gain. it might do other things in the future
 
+  const end = t + hapDuration;
+  const endWithRelease = end + release;
   const chainID = Math.round(Math.random() * 1000000);
 
   // oldest audio nodes will be destroyed if maximum polyphony is exceeded
@@ -648,7 +689,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
         lprelease,
         lpenv,
         t,
-        t + hapDuration,
+        end,
         fanchor,
         ftype,
         drive,
@@ -672,7 +713,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
         hprelease,
         hpenv,
         t,
-        t + hapDuration,
+        end,
         fanchor,
       );
     chain.push(hp());
@@ -683,20 +724,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
 
   if (bandf !== undefined) {
     let bp = () =>
-      createFilter(
-        ac,
-        'bandpass',
-        bandf,
-        bandq,
-        bpattack,
-        bpdecay,
-        bpsustain,
-        bprelease,
-        bpenv,
-        t,
-        t + hapDuration,
-        fanchor,
-      );
+      createFilter(ac, 'bandpass', bandf, bandq, bpattack, bpdecay, bpsustain, bprelease, bpenv, t, end, fanchor);
     chain.push(bp());
     if (ftype === '24db') {
       chain.push(bp());
@@ -714,6 +742,33 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
   shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
   distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
 
+  if (tremolosync != null) {
+    tremolo = cps * tremolosync;
+  }
+
+  if (tremolo !== undefined) {
+    // Allow clipping of modulator for more dynamic possiblities, and to prevent speaker overload
+    // EX:  a triangle waveform will clip like this /-\ when the depth is above 1
+    const gain = Math.max(1 - tremolodepth, 0);
+    const amGain = new GainNode(ac, { gain });
+
+    const time = cycle / cps;
+    const lfo = getLfo(ac, t, endWithRelease, {
+      skew: tremoloskew ?? (tremoloshape != null ? 0.5 : 1),
+      frequency: tremolo,
+      depth: tremolodepth,
+      time,
+      dcoffset: 0,
+      shape: tremoloshape,
+      phaseoffset: tremolophase,
+      min: 0,
+      max: 1,
+      curve: 1.5,
+    });
+    lfo.connect(amGain.gain);
+    chain.push(amGain);
+  }
+
   compressorThreshold !== undefined &&
     chain.push(
       getCompressor(ac, compressorThreshold, compressorRatio, compressorKnee, compressorAttack, compressorRelease),
@@ -727,7 +782,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5) => {
   }
   // phaser
   if (phaser !== undefined && phaserdepth > 0) {
-    const phaserFX = getPhaser(t, t + hapDuration, phaser, phaserdepth, phasercenter, phasersweep);
+    const phaserFX = getPhaser(t, endWithRelease, phaser, phaserdepth, phasercenter, phasersweep);
     chain.push(phaserFX);
   }
 

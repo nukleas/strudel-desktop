@@ -17,8 +17,8 @@ const hap2value = (hap) => {
 
 // uses more precise, absolute t if available, see https://github.com/tidalcycles/strudel/pull/1004
 // TODO: refactor output callbacks to eliminate deadline
-export const webaudioOutput = (hap, deadline, hapDuration, cps, t) => {
-  return superdough(hap2value(hap), t, hapDuration, cps);
+export const webaudioOutput = (hap, _deadline, hapDuration, cps, t) => {
+  return superdough(hap2value(hap), t, hapDuration, cps, hap.whole?.begin.valueOf());
 };
 
 export function webaudioRepl(options = {}) {

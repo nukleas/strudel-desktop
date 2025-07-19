@@ -31,7 +31,7 @@ function polyBlep(phase, dt) {
     return 0;
   }
 }
-
+// The order is important for dough integration
 const waveshapes = {
   tri(phase, skew = 0.5) {
     const x = 1 - skew;
@@ -85,6 +85,7 @@ const waveShapeNames = Object.keys(waveshapes);
 class LFOProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
+      { name: 'begin', defaultValue: 0 },
       { name: 'time', defaultValue: 0 },
       { name: 'end', defaultValue: 0 },
       { name: 'frequency', defaultValue: 0.5 },
@@ -92,7 +93,10 @@ class LFOProcessor extends AudioWorkletProcessor {
       { name: 'depth', defaultValue: 1 },
       { name: 'phaseoffset', defaultValue: 0 },
       { name: 'shape', defaultValue: 0 },
+      { name: 'curve', defaultValue: 1 },
       { name: 'dcoffset', defaultValue: 0 },
+      { name: 'min', defaultValue: 0 },
+      { name: 'max', defaultValue: 1 },
     ];
   }
 
@@ -109,9 +113,13 @@ class LFOProcessor extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
+    const begin = parameters['begin'][0];
     // eslint-disable-next-line no-undef
     if (currentTime >= parameters.end[0]) {
       return false;
+    }
+    if (currentTime <= begin) {
+      return true;
     }
 
     const output = outputs[0];
@@ -121,6 +129,9 @@ class LFOProcessor extends AudioWorkletProcessor {
     const depth = parameters['depth'][0];
     const skew = parameters['skew'][0];
     const phaseoffset = parameters['phaseoffset'][0];
+    const min = parameters['min'][0];
+    const max = parameters['max'][0];
+    const curve = parameters['curve'][0];
 
     const dcoffset = parameters['dcoffset'][0];
     const shape = waveShapeNames[parameters['shape'][0]];
@@ -135,7 +146,7 @@ class LFOProcessor extends AudioWorkletProcessor {
     for (let n = 0; n < blockSize; n++) {
       for (let i = 0; i < output.length; i++) {
         const modval = (waveshapes[shape](this.phase, skew) + dcoffset) * depth;
-        output[i][n] = modval;
+        output[i][n] = clamp(Math.pow(modval, curve), min, max);
       }
       this.incrementPhase(dt);
     }

@@ -445,6 +445,78 @@ export const { crush } = registerControl('crush');
 export const { coarse } = registerControl('coarse');
 
 /**
+ * modulate the amplitude of a sound with a continuous waveform
+ *
+ * @name tremolo
+ * @synonyms trem
+ * @param {number | Pattern} speed modulation speed in HZ
+ * @example
+ * note("d d d# d".fast(4)).s("supersaw").tremolo("<3 2 100> ").tremoloskew("<.5>")
+ *
+ */
+export const { tremolo } = registerControl(['tremolo', 'tremolodepth', 'tremoloskew', 'tremolophase'], 'trem');
+
+/**
+ * modulate the amplitude of a sound with a continuous waveform
+ *
+ * @name tremolosync
+ * @synonyms tremsync
+ * @param {number | Pattern} cycles modulation speed in cycles
+ * @example
+ * note("d d d# d".fast(4)).s("supersaw").tremolosync("4").tremoloskew("<1 .5 0>")
+ *
+ */
+export const { tremolosync } = registerControl(
+  ['tremolosync', 'tremolodepth', 'tremoloskew', 'tremolophase'],
+  'tremsync',
+);
+
+/**
+ * depth of amplitude modulation
+ *
+ * @name tremolodepth
+ * @synonyms tremdepth
+ * @param {number | Pattern} depth
+ * @example
+ * note("a1 a1 a#1 a1".fast(4)).s("pulse").tremsync(4).tremolodepth("<1 2 .7>")
+ *
+ */
+export const { tremolodepth } = registerControl('tremolodepth', 'tremdepth');
+/**
+ * alter the shape of the modulation waveform
+ *
+ * @name tremoloskew
+ * @synonyms tremskew
+ * @param {number | Pattern} amount between 0 & 1, the shape of the waveform
+ * @example
+ * note("{f a c e}%16").s("sawtooth").tremsync(4).tremoloskew("<.5 0 1>")
+ *
+ */
+export const { tremoloskew } = registerControl('tremoloskew', 'tremskew');
+
+/**
+ * alter the phase of the modulation waveform
+ *
+ * @name tremolophase
+ * @synonyms tremphase
+ * @param {number | Pattern} offset the offset in cycles of the modulation
+ * @example
+ * note("{f a c e}%16").s("sawtooth").tremsync(4).tremolophase("<0 .25 .66>")
+ *
+ */
+export const { tremolophase } = registerControl('tremolophase', 'tremphase');
+
+/**
+ * shape of amplitude modulation
+ *
+ * @name tremoloshape
+ * @param {number | Pattern} shape tri | square | sine | saw | ramp
+ * @example
+ * note("{f g c d}%16").tremsync(4).tremoloshape("<sine tri square>").s("sawtooth")
+ *
+ */
+export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
+/**
  * filter overdrive for supported filter types
  *
  * @name drive
@@ -453,6 +525,30 @@ export const { coarse } = registerControl('coarse');
  * note("{f g g c d a a#}%16".sub(17)).s("supersaw").lpenv(8).lpf(150).lpq(.8).ftype('ladder').drive("<.5 4>")
  *
  */
+
+// TODO: SUPRADOUGH implement post orbit "pump" sidechain effect
+// /**
+//  * modulate the amplitude of an orbit to create a "sidechain" like effect
+//  *
+//  * @name pump
+//  * @param {number | Pattern} speed modulation speed in cycles
+//  * @example
+//  * note("{f g c d}%16").s("sawtooth").pump(".25:.75")
+//  *
+//  */
+// export const { pump } = registerControl(['pump', 'pumpdepth']);
+
+// /**
+//  * modulate the amplitude of an orbit to create a "sidechain" like effect
+//  *
+//  * @name pumpdepth
+//  * @param {number | Pattern} depth depth of modulation from 0 to 1
+//  * @example
+//  * note("{f g c d}%16").s("sawtooth").pump(".25").depth("<.25 .5 .75 1>")
+//  *
+//  */
+// export const { pumpdepth } = registerControl('pumpdepth');
+
 export const { drive } = registerControl('drive');
 
 /**
@@ -1561,18 +1657,6 @@ export const { density } = registerControl('density');
 // ['modwheel'],
 export const { expression } = registerControl('expression');
 export const { sustainpedal } = registerControl('sustainpedal');
-/* // TODO: doesn't seem to do anything
- *
- * Tremolo Audio DSP effect
- *
- * @name tremolodepth
- * @param {number | Pattern} depth between 0 and 1
- * @example
- * n("0,4,7").tremolodepth("<0 .3 .6 .9>").osc()
- *
- */
-export const { tremolodepth, tremdp } = registerControl('tremolodepth', 'tremdp');
-export const { tremolorate, tremr } = registerControl('tremolorate', 'tremr');
 
 export const { fshift } = registerControl('fshift');
 export const { fshiftnote } = registerControl('fshiftnote');
@@ -1649,7 +1733,6 @@ export const { zmod } = registerControl('zmod');
 // like crush but scaled differently
 export const { zcrush } = registerControl('zcrush');
 export const { zdelay } = registerControl('zdelay');
-export const { tremolo } = registerControl('tremolo');
 export const { zzfx } = registerControl('zzfx');
 
 /**
