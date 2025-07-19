@@ -447,68 +447,72 @@ export const { coarse } = registerControl('coarse');
 /**
  * modulate the amplitude of a sound with a continuous waveform
  *
- * @name am
- * @synonyms tremolo
+ * @name tremolo
+ * @synonyms trem
  * @param {number | Pattern} speed modulation speed in HZ
  * @example
- * s("triangle").am("2").amshape("<tri saw ramp square>").amdepth(.5)
+ * note("d d d# d".fast(4)).s("supersaw").tremolo("<3 2 100> ").tremoloskew("<.5>")
  *
  */
-export const { am, tremolo } = registerControl(['am', 'amdepth', 'amskew', 'amphase'], 'tremolo');
+export const { tremolo } = registerControl(['tremolo', 'tremolodepth', 'tremoloskew', 'tremolophase'], 'trem');
 
 /**
  * modulate the amplitude of a sound with a continuous waveform
  *
- * @name amsync
+ * @name tremolosync
+ * @synonyms tremsync
  * @param {number | Pattern} cycles modulation speed in cycles
  * @example
- * s("supersaw").amsync(1/4).amskew("<0 .5 1>").amdepth(2)
+ * note("d d d# d".fast(4)).s("supersaw").tremolosync("4").tremoloskew("<1 .5 0>")
  *
  */
-export const { amsync } = registerControl(['amsync', 'amdepth', 'amskew', 'amphase']);
+export const { tremolosync } = registerControl(['tremolosync', 'tremolodepth', 'tremoloskew', 'tremolophase'], 'tremsync');
 
 /**
  * depth of amplitude modulation
  *
- * @name amdepth
+ * @name tremolodepth
+ * @synonyms tremdepth
  * @param {number | Pattern} depth
  * @example
- * s("triangle").am(1).amdepth("1")
+ * note("a1 a1 a#1 a1".fast(4)).s("pulse").tremsync(4).tremolodepth("<1 2 .7>")
  *
  */
-export const { amdepth } = registerControl('amdepth');
+export const { tremolodepth } = registerControl('tremolodepth', 'tremdepth');
 /**
  * alter the shape of the modulation waveform
  *
- * @name amskew
+ * @name tremoloskew
+ * @synonyms tremskew
  * @param {number | Pattern} amount between 0 & 1, the shape of the waveform
  * @example
- * note("{f a c e}%16").am(5).amskew(.5).amdepth("<1 0.5 2>").att(.01).rel(.03)
+ * note("{f a c e}%16").s("sawtooth").tremsync(4).tremoloskew("<.5 0 1>")
  *
  */
-export const { amskew } = registerControl('amskew');
+export const { tremoloskew } = registerControl('tremoloskew', 'tremskew');
 
 /**
  * alter the phase of the modulation waveform
  *
- * @name amphase
+ * @name tremolophase
+ * @synonyms tremphase
  * @param {number | Pattern} offset the offset in cycles of the modulation
  * @example
- * note("{f a c e}%16").s("sawtooth").am(4).amphase("<0 .25 .66>")
+ * note("{f a c e}%16").s("sawtooth").tremsync(4).tremolophase("<0 .25 .66>")
  *
  */
-export const { amphase } = registerControl('amphase');
+export const { tremolophase } = registerControl('tremolophase', 'tremphase');
 
 /**
  * shape of amplitude modulation
  *
- * @name amshape
+ * @name tremoloshape
  * @param {number | Pattern} shape tri | square | sine | saw | ramp
  * @example
- * note("{f g c d}%16").am(4).amshape("ramp").s("sawtooth")
+ * note("{f g c d}%16").tremsync(4).tremoloshape("<sine tri square>").s("sawtooth")
  *
  */
-export const { amshape } = registerControl('amshape');
+export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
 /**
  * filter overdrive for supported filter types
  *
@@ -1650,18 +1654,8 @@ export const { density } = registerControl('density');
 // ['modwheel'],
 export const { expression } = registerControl('expression');
 export const { sustainpedal } = registerControl('sustainpedal');
-/* // TODO: doesn't seem to do anything
- *
- * Tremolo Audio DSP effect
- *
- * @name tremolodepth
- * @param {number | Pattern} depth between 0 and 1
- * @example
- * n("0,4,7").tremolodepth("<0 .3 .6 .9>").osc()
- *
- */
-export const { tremolodepth, tremdp } = registerControl('tremolodepth', 'tremdp');
-export const { tremolorate, tremr } = registerControl('tremolorate', 'tremr');
+
+
 
 export const { fshift } = registerControl('fshift');
 export const { fshiftnote } = registerControl('fshiftnote');

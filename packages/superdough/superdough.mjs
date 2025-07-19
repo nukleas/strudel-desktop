@@ -519,12 +519,12 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   }
   // destructure
   let {
-    am,
-    amsync,
-    amdepth = 1,
-    amskew,
-    amphase = 0,
-    amshape,
+    tremolo,
+    tremolosync,
+    tremolodepth = 1,
+    tremoloskew,
+    tremolophase = 0,
+    tremoloshape,
     s = getDefaultValue('s'),
     bank,
     source,
@@ -610,7 +610,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   distortvol = applyGainCurve(distortvol);
   delay = applyGainCurve(delay);
   velocity = applyGainCurve(velocity);
-  amdepth = applyGainCurve(amdepth);
+  tremolodepth = applyGainCurve(tremolodepth);
   gain *= velocity; // velocity currently only multiplies with gain. it might do other things in the future
 
   const end = t + hapDuration;
@@ -742,24 +742,25 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
   distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
 
-  if (amsync != null) {
-    am = cps / amsync;
+  if (tremolosync != null) {
+    tremolo = cps * tremolosync;
   }
-  if (am !== undefined) {
+  
+  if (tremolo !== undefined) {
     // Allow clipping of modulator for more dynamic possiblities, and to prevent speaker overload
     // EX:  a triangle waveform will clip like this /-\ when the depth is above 1
-    const gain = Math.max(1 - amdepth, 0);
+    const gain = Math.max(1 - tremolodepth, 0);
     const amGain = new GainNode(ac, { gain });
 
     const time = cycle / cps;
     const lfo = getLfo(ac, t, endWithRelease, {
-      skew: amskew ?? (amshape != null ? 0.5 : 1),
-      frequency: am,
-      depth: amdepth,
+      skew: tremoloskew ?? (tremoloshape != null ? 0.5 : 1),
+      frequency: tremolo,
+      depth: tremolodepth,
       time,
       dcoffset: 0,
-      shape: amshape,
-      phaseoffset: amphase,
+      shape: tremoloshape,
+      phaseoffset: tremolophase,
       min: 0,
       max: 1,
       curve: 1.5,
