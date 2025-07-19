@@ -745,7 +745,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   if (tremolosync != null) {
     tremolo = cps * tremolosync;
   }
-  
+
   if (tremolo !== undefined) {
     // Allow clipping of modulator for more dynamic possiblities, and to prevent speaker overload
     // EX:  a triangle waveform will clip like this /-\ when the depth is above 1

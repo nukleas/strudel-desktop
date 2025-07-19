@@ -466,7 +466,10 @@ export const { tremolo } = registerControl(['tremolo', 'tremolodepth', 'tremolos
  * note("d d d# d".fast(4)).s("supersaw").tremolosync("4").tremoloskew("<1 .5 0>")
  *
  */
-export const { tremolosync } = registerControl(['tremolosync', 'tremolodepth', 'tremoloskew', 'tremolophase'], 'tremsync');
+export const { tremolosync } = registerControl(
+  ['tremolosync', 'tremolodepth', 'tremoloskew', 'tremolophase'],
+  'tremsync',
+);
 
 /**
  * depth of amplitude modulation
@@ -1654,8 +1657,6 @@ export const { density } = registerControl('density');
 // ['modwheel'],
 export const { expression } = registerControl('expression');
 export const { sustainpedal } = registerControl('sustainpedal');
-
-
 
 export const { fshift } = registerControl('fshift');
 export const { fshiftnote } = registerControl('fshiftnote');
