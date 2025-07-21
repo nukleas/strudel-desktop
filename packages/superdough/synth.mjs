@@ -279,7 +279,7 @@ export function registerSynthSounds() {
       getParamADSR(envGain.gain, attack, decay, sustain, release, 0, 1, begin, holdend, 'linear');
       let lfo;
       if (pwsweep != 0) {
-        lfo = getLfo(ac, begin, end, { frequency: pwrate, depth: pwsweep });
+        lfo = getLfo(ac, begin, end, { frequency: pwrate, depth: pwsweep, skew: .5, dcoffset: 0 });
         lfo.connect(o.parameters.get('pulsewidth'));
       }
       let timeoutNode = webAudioTimeout(

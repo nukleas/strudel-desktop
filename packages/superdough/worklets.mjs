@@ -185,6 +185,8 @@ class LFOProcessor extends AudioWorkletProcessor {
       return true;
     }
 
+
+
     const output = outputs[0];
     const frequency = parameters['frequency'][0];
 

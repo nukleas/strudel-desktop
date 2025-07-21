@@ -346,10 +346,10 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
 export function getLfo(audioContext, begin, end, properties = {}) {
   const { shape = 0, ...props } = properties;
   const { dcoffset = -0.5, depth = 1 } = properties;
-  return getWorklet(audioContext, 'lfo-processor', {
+  const lfoprops = {
     frequency: 1,
     depth,
-    skew: 0,
+    skew: .5,
     phaseoffset: 0,
     time: begin,
     begin,
@@ -360,7 +360,10 @@ export function getLfo(audioContext, begin, end, properties = {}) {
     max: dcoffset + depth * 0.5,
     curve: 1,
     ...props,
-  });
+  }
+
+  console.info(lfoprops)
+  return getWorklet(audioContext, 'lfo-processor', lfoprops);
 }
 
 // export function getLfo(audioContext, time, end, properties = {}) {
