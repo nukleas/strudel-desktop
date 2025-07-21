@@ -81,7 +81,70 @@ function getParamValue(block, param) {
   }
   return param[0];
 }
-const waveShapeNames = Object.keys(waveshapes);
+// const waveShapeNames = Object.keys(waveshapes);
+// class LFOProcessor extends AudioWorkletProcessor {
+//   static get parameterDescriptors() {
+//     return [
+//       { name: 'time', defaultValue: 0 },
+//       { name: 'end', defaultValue: 0 },
+//       { name: 'frequency', defaultValue: 0.5 },
+//       { name: 'skew', defaultValue: 0.5 },
+//       { name: 'depth', defaultValue: 1 },
+//       { name: 'phaseoffset', defaultValue: 0 },
+//       { name: 'shape', defaultValue: 0 },
+//       { name: 'dcoffset', defaultValue: 0 },
+//     ];
+//   }
+
+//   constructor() {
+//     super();
+//     this.phase;
+//   }
+
+//   incrementPhase(dt) {
+//     this.phase += dt;
+//     if (this.phase > 1.0) {
+//       this.phase = this.phase - 1;
+//     }
+//   }
+
+//   process(inputs, outputs, parameters) {
+//     // eslint-disable-next-line no-undef
+//     if (currentTime >= parameters.end[0]) {
+//       return false;
+//     }
+
+//     const output = outputs[0];
+//     const frequency = parameters['frequency'][0];
+
+//     const time = parameters['time'][0];
+//     const depth = parameters['depth'][0];
+//     const skew = parameters['skew'][0];
+//     const phaseoffset = parameters['phaseoffset'][0];
+
+//     const dcoffset = parameters['dcoffset'][0];
+//     const shape = waveShapeNames[parameters['shape'][0]];
+
+//     const blockSize = output[0].length ?? 0;
+
+//     if (this.phase == null) {
+//       this.phase = _mod(time * frequency + phaseoffset, 1);
+//     }
+//     // eslint-disable-next-line no-undef
+//     const dt = frequency / sampleRate;
+//     for (let n = 0; n < blockSize; n++) {
+//       for (let i = 0; i < output.length; i++) {
+//         const modval = (waveshapes[shape](this.phase, skew) + dcoffset) * depth;
+//         output[i][n] = modval;
+//       }
+//       this.incrementPhase(dt);
+//     }
+
+//     return true;
+//   }
+// }
+// registerProcessor('lfo-processor', LFOProcessor);
+// const waveShapeNames = Object.keys(waveshapes);
 class LFOProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
