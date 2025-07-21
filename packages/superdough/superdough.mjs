@@ -346,21 +346,23 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
 export function getLfo(audioContext, begin, end, properties = {}) {
   const { shape = 0, ...props } = properties;
   const { dcoffset = -0.5, depth = 1 } = properties;
-  return getWorklet(audioContext, 'lfo-processor', {
+  const lfoprops = {
     frequency: 1,
     depth,
-    skew: 0,
+    skew: 0.5,
     phaseoffset: 0,
     time: begin,
     begin,
     end,
     shape: getModulationShapeInput(shape),
     dcoffset,
-    min: dcoffset - depth * 0.5,
-    max: dcoffset + depth * 0.5,
+    min: dcoffset * depth,
+    max: dcoffset * depth + depth,
     curve: 1,
     ...props,
-  });
+  };
+
+  return getWorklet(audioContext, 'lfo-processor', lfoprops);
 }
 
 export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {
