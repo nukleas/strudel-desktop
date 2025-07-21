@@ -363,6 +363,22 @@ export function getLfo(audioContext, begin, end, properties = {}) {
   });
 }
 
+// export function getLfo(audioContext, time, end, properties = {}) {
+//   return getWorklet(audioContext, 'lfo-processor', {
+//     frequency: 1,
+//     depth: 1,
+//     skew: 0,
+//     phaseoffset: 0,
+//     time,
+//     begin: time,
+//     end,
+//     shape: 1,
+//     dcoffset: -0.5,
+//     ...properties,
+//   });
+// }
+
+
 export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {
   const frequency = cycle / cps;
 
