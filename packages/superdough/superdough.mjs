@@ -343,40 +343,40 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
   return delays[orbit];
 }
 
-// export function getLfo(audioContext, begin, end, properties = {}) {
-//   const { shape = 0, ...props } = properties;
-//   const { dcoffset = -0.5, depth = 1 } = properties;
-//   return getWorklet(audioContext, 'lfo-processor', {
-//     frequency: 1,
-//     depth,
-//     skew: 0,
-//     phaseoffset: 0,
-//     time: begin,
-//     begin,
-//     end,
-//     shape: getModulationShapeInput(shape),
-//     dcoffset,
-//     min: dcoffset - depth * 0.5,
-//     max: dcoffset + depth * 0.5,
-//     curve: 1,
-//     ...props,
-//   });
-// }
-
-export function getLfo(audioContext, time, end, properties = {}) {
+export function getLfo(audioContext, begin, end, properties = {}) {
+  const { shape = 0, ...props } = properties;
+  const { dcoffset = -0.5, depth = 1 } = properties;
   return getWorklet(audioContext, 'lfo-processor', {
     frequency: 1,
-    depth: 1,
+    depth,
     skew: 0,
     phaseoffset: 0,
-    time,
-    begin: time,
+    time: begin,
+    begin,
     end,
-    shape: 1,
-    dcoffset: -0.5,
-    ...properties,
+    shape: getModulationShapeInput(shape),
+    dcoffset,
+    min: dcoffset - depth * 0.5,
+    max: dcoffset + depth * 0.5,
+    curve: 1,
+    ...props,
   });
 }
+
+// export function getLfo(audioContext, time, end, properties = {}) {
+//   return getWorklet(audioContext, 'lfo-processor', {
+//     frequency: 1,
+//     depth: 1,
+//     skew: 0,
+//     phaseoffset: 0,
+//     time,
+//     begin: time,
+//     end,
+//     shape: 1,
+//     dcoffset: -0.5,
+//     ...properties,
+//   });
+// }
 
 
 export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {

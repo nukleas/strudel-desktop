@@ -144,7 +144,7 @@ function getParamValue(block, param) {
 //   }
 // }
 // registerProcessor('lfo-processor', LFOProcessor);
-// const waveShapeNames = Object.keys(waveshapes);
+const waveShapeNames = Object.keys(waveshapes);
 class LFOProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
