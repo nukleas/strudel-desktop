@@ -109,6 +109,8 @@ export function SettingsTab({ started }) {
     togglePanelTrigger,
     maxPolyphony,
     multiChannelOrbits,
+    isTabIndentationEnabled,
+    isMultiCursorEnabled,
   } = useSettings();
   const shouldAlwaysSync = isUdels();
   const canChangeAudioDevice = AudioContext.prototype.setSinkId != null;
@@ -261,6 +263,16 @@ export function SettingsTab({ started }) {
           label="Enable line wrapping"
           onChange={(cbEvent) => settingsMap.setKey('isLineWrappingEnabled', cbEvent.target.checked)}
           value={isLineWrappingEnabled}
+        />
+        <Checkbox
+          label="Enable Tab indentation"
+          onChange={(cbEvent) => settingsMap.setKey('isTabIndentationEnabled', cbEvent.target.checked)}
+          value={isTabIndentationEnabled}
+        />
+        <Checkbox
+          label="Enable Multi-Cursor (Cmd/Ctrl+Click)"
+          onChange={(cbEvent) => settingsMap.setKey('isMultiCursorEnabled', cbEvent.target.checked)}
+          value={isMultiCursorEnabled}
         />
         <Checkbox
           label="Enable flashing on evaluation"
