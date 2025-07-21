@@ -5,7 +5,7 @@ This program is free software: you can redistribute it and/or modify it under th
 */
 
 import createClock from './zyklus.mjs';
-import { logger } from './logger.mjs';
+import { errorLogger, logger } from './logger.mjs';
 
 export class Cyclist {
   constructor({
@@ -76,7 +76,7 @@ export class Cyclist {
             }
           });
         } catch (e) {
-          logger(`[cyclist] error: ${e.message}`);
+          errorLogger(e);
           onError?.(e);
         }
       },

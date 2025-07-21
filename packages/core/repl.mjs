@@ -1,7 +1,7 @@
 import { NeoCyclist } from './neocyclist.mjs';
 import { Cyclist } from './cyclist.mjs';
 import { evaluate as _evaluate } from './evaluate.mjs';
-import { logger } from './logger.mjs';
+import { errorLogger, logger } from './logger.mjs';
 import { setTime } from './time.mjs';
 import { evalScope } from './evaluate.mjs';
 import { register, Pattern, isPattern, silence, stack } from './pattern.mjs';
@@ -256,6 +256,6 @@ export const getTrigger =
         await hap.context.onTrigger(hap, getTime(), cps, t);
       }
     } catch (err) {
-      logger(`[cyclist] error: ${err.message}`, 'error');
+      errorLogger(err, 'getTrigger');
     }
   };

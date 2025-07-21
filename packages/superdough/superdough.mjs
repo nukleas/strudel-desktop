@@ -349,38 +349,21 @@ export function getLfo(audioContext, begin, end, properties = {}) {
   const lfoprops = {
     frequency: 1,
     depth,
-    skew: .5,
+    skew: 0.5,
     phaseoffset: 0,
     time: begin,
     begin,
     end,
     shape: getModulationShapeInput(shape),
     dcoffset,
-    min: dcoffset - depth * 0.5,
-    max: dcoffset + depth * 0.5,
+    min: dcoffset * depth,
+    max: dcoffset * depth + depth,
     curve: 1,
     ...props,
-  }
+  };
 
-  console.info(lfoprops)
   return getWorklet(audioContext, 'lfo-processor', lfoprops);
 }
-
-// export function getLfo(audioContext, time, end, properties = {}) {
-//   return getWorklet(audioContext, 'lfo-processor', {
-//     frequency: 1,
-//     depth: 1,
-//     skew: 0,
-//     phaseoffset: 0,
-//     time,
-//     begin: time,
-//     end,
-//     shape: 1,
-//     dcoffset: -0.5,
-//     ...properties,
-//   });
-// }
-
 
 export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {
   const frequency = cycle / cps;
