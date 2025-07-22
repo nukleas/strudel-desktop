@@ -11,7 +11,6 @@ export class NeoCyclist {
   constructor({ onTrigger, onToggle, getTime }) {
     this.started = false;
     this.cps = 0.5;
-    this.lastTick = 0; // absolute time when last tick (clock callback) happened
     this.getTime = getTime; // get absolute time
     this.time_at_last_tick_message = 0;
     // the clock of the worker and the audio context clock can drift apart over time

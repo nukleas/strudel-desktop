@@ -72,3 +72,7 @@ export const getSoundIndex = (n, numSounds) => {
 export function cycleToSeconds(cycle, cps) {
   return cycle / cps;
 }
+
+export function secondsToCycle(t, cps) {
+  return t * cps;
+}
