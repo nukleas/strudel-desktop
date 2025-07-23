@@ -1,6 +1,6 @@
 /*
 Repl.jsx - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/repl/src/App.js>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/repl/src/App.js>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -13,6 +13,7 @@ import {
   resetGlobalEffects,
   resetLoadedSounds,
   initAudioOnFirstClick,
+  resetDefaults,
 } from '@strudel/webaudio';
 import { setVersionDefaultsFrom } from './util.mjs';
 import { StrudelMirror, defaultSettings } from '@strudel/codemirror';
@@ -59,6 +60,8 @@ async function getModule(name) {
   return modules.find((m) => m.packageName === name);
 }
 
+const initialCode = `// LOADING`;
+
 export function useReplContext() {
   const { isSyncEnabled, audioEngineTarget } = useSettings();
   const shouldUseWebaudio = audioEngineTarget !== audioEngineTargets.osc;
@@ -77,7 +80,7 @@ export function useReplContext() {
       transpiler,
       autodraw: false,
       root: containerRef.current,
-      initialCode: '// LOADING',
+      initialCode,
       pattern: silence,
       drawTime,
       drawContext,
@@ -133,9 +136,10 @@ export function useReplContext() {
         code = latestCode;
         msg = `Your last session has been loaded!`;
       } else {
-        const { code: randomTune, name } = await getRandomTune();
-        code = randomTune;
-        msg = `A random code snippet named "${name}" has been loaded!`;
+        /* const { code: randomTune, name } = await getRandomTune();
+        code = randomTune; */
+        code = '$: s("[bd <hh oh>]*2").bank("tr909").dec(.4)';
+        msg = `Default code has been loaded`;
       }
       editor.setCode(code);
       setDocumentTitle(code);
@@ -178,6 +182,7 @@ export function useReplContext() {
 
   const resetEditor = async () => {
     (await getModule('@strudel/tonal'))?.resetVoicings();
+    resetDefaults();
     resetGlobalEffects();
     clearCanvas();
     clearHydra();

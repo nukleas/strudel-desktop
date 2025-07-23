@@ -1,7 +1,7 @@
 import { closeBrackets } from '@codemirror/autocomplete';
 export { toggleComment, toggleBlockComment, toggleLineComment, toggleBlockCommentByLine } from '@codemirror/commands';
 // import { search, highlightSelectionMatches } from '@codemirror/search';
-import { history } from '@codemirror/commands';
+import { history, indentWithTab } from '@codemirror/commands';
 import { javascript } from '@codemirror/lang-javascript';
 import { defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
 import { Compartment, EditorState, Prec } from '@codemirror/state';
@@ -37,6 +37,14 @@ const extensions = {
   isActiveLineHighlighted: (on) => (on ? [highlightActiveLine(), highlightActiveLineGutter()] : []),
   isFlashEnabled,
   keybindings,
+  isTabIndentationEnabled: (on) => (on ? keymap.of([indentWithTab]) : []),
+  isMultiCursorEnabled: (on) =>
+    on
+      ? [
+          EditorState.allowMultipleSelections.of(true),
+          EditorView.clickAddsSelectionRange.of((ev) => ev.metaKey || ev.ctrlKey),
+        ]
+      : [],
 };
 const compartments = Object.fromEntries(Object.keys(extensions).map((key) => [key, new Compartment()]));
 
@@ -51,6 +59,8 @@ export const defaultSettings = {
   isFlashEnabled: true,
   isTooltipEnabled: false,
   isLineWrappingEnabled: false,
+  isTabIndentationEnabled: false,
+  isMultiCursorEnabled: false,
   theme: 'strudelTheme',
   fontFamily: 'monospace',
   fontSize: 18,
@@ -62,7 +72,7 @@ export const codemirrorSettings = persistentAtom('codemirror-settings', defaultS
 });
 
 // https://codemirror.net/docs/guide/
-export function initEditor({ initialCode = '', onChange, onEvaluate, onStop, root }) {
+export function initEditor({ initialCode = '', onChange, onEvaluate, onStop, root, mondo }) {
   const settings = codemirrorSettings.get();
   const initialSettings = Object.keys(compartments).map((key) =>
     compartments[key].of(extensions[key](parseBooleans(settings[key]))),
@@ -75,7 +85,7 @@ export function initEditor({ initialCode = '', onChange, onEvaluate, onStop, roo
       /* search(),
       highlightSelectionMatches(), */
       ...initialSettings,
-      javascript(),
+      mondo ? [] : javascript(),
       sliderPlugin,
       widgetPlugin,
       // indentOnInput(), // works without. already brought with javascript extension?
@@ -209,6 +219,7 @@ export class StrudelMirror {
       },
       onEvaluate: () => this.evaluate(),
       onStop: () => this.stop(),
+      mondo: replOptions.mondo,
     });
     const cmEditor = this.root.querySelector('.cm-editor');
     if (cmEditor) {

@@ -1,6 +1,6 @@
 /*
 draw.mjs - <short description TODO>
-Copyright (C) 2022 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/canvas/draw.mjs>
+Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/canvas/draw.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -150,7 +150,7 @@ export class Drawer {
         this.lastFrame = phase;
         this.visibleHaps = (this.visibleHaps || [])
           // filter out haps that are too far in the past (think left edge of screen for pianoroll)
-          .filter((h) => h.endClipped >= phase - lookbehind - lookahead)
+          .filter((h) => h.whole && h.endClipped >= phase - lookbehind - lookahead)
           // add new haps with onset (think right edge bars scrolling in)
           .concat(haps.filter((h) => h.hasOnset()));
         const time = phase - lookahead;
@@ -175,7 +175,7 @@ export class Drawer {
     // +0.1 = workaround for weird holes in query..
     const [begin, end] = [Math.max(t, 0), t + lookahead + 0.1];
     // remove all future haps
-    this.visibleHaps = this.visibleHaps.filter((h) => h.whole.begin < t);
+    this.visibleHaps = this.visibleHaps.filter((h) => h.whole?.begin < t);
     this.painters = []; // will get populated by .onPaint calls attached to the pattern
     // query future haps
     const futureHaps = scheduler.pattern.queryArc(begin, end, { painters: this.painters });

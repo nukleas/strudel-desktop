@@ -31,7 +31,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tidalcycles/strudel.git"
+    "url": "git+https://codeberg.org/uzu/strudel.git"
   },
   "keywords": [
     "tidalcycles",
@@ -43,7 +43,7 @@
   "author": "Alex McLean <alex@slab.org> (https://slab.org)",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/tidalcycles/strudel/issues"
+    "url": "https://codeberg.org/uzu/strudel/issues"
   },
   "homepage": "https://strudel.cc",
   "dependencies": {

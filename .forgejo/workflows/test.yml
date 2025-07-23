@@ -1,16 +1,18 @@
 name: Strudel tests
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: docker
     strategy:
       matrix:
         node-version: [20]
 
     steps:
       - uses: actions/checkout@v4
+      - name: apt install ztd
+        run: apt update && apt install -y zstd
       - uses: pnpm/action-setup@v4
         with:
           version: 9.12.2

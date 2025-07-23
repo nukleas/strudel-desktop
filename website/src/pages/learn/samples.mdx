@@ -62,7 +62,7 @@ To see which sample names are available, open the `sounds` tab in the [REPL](htt
 Note that only the sample maps (mapping names to URLs) are loaded initially, while the audio samples themselves are not loaded until they are actually played.
 This behaviour of loading things only when they are needed is also called `lazy loading`.
 While it saves resources, it can also lead to sounds not being audible the first time they are triggered, because the sound is still loading.
-[This might be fixed in the future](https://github.com/tidalcycles/strudel/issues/187)
+[This might be fixed in the future](https://codeberg.org/uzu/strudel/issues/187)
 
 # Sound Banks
 
@@ -163,6 +163,21 @@ The last section could be written as:
 }
 ```
 
+Please note that browsers will often cache `strudel.json` on first load, and keep using the cached
+version even if the orginal has been updated. If this bites you (for example while developing a new
+sample pack), you can force the browser to download a new copy by i.e. changing capitalization of one
+character in the URL, or adding a URL attribute, such as:
+
+```javascript
+samples('https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/strudel.json?version=2');
+```
+
+that gets ignored by GitHub (but changes the URL, forcing the browser to reload every time we increase
+the version number).
+
+It is also possible, of course, to just remove it from cache (deleting cache in browser Privacy settings,
+or from the dev console if you're technically minded, or by using a cache deleting extension).
+
 ## Github Shortcut
 
 Because loading samples from github is common, there is a shortcut:
@@ -247,15 +262,17 @@ We can also declare different samples for different regions of the keyboard:
 
 <MiniRepl
   client:idle
-  tune={`samples({
+  tune={`setcpm(60)
+samples({
   'moog': {
     'g2': 'moog/004_Mighty%20Moog%20G2.wav',
     'g3': 'moog/005_Mighty%20Moog%20G3.wav',
     'g4': 'moog/006_Mighty%20Moog%20G4.wav',
-  }}, 'github:tidalcycles/dirt-samples');
+  }}, 'github:tidalcycles/dirt-samples')
+
 note("g2!2 <bb2 c3>!2, <c4@3 [<eb4 bb3> g4 f4]>")
-  .s('moog').clip(1)
-  .gain(.5).cpm(60)`}
+.s('moog').clip(1)
+.gain(.5)`}
 />
 
 The sampler will always pick the closest matching sample for the current note!

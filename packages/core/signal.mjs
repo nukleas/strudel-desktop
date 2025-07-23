@@ -1,6 +1,6 @@
 /*
 signal.mjs - continuous patterns
-Copyright (C) 2024 Strudel contributors - see <https://github.com/tidalcycles/strudel/blob/main/packages/core/signal.mjs>
+Copyright (C) 2024 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/signal.mjs>
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
@@ -71,7 +71,6 @@ export const sine2 = signal((t) => Math.sin(Math.PI * 2 * t));
 
 /**
  *  A sine signal between 0 and 1.
- *
  * @return {Pattern}
  * @example
  * n(sine.segment(16).range(0,15))
@@ -100,7 +99,6 @@ export const cosine2 = sine2._early(Fraction(1).div(4));
 
 /**
  *  A square signal between 0 and 1.
- *
  * @return {Pattern}
  * @example
  * n(square.segment(4).range(0,7)).scale("C:minor")
@@ -266,7 +264,7 @@ export const randrun = (n) => {
     const rands = timeToRands(t.floor().add(0.5), n);
     const nums = rands
       .map((n, i) => [n, i])
-      .sort((a, b) => a[0] > b[0] - a[0] < b[0])
+      .sort((a, b) => (a[0] > b[0]) - (a[0] < b[0]))
       .map((x) => x[1]);
     const i = t.cyclePos().mul(n).floor() % n;
     return nums[i];
@@ -285,7 +283,7 @@ const _rearrangeWith = (ipat, n, pat) => {
  * @example
  * note("c d e f").sound("piano").shuffle(4)
  * @example
- * note("c d e f".shuffle(4), "g").sound("piano")
+ * seq("c d e f".shuffle(4), "g").note().sound("piano")
  */
 export const shuffle = register('shuffle', (n, pat) => {
   return _rearrangeWith(randrun(n), n, pat);
@@ -298,7 +296,7 @@ export const shuffle = register('shuffle', (n, pat) => {
  * @example
  * note("c d e f").sound("piano").scramble(4)
  * @example
- * note("c d e f".scramble(4), "g").sound("piano")
+ * seq("c d e f".scramble(4), "g").note().sound("piano")
  */
 export const scramble = register('scramble', (n, pat) => {
   return _rearrangeWith(_irand(n)._segment(n), n, pat);
@@ -398,6 +396,10 @@ export const chooseInWith = (pat, xs) => {
  */
 export const choose = (...xs) => chooseWith(rand, xs);
 
+// todo: doc
+export const chooseIn = (...xs) => chooseInWith(rand, xs);
+export const chooseOut = choose;
+
 /**
  * Chooses from the given list of values (or patterns of values), according
  * to the pattern that the method is called on. The pattern should be in
@@ -486,13 +488,34 @@ export const wchooseCycles = (...pairs) => _wchooseWith(rand.segment(1), ...pair
 
 export const wrandcat = wchooseCycles;
 
-// this function expects pat to be a pattern of floats...
-export const perlinWith = (pat) => {
-  const pata = pat.fmap(Math.floor);
-  const patb = pat.fmap((t) => Math.floor(t) + 1);
+function _perlin(t) {
+  let ta = Math.floor(t);
+  let tb = ta + 1;
   const smootherStep = (x) => 6.0 * x ** 5 - 15.0 * x ** 4 + 10.0 * x ** 3;
   const interp = (x) => (a) => (b) => a + smootherStep(x) * (b - a);
-  return pat.sub(pata).fmap(interp).appBoth(pata.fmap(timeToRand)).appBoth(patb.fmap(timeToRand));
+  const v = interp(t - ta)(timeToRand(ta))(timeToRand(tb));
+  return v;
+}
+export const perlinWith = (tpat) => {
+  return tpat.fmap(_perlin);
+};
+
+function _berlin(t) {
+  const prevRidgeStartIndex = Math.floor(t);
+  const nextRidgeStartIndex = prevRidgeStartIndex + 1;
+
+  const prevRidgeBottomPoint = timeToRand(prevRidgeStartIndex);
+  const nextRidgeTopPoint = timeToRand(nextRidgeStartIndex) + prevRidgeBottomPoint;
+
+  const currentPercent = (t - prevRidgeStartIndex) / (nextRidgeStartIndex - prevRidgeStartIndex);
+  const interp = (a, b, t) => {
+    return a + (b - a) * t;
+  };
+  return interp(prevRidgeBottomPoint, nextRidgeTopPoint, currentPercent) / 2;
+}
+
+export const berlinWith = (tpat) => {
+  return tpat.fmap(_berlin);
 };
 
 /**
@@ -505,6 +528,18 @@ export const perlinWith = (pat) => {
  *
  */
 export const perlin = perlinWith(time.fmap((v) => Number(v)));
+
+/**
+ * Generates a continuous pattern of [berlin noise](conceived by Jame Coyne and Jade Rowland as a joke but turned out to be surprisingly cool and useful,
+ * like perlin noise but with sawtooth waves), in the range 0..1.
+ *
+ * @name berlin
+ * @example
+ * // ascending arpeggios
+ * n("0!16".add(berlin.fast(4).mul(14))).scale("d:minor")
+ *
+ */
+export const berlin = berlinWith(time.fmap((v) => Number(v)));
 
 export const degradeByWith = register(
   'degradeByWith',

@@ -8,6 +8,11 @@ import CutiePi, { settings as CutiePiSettings } from './themes/CutiePi.mjs';
 import sonicPink, { settings as sonicPinkSettings } from './themes/sonic-pink.mjs';
 import redText, { settings as redTextSettings } from './themes/red-text.mjs';
 import greenText, { settings as greenTextSettings } from './themes/green-text.mjs';
+import archBtw, { settings as archBtwSettings } from './themes/archBtw.mjs';
+import fruitDaw, { settings as fruitDawSettings } from './themes/fruitDaw.mjs';
+
+import bluescreenlight, { settings as bluescreenlightsettings } from './themes/bluescreenlight.mjs';
+
 import androidstudio, { settings as androidstudioSettings } from './themes/androidstudio.mjs';
 import atomone, { settings as atomOneSettings } from './themes/atomone.mjs';
 import aura, { settings as auraSettings } from './themes/aura.mjs';
@@ -39,17 +44,20 @@ import { setTheme } from '@strudel/draw';
 export const themes = {
   strudelTheme,
   algoboy,
+  archBtw,
   androidstudio,
   atomone,
   aura,
   bbedit,
   blackscreen,
   bluescreen,
+  bluescreenlight,
   CutiePi,
   darcula,
   dracula,
   duotoneDark,
   eclipse,
+  fruitDaw,
   githubDark,
   githubLight,
   greenText,
@@ -78,10 +86,12 @@ export const themes = {
 export const settings = {
   strudelTheme: strudelThemeSettings,
   bluescreen: bluescreenSettings,
+  bluescreenlight: bluescreenlightsettings,
   blackscreen: blackscreenSettings,
   whitescreen: whitescreenSettings,
   teletext: teletextSettings,
   algoboy: algoboySettings,
+  archBtw: archBtwSettings,
   androidstudio: androidstudioSettings,
   atomone: atomOneSettings,
   aura: auraSettings,
@@ -92,9 +102,11 @@ export const settings = {
   eclipse: eclipseSettings,
   CutiePi: CutiePiSettings,
   sonicPink: sonicPinkSettings,
+  fruitDaw: fruitDawSettings,
   githubLight: githubLightSettings,
   githubDark: githubDarkSettings,
   greenText: greenTextSettings,
+
   gruvboxDark: gruvboxDarkSettings,
   gruvboxLight: gruvboxLightSettings,
   materialDark: materialDarkSettings,

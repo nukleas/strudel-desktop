@@ -2,7 +2,7 @@
 euclid.mjs - Bjorklund/Euclidean/Diaspora rhythms
 Copyright (C) 2023 Rohan Drape and strudel contributors
 
-See <https://github.com/tidalcycles/strudel/blob/main/packages/core/euclid.mjs> for authors of this file.
+See <https://codeberg.org/uzu/strudel/src/branch/main/packages/core/euclid.mjs> for authors of this file.
 
 The Bjorklund algorithm implementation is ported from the Haskell Music Theory Haskell module by Rohan Drape -
 https://rohandrape.net/?t=hmt
@@ -10,9 +10,9 @@ https://rohandrape.net/?t=hmt
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { Pattern, timeCat, register, silence } from './pattern.mjs';
+import { timeCat, register, silence } from './pattern.mjs';
 import { rotate, flatten, splitAt, zipWith } from './util.mjs';
-import Fraction from './fraction.mjs';
+import Fraction, { lcm } from './fraction.mjs';
 
 const left = function (n, x) {
   const [ons, offs] = n;
@@ -42,29 +42,26 @@ const _bjork = function (n, x) {
 
 export const bjork = function (ons, steps) {
   const inverted = ons < 0;
-  ons = Math.abs(ons);
-  const offs = steps - ons;
-  const x = Array(ons).fill([1]);
-  const y = Array(offs).fill([0]);
-  const result = _bjork([ons, offs], [x, y]);
-  const p = flatten(result[1][0]).concat(flatten(result[1][1]));
-  if (inverted) {
-    return p.map((x) => (x === 0 ? 1 : 0));
-  }
-  return p;
+  const absOns = Math.abs(ons);
+  const offs = steps - absOns;
+  const ones = Array(absOns).fill([1]);
+  const zeros = Array(offs).fill([0]);
+  const result = _bjork([absOns, offs], [ones, zeros]);
+  const pattern = flatten(result[1][0]).concat(flatten(result[1][1]));
+  return inverted ? pattern.map((x) => 1 - x) : pattern;
 };
 
 /**
- * Changes the structure of the pattern to form an euclidean rhythm.
- * Euclidian rhythms are rhythms obtained using the greatest common
+ * Changes the structure of the pattern to form an Euclidean rhythm.
+ * Euclidean rhythms are rhythms obtained using the greatest common
  * divisor of two numbers.  They were described in 2004 by Godfried
- * Toussaint, a canadian computer scientist.  Euclidian rhythms are
+ * Toussaint, a Canadian computer scientist.  Euclidean rhythms are
  * really useful for computer/algorithmic music because they can
  * describe a large number of rhythms with a couple of numbers.
  *
  * @memberof Pattern
  * @name euclid
- * @param {number} pulses the number of onsets / beats
+ * @param {number} pulses the number of onsets/beats
  * @param {number} steps the number of steps to fill
  * @returns Pattern
  * @example
@@ -76,7 +73,7 @@ export const bjork = function (ons, steps) {
  * Like `euclid`, but has an additional parameter for 'rotating' the resulting sequence.
  * @memberof Pattern
  * @name euclidRot
- * @param {number} pulses the number of onsets / beats
+ * @param {number} pulses the number of onsets/beats
  * @param {number} steps the number of steps to fill
  * @param {number} rotation offset in steps
  * @returns Pattern
@@ -86,13 +83,13 @@ export const bjork = function (ons, steps) {
  */
 
 /**
- * @example // A thirteenth century Persian rhythm called Khafif-e-ramal.
+ * @example // A thirteenth-century Persian rhythm called Khafif-e-ramal.
  * note("c3").euclid(2,5)
  * @example // The archetypal pattern of the Cumbia from Colombia, as well as a Calypso rhythm from Trinidad.
  * note("c3").euclid(3,4)
  * @example // Another thirteenth century Persian rhythm by the name of Khafif-e-ramal, as well as a Rumanian folk-dance rhythm.
  * note("c3").euclidRot(3,5,2)
- * @example // A Ruchenitza rhythm used in a Bulgarian folk-dance.
+ * @example // A Ruchenitza rhythm used in a Bulgarian folk dance.
  * note("c3").euclid(3,7)
  * @example // The Cuban tresillo pattern.
  * note("c3").euclid(3,8)
@@ -142,6 +139,14 @@ export const euclid = register('euclid', function (pulses, steps, pat) {
   return pat.struct(_euclidRot(pulses, steps, 0));
 });
 
+export const e = register('e', function (euc, pat) {
+  if (!Array.isArray(euc)) {
+    euc = [euc];
+  }
+  const [pulses, steps = pulses, rot = 0] = euc;
+  return pat.struct(_euclidRot(pulses, steps, rot));
+});
+
 export const { euclidrot, euclidRot } = register(['euclidrot', 'euclidRot'], function (pulses, steps, rotation, pat) {
   return pat.struct(_euclidRot(pulses, steps, rotation));
 });
@@ -151,8 +156,10 @@ export const { euclidrot, euclidRot } = register(['euclidrot', 'euclidRot'], fun
  * so there will be no gaps.
  * @name euclidLegato
  * @memberof Pattern
- * @param {number} pulses the number of onsets / beats
+ * @param {number} pulses the number of onsets/beats
  * @param {number} steps the number of steps to fill
+ * @param rotation offset in steps
+ * @param pat
  * @example
  * note("c3").euclidLegato(3,8)
  */
@@ -161,13 +168,13 @@ const _euclidLegato = function (pulses, steps, rotation, pat) {
   if (pulses < 1) {
     return silence;
   }
-  const bin_pat = _euclidRot(pulses, steps, rotation);
+  const bin_pat = _euclidRot(pulses, steps, 0);
   const gapless = bin_pat
     .join('')
     .split('1')
     .slice(1)
     .map((s) => [s.length + 1, true]);
-  return pat.struct(timeCat(...gapless));
+  return pat.struct(timeCat(...gapless)).late(Fraction(rotation).div(steps));
 };
 
 export const euclidLegato = register(['euclidLegato'], function (pulses, steps, pat) {
@@ -180,7 +187,7 @@ export const euclidLegato = register(['euclidLegato'], function (pulses, steps, 
  * the resulting sequence
  * @name euclidLegatoRot
  * @memberof Pattern
- * @param {number} pulses the number of onsets / beats
+ * @param {number} pulses the number of onsets/beats
  * @param {number} steps the number of steps to fill
  * @param {number} rotation offset in steps
  * @example

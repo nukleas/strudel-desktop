@@ -5,22 +5,24 @@ made into a pattern swatch.
 
 Example: <https://felixroos.github.io/strudel/swatch/>
 
+Please note: These instructions have not been fully tested/adapted since strudel moved to codeberg from github. PRs welcome!
+
 ## deploy
 
-### 1. fork the [strudel repo on github](https://github.com/tidalcycles/strudel.git)
+### 1. fork the [strudel repo on codeberg](https://codeberg.org/uzu/strudel.git)
 
-### 2. clone your fork to your machine `git clone https://github.com/<your-username>/strudel.git strudel && cd strudel`
+### 2. clone your fork to your machine `git clone https://codeberg.org/<your-username>/strudel.git strudel && cd strudel`
 
 ### 3. create a separate branch like `git branch patternuary && git checkout patternuary`
 
 ### 4. save one or more .txt files in the my-patterns folder
 
-### 5. edit `website/public/CNAME` to contain `<your-username>.github.io/strudel`
+### 5. edit `website/public/CNAME` to contain `<your-username>.codeberg.page/strudel`
 
-### 6. edit `website/astro.config.mjs` to use site: `https://<your-username>.github.io` and base `/strudel`, like this
+### 6. edit `website/astro.config.mjs` to use site: `https://<your-username>.codeberg.page` and base `/strudel`, like this
 
 ```js
-const site = 'https://<your-username>.github.io';
+const site = 'https://<your-username>.codeberg.page';
 const base = '/strudel';
 ```
 
@@ -30,15 +32,9 @@ const base = '/strudel';
 git add . && git commit -m "site config" && git push --set-upstream origin
 ```
 
-### 8. deploy to github pages
+### 8. deploy to codeberg pages
 
-- go to settings -> pages and select "Github Actions" as source
-- go to settings -> environments -> github-pages and press the edit button next to `main` and type in `patternuary` (under "Deployment branches")
-- go to Actions -> `Build and Deploy` and click `Run workflow` with branch `patternuary`
-
-### 9. view your patterns at `<your-username>.github.io/strudel/swatch/`
-
-Alternatively, github pages allows you to use a custom domain, like https://mycooldomain.org/swatch/. [See their documentation for details](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site).
+### 9. view your patterns at `<your-username>.codeberg.page/strudel/swatch/`
 
 ### 10. optional: automatic deployment
 

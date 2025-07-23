@@ -7,7 +7,7 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tidalcycles/strudel.git"
+    "url": "git+https://codeberg.org/uzu/strudel.git"
   },
   "keywords": [
     "tidalcycles",
@@ -19,11 +19,11 @@
   "author": "Jade Rowland <jaderowlanddev@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/tidalcycles/strudel/issues"
+    "url": "https://codeberg.org/uzu/strudel/issues"
   },
   "dependencies": {
     "@strudel/core": "workspace:*",
     "@tauri-apps/api": "^2.2.0"
   },
-  "homepage": "https://github.com/tidalcycles/strudel#readme"
+  "homepage": "https://codeberg.org/uzu/strudel#readme"
 }
