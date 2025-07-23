@@ -493,6 +493,9 @@ export async function midin(input) {
         otherInputs?.length ? `Also available: ${getMidiDeviceNamesString(otherInputs)}` : ''
       }`,
     );
+  }
+  // ensure refs for this input are initialized
+  if (!refs[input]) {
     refs[input] = {};
   }
   const cc = (cc) => ref(() => refs[input][cc] || 0);
