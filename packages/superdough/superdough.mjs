@@ -11,9 +11,8 @@ import { clamp, nanFallback, _mod, cycleToSeconds, secondsToCycle } from './util
 import workletsUrl from './worklets.mjs?audioworklet';
 import { createFilter, gainNode, getCompressor, getWorklet } from './helpers.mjs';
 import { map } from 'nanostores';
-import { logger } from './logger.mjs';
+import { logger, errorLogger } from './logger.mjs';
 import { loadBuffer } from './sampler.mjs';
-import { errorLogger } from '@strudel/core';
 
 export const DEFAULT_MAX_POLYPHONY = 128;
 const DEFAULT_AUDIO_DEVICE_NAME = 'System Standard';
@@ -401,10 +400,10 @@ function getFilterType(ftype) {
 
 //type orbit {
 // gain: number,
-// reverb: reverbNode
-// delay:
+// reverbNode: reverbNode
+// delayNode:
 //}
-const orbits = {};
+let orbits = {};
 function connectToOrbit(node, orbit) {
   if (orbits[orbit] == null) {
     errorLogger(new Error('target orbit does not exist'), 'superdough');
@@ -498,8 +497,7 @@ function effectSend(input, effect, wet) {
 }
 
 export function resetGlobalEffects() {
-  delays = {};
-  reverbs = {};
+  orbits = {};
   analysers = {};
   analysersData = {};
 }
