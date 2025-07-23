@@ -121,7 +121,10 @@ export function registerSynthSounds() {
       const gainAdjustment = 1 / Math.sqrt(voices);
       getPitchEnvelope(o.parameters.get('detune'), value, begin, holdend);
       const vibratoOscillator = getVibratoOscillator(o.parameters.get('detune'), value, begin);
-      const fm = applyFM(o.parameters.get('frequency'), value, begin);
+      // const fm = applyFM(o.parameters.get('frequency'), value, begin);
+      // https://codeberg.org/uzu/strudel/issues/1428
+      // if you think about re-enabling this, please test with fm > 1 first
+      // it's like 10x gain, so it's really dangerous
       let envGain = gainNode(1);
       envGain = o.connect(envGain);
 
@@ -133,7 +136,7 @@ export function registerSynthSounds() {
           destroyAudioWorkletNode(o);
           envGain.disconnect();
           onended();
-          fm?.stop();
+          // fm?.stop();
           vibratoOscillator?.stop();
         },
         begin,

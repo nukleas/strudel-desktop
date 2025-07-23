@@ -1,7 +1,7 @@
 import { NeoCyclist } from './neocyclist.mjs';
 import { Cyclist } from './cyclist.mjs';
 import { evaluate as _evaluate } from './evaluate.mjs';
-import { logger } from './logger.mjs';
+import { errorLogger, logger } from './logger.mjs';
 import { setTime } from './time.mjs';
 import { evalScope } from './evaluate.mjs';
 import { register, Pattern, isPattern, silence, stack } from './pattern.mjs';
@@ -245,6 +245,7 @@ export function repl({
 export const getTrigger =
   ({ getTime, defaultOutput }) =>
   async (hap, deadline, duration, cps, t) => {
+    //   ^ this signature is different from hap.context.onTrigger, as set by Pattern.onTrigger(onTrigger)
     // TODO: get rid of deadline after https://codeberg.org/uzu/strudel/pulls/1004
     try {
       if (!hap.context.onTrigger || !hap.context.dominantTrigger) {
@@ -252,9 +253,9 @@ export const getTrigger =
       }
       if (hap.context.onTrigger) {
         // call signature of output / onTrigger is different...
-        await hap.context.onTrigger(getTime() + deadline, hap, getTime(), cps, t);
+        await hap.context.onTrigger(hap, getTime(), cps, t);
       }
     } catch (err) {
-      logger(`[cyclist] error: ${err.message}`, 'error');
+      errorLogger(err, 'getTrigger');
     }
   };

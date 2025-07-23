@@ -7,7 +7,7 @@ This program is free software: you can redistribute it and/or modify it under th
 import './feedbackdelay.mjs';
 import './reverb.mjs';
 import './vowel.mjs';
-import { clamp, nanFallback, _mod } from './util.mjs';
+import { clamp, nanFallback, _mod, cycleToSeconds, secondsToCycle } from './util.mjs';
 import workletsUrl from './worklets.mjs?audioworklet';
 import { createFilter, gainNode, getCompressor, getWorklet } from './helpers.mjs';
 import { map } from 'nanostores';
@@ -26,6 +26,13 @@ export function setMaxPolyphony(polyphony) {
 let multiChannelOrbits = false;
 export function setMultiChannelOrbits(bool) {
   multiChannelOrbits = bool == true;
+}
+
+function getModulationShapeInput(val) {
+  if (typeof val === 'number') {
+    return val % 5;
+  }
+  return { tri: 0, triangle: 0, sine: 1, ramp: 2, saw: 3, square: 4 }[val] ?? 0;
 }
 
 export const soundMap = map();
@@ -126,7 +133,7 @@ export const getAudioDevices = async () => {
   return devicesMap;
 };
 
-const defaultDefaultValues = {
+let defaultDefaultValues = {
   s: 'triangle',
   gain: 0.8,
   postgain: 1,
@@ -143,12 +150,23 @@ const defaultDefaultValues = {
   delay: 0,
   byteBeatExpression: '0',
   delayfeedback: 0.5,
-  delaytime: 0.25,
+  delaysync: 3 / 16,
   orbit: 1,
   i: 1,
   velocity: 1,
   fft: 8,
 };
+
+const defaultDefaultDefaultValues = Object.freeze({ ...defaultDefaultValues });
+
+export function setDefault(control, value) {
+  // const main = getControlName(control); // we cant do this because superdough is independent of strudel/core
+  defaultDefaultValues[control] = value;
+}
+
+export function resetDefaults() {
+  defaultDefaultValues = { ...defaultDefaultDefaultValues };
+}
 
 let defaultControls = new Map(Object.entries(defaultDefaultValues));
 
@@ -325,9 +343,33 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
   return delays[orbit];
 }
 
-export function getLfo(audioContext, time, end, properties = {}) {
-  return getWorklet(audioContext, 'lfo-processor', {
+export function getLfo(audioContext, begin, end, properties = {}) {
+  const { shape = 0, ...props } = properties;
+  const { dcoffset = -0.5, depth = 1 } = properties;
+  const lfoprops = {
     frequency: 1,
+    depth,
+    skew: 0.5,
+    phaseoffset: 0,
+    time: begin,
+    begin,
+    end,
+    shape: getModulationShapeInput(shape),
+    dcoffset,
+    min: dcoffset * depth,
+    max: dcoffset * depth + depth,
+    curve: 1,
+    ...props,
+  };
+
+  return getWorklet(audioContext, 'lfo-processor', lfoprops);
+}
+
+export function getSyncedLfo(audioContext, time, end, cps, cycle, properties = {}) {
+  const frequency = cycle / cps;
+
+  return getWorklet(audioContext, 'lfo-processor', {
+    frequency,
     depth: 1,
     skew: 0,
     phaseoffset: 0,
@@ -450,9 +492,10 @@ function mapChannelNumbers(channels) {
   return (Array.isArray(channels) ? channels : [channels]).map((ch) => ch - 1);
 }
 
-export const superdough = async (value, t, hapDuration, cps) => {
+export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) => {
+  // new: t is always expected to be the absolute target onset time
   const ac = getAudioContext();
-  t = typeof t === 'string' && t.startsWith('=') ? Number(t.slice(1)) : ac.currentTime + t;
+
   let { stretch } = value;
   if (stretch != null) {
     //account for phase vocoder latency
@@ -478,6 +521,12 @@ export const superdough = async (value, t, hapDuration, cps) => {
   }
   // destructure
   let {
+    tremolo,
+    tremolosync,
+    tremolodepth = 1,
+    tremoloskew,
+    tremolophase = 0,
+    tremoloshape,
     s = getDefaultValue('s'),
     bank,
     source,
@@ -487,6 +536,7 @@ export const superdough = async (value, t, hapDuration, cps) => {
     // filters
     fanchor = getDefaultValue('fanchor'),
     drive = 0.69,
+    release = 0,
     // low pass
     cutoff,
     lpenv,
@@ -519,6 +569,7 @@ export const superdough = async (value, t, hapDuration, cps) => {
     phasercenter,
     //
     coarse,
+
     crush,
     shape,
     shapevol = getDefaultValue('shapevol'),
@@ -528,7 +579,8 @@ export const superdough = async (value, t, hapDuration, cps) => {
     vowel,
     delay = getDefaultValue('delay'),
     delayfeedback = getDefaultValue('delayfeedback'),
-    delaytime = getDefaultValue('delaytime'),
+    delaysync = getDefaultValue('delaysync'),
+    delaytime,
     orbit = getDefaultValue('orbit'),
     room,
     roomfade,
@@ -547,6 +599,8 @@ export const superdough = async (value, t, hapDuration, cps) => {
     compressorRelease,
   } = value;
 
+  delaytime = delaytime ?? cycleToSeconds(delaysync, cps);
+
   const orbitChannels = mapChannelNumbers(
     multiChannelOrbits && orbit > 0 ? [orbit * 2 - 1, orbit * 2] : getDefaultValue('channels'),
   );
@@ -558,8 +612,11 @@ export const superdough = async (value, t, hapDuration, cps) => {
   distortvol = applyGainCurve(distortvol);
   delay = applyGainCurve(delay);
   velocity = applyGainCurve(velocity);
+  tremolodepth = applyGainCurve(tremolodepth);
   gain *= velocity; // velocity currently only multiplies with gain. it might do other things in the future
 
+  const end = t + hapDuration;
+  const endWithRelease = end + release;
   const chainID = Math.round(Math.random() * 1000000);
 
   // oldest audio nodes will be destroyed if maximum polyphony is exceeded
@@ -634,7 +691,7 @@ export const superdough = async (value, t, hapDuration, cps) => {
         lprelease,
         lpenv,
         t,
-        t + hapDuration,
+        end,
         fanchor,
         ftype,
         drive,
@@ -658,7 +715,7 @@ export const superdough = async (value, t, hapDuration, cps) => {
         hprelease,
         hpenv,
         t,
-        t + hapDuration,
+        end,
         fanchor,
       );
     chain.push(hp());
@@ -669,20 +726,7 @@ export const superdough = async (value, t, hapDuration, cps) => {
 
   if (bandf !== undefined) {
     let bp = () =>
-      createFilter(
-        ac,
-        'bandpass',
-        bandf,
-        bandq,
-        bpattack,
-        bpdecay,
-        bpsustain,
-        bprelease,
-        bpenv,
-        t,
-        t + hapDuration,
-        fanchor,
-      );
+      createFilter(ac, 'bandpass', bandf, bandq, bpattack, bpdecay, bpsustain, bprelease, bpenv, t, end, fanchor);
     chain.push(bp());
     if (ftype === '24db') {
       chain.push(bp());
@@ -700,6 +744,33 @@ export const superdough = async (value, t, hapDuration, cps) => {
   shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
   distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
 
+  if (tremolosync != null) {
+    tremolo = cps * tremolosync;
+  }
+
+  if (tremolo !== undefined) {
+    // Allow clipping of modulator for more dynamic possiblities, and to prevent speaker overload
+    // EX:  a triangle waveform will clip like this /-\ when the depth is above 1
+    const gain = Math.max(1 - tremolodepth, 0);
+    const amGain = new GainNode(ac, { gain });
+
+    const time = cycle / cps;
+    const lfo = getLfo(ac, t, endWithRelease, {
+      skew: tremoloskew ?? (tremoloshape != null ? 0.5 : 1),
+      frequency: tremolo,
+      depth: tremolodepth,
+      time,
+      dcoffset: 0,
+      shape: tremoloshape,
+      phaseoffset: tremolophase,
+      min: 0,
+      max: 1,
+      curve: 1.5,
+    });
+    lfo.connect(amGain.gain);
+    chain.push(amGain);
+  }
+
   compressorThreshold !== undefined &&
     chain.push(
       getCompressor(ac, compressorThreshold, compressorRatio, compressorKnee, compressorAttack, compressorRelease),
@@ -713,7 +784,7 @@ export const superdough = async (value, t, hapDuration, cps) => {
   }
   // phaser
   if (phaser !== undefined && phaserdepth > 0) {
-    const phaserFX = getPhaser(t, t + hapDuration, phaser, phaserdepth, phasercenter, phasersweep);
+    const phaserFX = getPhaser(t, endWithRelease, phaser, phaserdepth, phasercenter, phasersweep);
     chain.push(phaserFX);
   }
 
@@ -725,8 +796,8 @@ export const superdough = async (value, t, hapDuration, cps) => {
   // delay
   let delaySend;
   if (delay > 0 && delaytime > 0 && delayfeedback > 0) {
-    const delyNode = getDelay(orbit, delaytime, delayfeedback, t, orbitChannels);
-    delaySend = effectSend(post, delyNode, delay);
+    const delayNode = getDelay(orbit, delaytime, delayfeedback, t, orbitChannels);
+    delaySend = effectSend(post, delayNode, delay);
     audioNodes.push(delaySend);
   }
   // reverb
