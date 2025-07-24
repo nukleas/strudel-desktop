@@ -68,3 +68,11 @@ export const _mod = (n, m) => ((n % m) + m) % m;
 export const getSoundIndex = (n, numSounds) => {
   return _mod(Math.round(nanFallback(n, 0)), numSounds);
 };
+
+export function cycleToSeconds(cycle, cps) {
+  return cycle / cps;
+}
+
+export function secondsToCycle(t, cps) {
+  return t * cps;
+}

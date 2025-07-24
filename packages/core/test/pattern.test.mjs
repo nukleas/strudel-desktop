@@ -1271,4 +1271,39 @@ describe('Pattern', () => {
       );
     });
   });
+  describe('unjoin', () => {
+    it('destructures a pattern into subcycles', () => {
+      sameFirst(
+        fastcat('a', 'b', 'c', 'd')
+          .unjoin(fastcat(true, fastcat(true, true)))
+          .fmap(fast(2))
+          .join(),
+        fastcat('a', 'b', 'a', 'b', 'c', 'c', 'd', 'd'),
+      );
+    });
+  });
+  describe('into', () => {
+    it('applies a function to subcycles of a pattern', () => {
+      sameFirst(
+        fastcat('a', 'b', 'c', 'd').into(fastcat(fastcat('true', 'true'), 'true'), fast(2)),
+        fastcat('a', 'a', 'b', 'b', 'c', 'd', 'c', 'd'),
+      );
+    });
+  });
+  describe('chunkinto', () => {
+    it('chunks into subcycles', () => {
+      sameFirst(
+        fastcat('a', 'b', 'c').chunkInto(3, fast(2)).fast(3),
+        fastcat(fastcat('a', 'a'), 'b', 'c', 'a', fastcat('b', 'b'), 'c', 'a', 'b', fastcat('c', 'c')),
+      );
+    });
+  });
+  describe('chunkbackinto', () => {
+    it('chunks into subcycles backwards', () => {
+      sameFirst(
+        fastcat('a', 'b', 'c').chunkBackInto(3, fast(2)).fast(3),
+        fastcat('a', 'b', fastcat('c', 'c'), 'a', fastcat('b', 'b'), 'c', fastcat('a', 'a'), 'b', 'c'),
+      );
+    });
+  });
 });

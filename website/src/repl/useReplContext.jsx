@@ -13,6 +13,7 @@ import {
   resetGlobalEffects,
   resetLoadedSounds,
   initAudioOnFirstClick,
+  resetDefaults,
 } from '@strudel/webaudio';
 import { setVersionDefaultsFrom } from './util.mjs';
 import { StrudelMirror, defaultSettings } from '@strudel/codemirror';
@@ -181,6 +182,7 @@ export function useReplContext() {
 
   const resetEditor = async () => {
     (await getModule('@strudel/tonal'))?.resetVoicings();
+    resetDefaults();
     resetGlobalEffects();
     clearCanvas();
     clearHydra();

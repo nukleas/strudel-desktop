@@ -150,6 +150,7 @@ Important: Always publish with `pnpm`, as `npm` does not support overriding main
 
 
 ## useful commands
+
 ```sh
 #regenerate the test snapshots (ex: when updating or creating new pattern functions)
 pnpm snapshot 
@@ -160,6 +161,81 @@ pnpm run osc
 #build the standalone version
 pnpm tauri build
 ```
+
+## version tag patching
+
+here's a little guide on how to patch patterns in the database to prevent breaking old patterns due to breaking changes in newer versions.
+
+the general tactic is to use `// @version x.y` to tag a pattern with a specific strudel version. when a pattern is evaluated, this metadata will de-activate any breaking changes that came after the specified version. 
+for example, in version 1.1, the default value for `fanchor` was changed from `0.5` to `0`.
+if play a pattern that was made before that change, sounds that use filter evenlopes can sound very different, so by adding `// @version 1.0` will make it sound like it used to.
+before releasing a new version with breaking changes, we can edit all patterns in the database, inserting the version tag they were created under:
+
+as an example, to release version 1.2, do the following:
+
+1. get date range
+
+```sh
+# get date of last version:
+git log -1 --format=%aI @strudel/core@1.1.0
+# 2024-05-31T23:07:26+02:00
+
+# get date of current version:
+git log -1 --format=%aI @strudel/core@1.2.0
+# 2025-05-01T12:39:24+02:00
+# might also use todays timestamp if version is not yet released
+```
+
+now we know, all patterns between these 2 dates have to receive a version tag (unless they already have one).
+
+2. get patterns in question
+
+```sql
+SELECT *
+FROM code_v1
+WHERE code NOT LIKE '%@version%'
+AND created_at > '2024-05-31T23:07:26+02:00'
+AND created_at < '2025-05-01T12:39:24+02:00'
+ORDER BY created_at ASC;
+```
+
+this gives us all unversioned patterns that were saved between 1.1.0 and 1.2.0. in this case, it's 9373 patterns!
+
+3. insert version tags
+
+we are now ready to insert the version tag to these patterns.
+before updating thousands of patterns, it's probably a good idea to test if a single one gets udpated:
+
+```sql
+UPDATE code_v1
+SET code = code || E'\n// @version 1.1'
+WHERE hash = 'Ns2sMB40yIw4';
+```
+
+after [verifying](https://strudel.cc/?Ns2sMB40yIw4) that the version tag has been added, let's insert it everywhere:
+
+```sql
+UPDATE code_v1
+SET code = code || E'\n// @version 1.1'
+WHERE code NOT LIKE '%@version%'
+AND created_at > '2024-05-31T23:07:26+02:00'
+AND created_at < '2025-05-01T12:39:24+02:00'
+```
+
+4. verify
+
+we can verify that the edits worked by querying all patterns that contain the new version tag:
+
+```sql
+SELECT *
+FROM code_v1
+WHERE code LIKE '%@version 1.1%'
+AND created_at > '2024-05-31T23:07:26+02:00'
+AND created_at < '2025-05-01T12:39:24+02:00'
+ORDER BY created_at ASC;
+```
+
+
 ## Have Fun
 
 Remember to have fun, and that this project is driven by the passion of volunteers!

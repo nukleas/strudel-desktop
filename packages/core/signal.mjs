@@ -264,7 +264,7 @@ export const randrun = (n) => {
     const rands = timeToRands(t.floor().add(0.5), n);
     const nums = rands
       .map((n, i) => [n, i])
-      .sort((a, b) => a[0] > b[0] - a[0] < b[0])
+      .sort((a, b) => (a[0] > b[0]) - (a[0] < b[0]))
       .map((x) => x[1]);
     const i = t.cyclePos().mul(n).floor() % n;
     return nums[i];
