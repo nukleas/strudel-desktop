@@ -252,6 +252,18 @@ export const { fmenv } = registerControl('fmenv');
  *
  */
 export const { fmattack } = registerControl('fmattack');
+
+/**
+ * Attack time for the FM envelope: time it takes to reach maximum modulation
+ *
+ * @name fmwave
+ * @param {number | Pattern} wave waveform
+ * @example
+ * n("0 1 2 3".fast(4)).chord("<Dm Am F G>").voicing().s("sawtooth").fmwave("brown").fm(.6)
+ *
+ */
+export const { fmwave } = registerControl('fmwave');
+
 /**
  * Decay time for the FM envelope: seconds until the sustain level is reached after the attack phase.
  *
