@@ -254,10 +254,12 @@ export const { fmenv } = registerControl('fmenv');
 export const { fmattack } = registerControl('fmattack');
 
 /**
- * Attack time for the FM envelope: time it takes to reach maximum modulation
+ * waveform of the modulator
  *
  * @name fmwave
  * @param {number | Pattern} wave waveform
+ * @example
+ * n("0 1 2 3".fast(4)).scale("d:minor").s("sine").fmwave("<sine square sawtooth crackle>").fm(4).fmh(2.01)
  * @example
  * n("0 1 2 3".fast(4)).chord("<Dm Am F G>").voicing().s("sawtooth").fmwave("brown").fm(.6)
  *
