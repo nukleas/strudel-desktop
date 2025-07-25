@@ -254,7 +254,7 @@ export const { fmenv } = registerControl('fmenv');
 export const { fmattack } = registerControl('fmattack');
 
 /**
- * waveform of the modulator
+ * waveform of the fm modulator
  *
  * @name fmwave
  * @param {number | Pattern} wave waveform
