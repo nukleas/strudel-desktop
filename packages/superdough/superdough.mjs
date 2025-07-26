@@ -419,16 +419,20 @@ function setOrbit(audioContext, orbit, channels) {
     connectToDestination(orbits[orbit].gain, channels);
   }
 }
-function duckOrbit(target, t, attacktime = 0.1, duckdepth = 1) {
-  if (orbits[target] == null) {
-    errorLogger(new Error('duck target orbit does not exist'), 'superdough');
-  }
+function duckOrbit(targetOrbit, t, attacktime = 0.1, duckdepth = 1) {
+  const targetArr = [targetOrbit].flat();
 
-  orbits[target].gain.gain.cancelAndHoldAtTime(t);
-  const currVal = orbits[target].gain.gain.value;
-  orbits[target].gain.gain.setValueAtTime(currVal, t);
-  orbits[target].gain.gain.linearRampToValueAtTime(clamp(1 - duckdepth, 0.01, currVal), t + 0.002);
-  orbits[target].gain.gain.exponentialRampToValueAtTime(1, t + Math.max(0.002, attacktime));
+  targetArr.forEach((target) => {
+    if (orbits[target] == null) {
+      errorLogger(new Error(`duck target orbit ${target} does not exist`), 'superdough');
+      return;
+    }
+    orbits[target].gain.gain.cancelAndHoldAtTime(t);
+    const currVal = orbits[target].gain.gain.value;
+    orbits[target].gain.gain.setValueAtTime(currVal, t);
+    orbits[target].gain.gain.linearRampToValueAtTime(clamp(1 - Math.pow(duckdepth, 0.5), 0.01, currVal), t + 0.002);
+    orbits[target].gain.gain.exponentialRampToValueAtTime(1, t + Math.max(0.002, attacktime));
+  });
 }
 
 let hasChanged = (now, before) => now !== undefined && now !== before;
