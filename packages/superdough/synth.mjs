@@ -97,7 +97,7 @@ export function registerSynthSounds() {
   });
 
   registerSound(
-    '909bd',
+    'sbd',
     (t, value, onended) => {
       const { duration, decay = 0.5, pdecay = 0.5, penv = 36, clip } = value;
       const ctx = getAudioContext();
