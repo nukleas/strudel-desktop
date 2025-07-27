@@ -69,3 +69,134 @@
   text-decoration: underline 0.18rem;
   text-underline-offset: 0.22rem;
 }
+
+/* Override default styles from the codemirror inline css for autocomplete info tooltip*/
+.cm-tooltip.cm-completionInfo {
+  padding: 0 !important;
+  background: #1e1e1e !important;
+  border: 1px solid #3a3a3a !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  max-width: 500px !important;
+  min-width: 300px !important;
+  max-height: 400px !important;
+  white-space: normal !important;
+}
+
+/* Main tooltip container */
+.autocomplete-info-tooltip {
+  padding: 12px;
+  color: #d4d4d4;
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  overflow-y: auto;
+  max-width: 600px;
+  max-height: 400px;
+}
+
+/* Function name */
+.autocomplete-info-function-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+
+/* Function description */
+.autocomplete-info-function-description {
+  margin: 0 0 12px 0;
+  color: #b4b4b4;
+  line-height: 1.5;
+}
+
+/* Section titles */
+.autocomplete-info-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 16px 0 6px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.autocomplete-info-section-title:first-child {
+  margin-top: 0;
+}
+
+/* Parameters */
+.autocomplete-info-params-section {
+  margin-top: 12px;
+}
+
+.autocomplete-info-params-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.autocomplete-info-param-item {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: #2a2a2a;
+  border-radius: 3px;
+  border-left: 2px solid #555;
+}
+
+.autocomplete-info-param-item:last-child {
+  margin-bottom: 0;
+}
+
+.autocomplete-info-param-name {
+  font-weight: 600;
+  color: #ffffff;
+  margin-right: 8px;
+}
+
+.autocomplete-info-param-type {
+  color: #888;
+  font-size: 12px;
+  background: #333;
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.autocomplete-info-param-desc {
+  color: #b4b4b4;
+  font-size: 10px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Examples */
+.autocomplete-info-examples-section {
+  margin-top: 12px;
+}
+
+.autocomplete-info-example-code {
+  background: #2a2a2a;
+  color: #d4d4d4;
+  padding: 8px;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 4px 0;
+  overflow-x: auto;
+  white-space: pre;
+  border: 1px solid #3a3a3a;
+}
+
+/* Scrollbar */
+.autocomplete-info-tooltip::-webkit-scrollbar {
+  width: 4px;
+}
+
+.autocomplete-info-tooltip::-webkit-scrollbar-track {
+  background: #2a2a2a;
+}
+
+.autocomplete-info-tooltip::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 2px;
+}
