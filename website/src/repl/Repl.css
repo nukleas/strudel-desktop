@@ -71,7 +71,6 @@
 }
 
 /* Override default styles from the codemirror inline css for autocomplete info tooltip*/
-/* Override default styles from the c odemirror inline css for autocomplete info tooltip*/
 .cm-tooltip.cm-completionInfo {
   padding: 12px !important;
   padding-bottom: 12px !important;
@@ -98,7 +97,6 @@
   min-width: 400px;
 }
 
-/* Function name */
 .autocomplete-info-function-name {
   font-size: 15px;
   font-weight: 600;
@@ -106,7 +104,6 @@
   margin: 0 0 8px 0;
 }
 
-/* Function description */
 .autocomplete-info-function-description {
   margin: 0 0 12px 0;
   color: var(--foreground);
@@ -114,7 +111,6 @@
   opacity: 0.8;
 }
 
-/* Section titles */
 .autocomplete-info-section-title {
   font-size: 12px;
   font-weight: 600;
@@ -128,7 +124,6 @@
   margin-top: 0;
 }
 
-/* Parameters */
 .autocomplete-info-params-section {
   margin-top: 12px;
 }
@@ -173,7 +168,6 @@
   opacity: 0.7;
 }
 
-/* Examples */
 .autocomplete-info-examples-section {
   margin-top: 12px;
 }
@@ -192,20 +186,17 @@
   border: 1px solid var(--foreground, #3a3a3a);
 }
 
-/* Scrollbar - using theme colors */
 .autocomplete-info-tooltip::-webkit-scrollbar {
   width: 4px;
 }
 
 .autocomplete-info-tooltip::-webkit-scrollbar-track {
-  /* background: var(--lineBackground, var(--background)); */
 }
 
 .autocomplete-info-tooltip::-webkit-scrollbar-thumb {
-  /* background: var(--border, #555); */
   border-radius: 2px;
 }
 
 .autocomplete-info-tooltip::-webkit-scrollbar-thumb:hover {
-  /* background: var(--selection, var(--border, #777)); */
+
 }
