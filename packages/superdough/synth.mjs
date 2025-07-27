@@ -106,6 +106,7 @@ export function registerSynthSounds() {
       const attackhold = 0.02;
       const noiselvl = 1.2;
       const noisedecay = 0.025;
+      const mixGain = 1;
 
       const o = ctx.createOscillator();
       o.type = 'triangle';
@@ -127,7 +128,8 @@ export function registerSynthSounds() {
       // tri to sine diode shaper emulation
       sat.curve = makeDistortionCurve(2);
 
-      const mix = gainNode(1);
+      const mix = gainNode(mixGain);
+
       o.onended = () => {
         o.disconnect();
         g.disconnect();
@@ -140,12 +142,17 @@ export function registerSynthSounds() {
 
       const node = o.connect(sat).connect(g).connect(mix);
       noise.node.connect(noiseGain).connect(mix);
-      const holdEnd = t + decay;
 
+      const holdEnd = t + decay;
       let end = holdEnd + 0.01;
       if (clip != null) {
         end = Math.min(t + clip * duration, end);
       }
+
+      // prevent clicking
+      mix.gain.setValueAtTime(mixGain, end - 0.01);
+      mix.gain.linearRampToValueAtTime(0, end);
+
       o.stop(end);
       noise.stop(end);
 
