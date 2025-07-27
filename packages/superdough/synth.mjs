@@ -42,11 +42,9 @@ const waveformAliases = [
 ];
 const noises = ['pink', 'white', 'brown', 'crackle'];
 
-function makeDistortionCurve(amount) {
+function makeSaturationCurve(amount, n_samples) {
   const k = typeof amount === 'number' ? amount : 50;
-  const n_samples = 44100;
   const curve = new Float32Array(n_samples);
-  const deg = Math.PI / 180;
 
   for (let i = 0; i < n_samples; i++) {
     const x = (i * 2) / n_samples - 1;
@@ -126,7 +124,7 @@ export function registerSynthSounds() {
 
       const sat = new WaveShaperNode(ctx);
       // tri to sine diode shaper emulation
-      sat.curve = makeDistortionCurve(2);
+      sat.curve = makeSaturationCurve(2, ctx.sampleRate);
 
       const mix = gainNode(mixGain);
 
