@@ -214,10 +214,8 @@ export const euclidLegatoRot = register(['euclidLegatoRot'], function (pulses, s
  * @example
  * sound("hh").euclidish(7,12,tri.slow(8))
  * .pan(tri.slow(8))
- * @example
- * sound("bd").euclidish(7,12,slider(0,0.1,1))
  */
-export const [euclidish, eish] = register(['euclidish', 'eish'], function (pulses, steps, perc, pat) {
+export const { euclidish, eish } = register(['euclidish', 'eish'], function (pulses, steps, perc, pat) {
   const b = bjork(pulses, steps);
   let trues = 0;
   const offs = [];
