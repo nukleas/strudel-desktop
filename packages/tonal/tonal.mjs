@@ -61,40 +61,7 @@ function scaleOffset(scale, offset, note) {
   return n + o;
 }
 
-// Pattern.prototype._transpose = function (intervalOrSemitones: string | number) {
-/**
- * Change the pitch of each value by the given amount. Expects numbers or note strings as values.
- * The amount can be given as a number of semitones or as a string in interval short notation.
- * If you don't care about enharmonic correctness, just use numbers. Otherwise, pass the interval of
- * the form: ST where S is the degree number and T the type of interval with
- *
- * - M = major
- * - m = minor
- * - P = perfect
- * - A = augmented
- * - d = diminished
- *
- * Examples intervals:
- *
- * - 1P = unison
- * - 3M = major third
- * - 3m = minor third
- * - 4P = perfect fourth
- * - 4A = augmented fourth
- * - 5P = perfect fifth
- * - 5d = diminished fifth
- *
- * @param {string | number} amount Either number of semitones or interval string.
- * @returns Pattern
- * @memberof Pattern
- * @name transpose
- * @example
- * "c2 c3".fast(2).transpose("<0 -2 5 3>".slow(2)).note()
- * @example
- * "c2 c3".fast(2).transpose("<1P -2M 4P 3m>".slow(2)).note()
- */
-
-export const transpose = register('transpose', function (intervalOrSemitones, pat) {
+function transposeFn(intervalOrSemitones, pat) {
   return pat.withHap((hap) => {
     const note = hap.value.note ?? hap.value;
     if (typeof note === 'number') {
@@ -128,7 +95,43 @@ export const transpose = register('transpose', function (intervalOrSemitones, pa
     }
     return hap.withValue(() => targetNote);
   });
-});
+}
+
+// Pattern.prototype._transpose = function (intervalOrSemitones: string | number) {
+/**
+ * Change the pitch of each value by the given amount. Expects numbers or note strings as values.
+ * The amount can be given as a number of semitones or as a string in interval short notation.
+ * If you don't care about enharmonic correctness, just use numbers. Otherwise, pass the interval of
+ * the form: ST where S is the degree number and T the type of interval with
+ *
+ * - M = major
+ * - m = minor
+ * - P = perfect
+ * - A = augmented
+ * - d = diminished
+ *
+ * Examples intervals:
+ *
+ * - 1P = unison
+ * - 3M = major third
+ * - 3m = minor third
+ * - 4P = perfect fourth
+ * - 4A = augmented fourth
+ * - 5P = perfect fifth
+ * - 5d = diminished fifth
+ *
+ * @param {string | number} amount Either number of semitones or interval string.
+ * @returns Pattern
+ * @memberof Pattern
+ * @name transpose
+ * @example
+ * "c2 c3".fast(2).transpose("<0 -2 5 3>".slow(2)).note()
+ * @example
+ * "c2 c3".fast(2).transpose("<1P -2M 4P 3m>".slow(2)).note()
+ */
+
+export const transpose = register('transpose', transposeFn);
+export const trans = register('trans', transposeFn);
 
 // example: transpose(3).late(0.2) will be equivalent to compose(transpose(3), late(0.2))
 // e.g. `stack(c3).superimpose(transpose(slowcat(7, 5)))` or
