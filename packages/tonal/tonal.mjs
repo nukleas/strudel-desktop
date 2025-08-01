@@ -124,6 +124,7 @@ function transposeFn(intervalOrSemitones, pat) {
  * @returns Pattern
  * @memberof Pattern
  * @name transpose
+ * @synonyms trans
  * @example
  * "c2 c3".fast(2).transpose("<0 -2 5 3>".slow(2)).note()
  * @example
