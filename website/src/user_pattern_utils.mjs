@@ -197,7 +197,7 @@ export async function importPatterns(fileList) {
       if (file.type === 'application/json') {
         const userPatterns = userPattern.getAll();
         setUserPatterns({ ...userPatterns, ...parseJSON(content) });
-      } else if (file.type === 'text/plain') {
+      } else if (['text/x-markdown', 'text/plain'].includes(file.type)) {
         const id = file.name.replace(/\.[^/.]+$/, '');
         userPattern.update(id, { code: content });
       }

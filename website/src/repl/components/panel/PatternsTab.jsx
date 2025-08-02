@@ -125,7 +125,7 @@ function UserPatterns({ context }) {
             style={{ display: 'none' }}
             type="file"
             multiple
-            accept="text/plain,application/json"
+            accept="text/plain,text/x-markdown,application/json"
             onChange={(e) => importPatterns(e.target.files)}
           />
           import
