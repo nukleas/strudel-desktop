@@ -61,42 +61,6 @@ function scaleOffset(scale, offset, note) {
   return n + o;
 }
 
-function transposeFn(intervalOrSemitones, pat) {
-  return pat.withHap((hap) => {
-    const note = hap.value.note ?? hap.value;
-    if (typeof note === 'number') {
-      // note is a number, so just add the number semitones of the interval
-      let semitones;
-      if (typeof intervalOrSemitones === 'number') {
-        semitones = intervalOrSemitones;
-      } else if (typeof intervalOrSemitones === 'string') {
-        semitones = Interval.semitones(intervalOrSemitones) || 0;
-      }
-      const targetNote = note + semitones;
-      if (typeof hap.value === 'object') {
-        return hap.withValue(() => ({ ...hap.value, note: targetNote }));
-      }
-      return hap.withValue(() => targetNote);
-    }
-    if (typeof note !== 'string' || !isNote(note)) {
-      logger(`[tonal] transpose: not a note "${note}"`, 'warning');
-      return hap;
-    }
-    // note is a string, so we might be able to preserve harmonics if interval is a string as well
-    const interval = !isNaN(Number(intervalOrSemitones))
-      ? Interval.fromSemitones(intervalOrSemitones)
-      : String(intervalOrSemitones);
-    // TODO: move simplify to player to preserve enharmonics
-    // tone.js doesn't understand multiple sharps flats e.g. F##3 has to be turned into G3
-    // TODO: check if this is still relevant..
-    const targetNote = Note.simplify(Note.transpose(note, interval));
-    if (typeof hap.value === 'object') {
-      return hap.withValue(() => ({ ...hap.value, note: targetNote }));
-    }
-    return hap.withValue(() => targetNote);
-  });
-}
-
 // Pattern.prototype._transpose = function (intervalOrSemitones: string | number) {
 /**
  * Change the pitch of each value by the given amount. Expects numbers or note strings as values.
@@ -131,8 +95,41 @@ function transposeFn(intervalOrSemitones, pat) {
  * "c2 c3".fast(2).transpose("<1P -2M 4P 3m>".slow(2)).note()
  */
 
-export const transpose = register('transpose', transposeFn);
-export const trans = register('trans', transposeFn);
+export const transpose = register(['transpose', 'trans'], function transposeFn(intervalOrSemitones, pat) {
+  return pat.withHap((hap) => {
+    const note = hap.value.note ?? hap.value;
+    if (typeof note === 'number') {
+      // note is a number, so just add the number semitones of the interval
+      let semitones;
+      if (typeof intervalOrSemitones === 'number') {
+        semitones = intervalOrSemitones;
+      } else if (typeof intervalOrSemitones === 'string') {
+        semitones = Interval.semitones(intervalOrSemitones) || 0;
+      }
+      const targetNote = note + semitones;
+      if (typeof hap.value === 'object') {
+        return hap.withValue(() => ({ ...hap.value, note: targetNote }));
+      }
+      return hap.withValue(() => targetNote);
+    }
+    if (typeof note !== 'string' || !isNote(note)) {
+      logger(`[tonal] transpose: not a note "${note}"`, 'warning');
+      return hap;
+    }
+    // note is a string, so we might be able to preserve harmonics if interval is a string as well
+    const interval = !isNaN(Number(intervalOrSemitones))
+      ? Interval.fromSemitones(intervalOrSemitones)
+      : String(intervalOrSemitones);
+    // TODO: move simplify to player to preserve enharmonics
+    // tone.js doesn't understand multiple sharps flats e.g. F##3 has to be turned into G3
+    // TODO: check if this is still relevant..
+    const targetNote = Note.simplify(Note.transpose(note, interval));
+    if (typeof hap.value === 'object') {
+      return hap.withValue(() => ({ ...hap.value, note: targetNote }));
+    }
+    return hap.withValue(() => targetNote);
+  });
+});
 
 // example: transpose(3).late(0.2) will be equivalent to compose(transpose(3), late(0.2))
 // e.g. `stack(c3).superimpose(transpose(slowcat(7, 5)))` or
