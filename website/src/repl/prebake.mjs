@@ -28,7 +28,7 @@ export async function prebake() {
       prebake: true,
       tag: 'drum-machines',
     }),
-    samples(`https://raw.githubusercontent.com/tidalcycles/uzu-drumkit/main/strudel.json`, undefined, {
+    samples(`${baseNoTrailing}/uzu-drumkit.json`, undefined, {
       prebake: true,
       tag: 'drum-machines',
     }),
