@@ -320,6 +320,7 @@ export const { fft } = registerControl('fft');
  *
  * @name decay
  * @param {number | Pattern} time decay time in seconds
+ * @synonyms dec
  * @example
  * note("c3 e3 f3 g3").decay("<.1 .2 .3 .4>").sustain(0)
  *

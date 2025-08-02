@@ -1569,7 +1569,7 @@ export const func = curry((a, b) => reify(b).func(a));
 /**
  * Registers a new pattern method. The method is added to the Pattern class + the standalone function is returned from register.
  *
- * @param {string} name name of the function
+ * @param {string | string[]} name name of the function, or an array of names to be used as synonyms
  * @param {function} func function with 1 or more params, where last is the current pattern
  * @noAutocomplete
  *
