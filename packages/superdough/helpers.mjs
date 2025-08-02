@@ -1,5 +1,8 @@
 import { getAudioContext } from './superdough.mjs';
 import { clamp, nanFallback } from './util.mjs';
+import { getNoiseBuffer } from './noise.mjs';
+
+export const noises = ['pink', 'white', 'brown', 'crackle'];
 
 export function gainNode(value) {
   const node = getAudioContext().createGain();
@@ -216,9 +219,17 @@ export function webAudioTimeout(audioContext, onComplete, startTime, stopTime) {
 }
 const mod = (freq, range = 1, type = 'sine') => {
   const ctx = getAudioContext();
-  const osc = ctx.createOscillator();
-  osc.type = type;
-  osc.frequency.value = freq;
+  let osc;
+  if (noises.includes(type)) {
+    osc = ctx.createBufferSource();
+    osc.buffer = getNoiseBuffer(type, 2);
+    osc.loop = true;
+  } else {
+    osc = ctx.createOscillator();
+    osc.type = type;
+    osc.frequency.value = freq;
+  }
+
   osc.start();
   const g = new GainNode(ctx, { gain: range });
   osc.connect(g); // -range, range

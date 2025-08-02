@@ -9,6 +9,7 @@ import {
   getVibratoOscillator,
   webAudioTimeout,
   getWorklet,
+  noises,
 } from './helpers.mjs';
 import { getNoiseMix, getNoiseOscillator } from './noise.mjs';
 
@@ -40,7 +41,6 @@ const waveformAliases = [
   ['saw', 'sawtooth'],
   ['sin', 'sine'],
 ];
-const noises = ['pink', 'white', 'brown', 'crackle'];
 
 function makeSaturationCurve(amount, n_samples) {
   const k = typeof amount === 'number' ? amount : 50;
