@@ -142,7 +142,7 @@ export const transpose = register('transpose', function (intervalOrSemitones, pa
  * @name scaleTranspose
  * @param {offset} offset number of steps inside the scale
  * @returns Pattern
- * @synonyms scaleTrans
+ * @synonyms scaleTrans, strans
  * @example
  * "-8 [2,4,6]"
  * .scale('C4 bebop major')
