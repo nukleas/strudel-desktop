@@ -143,6 +143,7 @@ export const transpose = register(['transpose', 'trans'], function transposeFn(i
  * @name scaleTranspose
  * @param {offset} offset number of steps inside the scale
  * @returns Pattern
+ * @synonyms scaleTrans, strans
  * @example
  * "-8 [2,4,6]"
  * .scale('C4 bebop major')
@@ -150,22 +151,25 @@ export const transpose = register(['transpose', 'trans'], function transposeFn(i
  * .note()
  */
 
-export const scaleTranspose = register('scaleTranspose', function (offset /* : number | string */, pat) {
-  return pat.withHap((hap) => {
-    if (!hap.context.scale) {
-      throw new Error('can only use scaleTranspose after .scale');
-    }
-    if (typeof hap.value === 'object')
-      return hap.withValue(() => ({
-        ...hap.value,
-        note: scaleOffset(hap.context.scale, Number(offset), hap.value.note),
-      }));
-    if (typeof hap.value !== 'string') {
-      throw new Error('can only use scaleTranspose with notes');
-    }
-    return hap.withValue(() => scaleOffset(hap.context.scale, Number(offset), hap.value));
-  });
-});
+export const scaleTranspose = register(
+  ['scaleTranspose', 'scaleTrans', 'strans'],
+  function (offset /* : number | string */, pat) {
+    return pat.withHap((hap) => {
+      if (!hap.context.scale) {
+        throw new Error('can only use scaleTranspose after .scale');
+      }
+      if (typeof hap.value === 'object')
+        return hap.withValue(() => ({
+          ...hap.value,
+          note: scaleOffset(hap.context.scale, Number(offset), hap.value.note),
+        }));
+      if (typeof hap.value !== 'string') {
+        throw new Error('can only use scaleTranspose with notes');
+      }
+      return hap.withValue(() => scaleOffset(hap.context.scale, Number(offset), hap.value));
+    });
+  },
+);
 
 /**
  * Turns numbers into notes in the scale (zero indexed). Also sets scale for other scale operations, like {@link Pattern#scaleTranspose}.
