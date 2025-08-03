@@ -88,13 +88,14 @@ function scaleOffset(scale, offset, note) {
  * @returns Pattern
  * @memberof Pattern
  * @name transpose
+ * @synonyms trans
  * @example
  * "c2 c3".fast(2).transpose("<0 -2 5 3>".slow(2)).note()
  * @example
  * "c2 c3".fast(2).transpose("<1P -2M 4P 3m>".slow(2)).note()
  */
 
-export const transpose = register('transpose', function (intervalOrSemitones, pat) {
+export const transpose = register(['transpose', 'trans'], function transposeFn(intervalOrSemitones, pat) {
   return pat.withHap((hap) => {
     const note = hap.value.note ?? hap.value;
     if (typeof note === 'number') {

@@ -252,6 +252,20 @@ export const { fmenv } = registerControl('fmenv');
  *
  */
 export const { fmattack } = registerControl('fmattack');
+
+/**
+ * waveform of the fm modulator
+ *
+ * @name fmwave
+ * @param {number | Pattern} wave waveform
+ * @example
+ * n("0 1 2 3".fast(4)).scale("d:minor").s("sine").fmwave("<sine square sawtooth crackle>").fm(4).fmh(2.01)
+ * @example
+ * n("0 1 2 3".fast(4)).chord("<Dm Am F G>").voicing().s("sawtooth").fmwave("brown").fm(.6)
+ *
+ */
+export const { fmwave } = registerControl('fmwave');
+
 /**
  * Decay time for the FM envelope: seconds until the sustain level is reached after the attack phase.
  *
@@ -306,6 +320,7 @@ export const { fft } = registerControl('fft');
  *
  * @name decay
  * @param {number | Pattern} time decay time in seconds
+ * @synonyms dec
  * @example
  * note("c3 e3 f3 g3").decay("<.1 .2 .3 .4>").sustain(0)
  *
