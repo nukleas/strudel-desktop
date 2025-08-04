@@ -1288,7 +1288,7 @@ export function sequenceP(pats) {
  * @synonyms polyrhythm, pr
  * @example
  * stack("g3", "b3", ["e4", "d4"]).note()
- * // "g3,b3,[e4,d4]".note()
+ * // "g3,b3,[e4 d4]".note()
  *
  * @example
  * // As a chained function:
