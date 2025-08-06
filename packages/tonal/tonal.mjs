@@ -183,11 +183,10 @@ function _convertStepToNumberAndOffset(step) {
   let offset = 0;
   if (isNaN(asNumber)) {
     step = String(step);
-    // Check to see if the format correctly matches the expected one of
-    // Optionally starting with + or -
-    // A number
-    // Some number of sharps or flats (but not both)
-    const match = /^[-+]?(\d+)((#{1,})|(b{1,}))?$/.exec(step);
+    // Check to see if the step matches the expected format:
+    //   - A number (possibly negative)
+    //   - Some number of sharps or flats (but not both)
+    const match = /^(-?\d+)(#+|b+)?$/.exec(step);
 
     if (!match) {
       logger(
@@ -196,27 +195,33 @@ function _convertStepToNumberAndOffset(step) {
       );
       return silence;
     }
-    asNumber = Number(match[2]);
-    // The number of semitones will be given by either the total number of sharps (match 3)
-    // or the negative of the total number of flats (match 4)
-    offset = match[3].length > 0 ? match[3].length : -match[4].length;
+    asNumber = Number(match[1]);
+    // These decorations will determine the semitone offset based on the number of
+    // sharps or flats
+    const decorations = match[2] || '';
+    offset = decorations[0] === '#' ? decorations.length : -decorations.length;
   }
   return [asNumber, offset];
 }
 
-// Finds the nearest (named) scale note to `note` (a string which is then converted to a midi number)
+// Finds the nearest scale note to `note`
 function _getNearestScaleNote(scaleName, note) {
-  let midiNote = noteToMidi(note);
+  let midiNote = typeof note === 'string' ? noteToMidi(note) : note;
   const octave = (midiNote / 12) >> 0;
-  const goal = midiNote % 12;
-  const chromas = scaleToChromas(scaleName);
-  return chromas.reduce((prev, curr) => {
-    return Math.abs(curr - goal) < Math.abs(prev - goal) ? curr : prev;
+  const targetChroma = midiNote % 12;
+  const scaleChromas = scaleToChromas(scaleName);
+  return scaleChromas.reduce((prev, curr) => {
+    // Include equality so ties are broken upwards
+    return Math.abs(curr - targetChroma) <= Math.abs(prev - targetChroma) ? curr : prev;
   }) + octave * 12;
 }
 
 /**
  * Turns numbers into notes in the scale (zero indexed) or quantizes notes to a scale.
+ *
+ * When describing notes via numbers, note that negative numbers can be used to wrap backwards
+ * in the scale as well as sharps or flats (but not both) to produce notes outside of the scale.
+ *
  * Also sets scale for other scale operations, like {@link Pattern#scaleTranspose}.
  *
  * A scale consists of a root note (e.g. `c4`, `c`, `f#`, `bb4`) followed by semicolon (':') and then a [scale type](https://github.com/tonaljs/tonal/blob/main/packages/scale-type/data.ts).
@@ -236,6 +241,10 @@ function _getNearestScaleNote(scaleName, note) {
  * n(rand.range(0,12).segment(8))
  * .scale("C:ritusen")
  * .s("piano")
+ * @example
+ * n("<[0,7b] [-4# -4] [-2,7##] 4 [0,7] [-4# -4b] [-2,7###] 4b>*4")
+ * .scale("C:<major minor>/2")
+ * .s("piano")
  */
 
 export const scale = register(
@@ -245,14 +254,13 @@ export const scale = register(
     if (Array.isArray(scale)) {
       scale = scale.flat().join(' ');
     }
-    let output = (
+    return (
       pat
         .fmap((value) => {
           const isObject = typeof value === 'object';
           // The case where the note has been defined via `n`
           if ((isObject && 'n' in value) || !isObject) {
             let step = isObject ? value.n : value;
-            debugger;
             delete value.n; // remove n so it won't cause trouble
             let [number, offset] = _convertStepToNumberAndOffset(step);
             try {
@@ -280,7 +288,6 @@ export const scale = register(
         // legacy:
         .withHap((hap) => hap.setContext({ ...hap.context, scale }))
     );
-    return output;
   },
   true,
   true, // preserve step count
