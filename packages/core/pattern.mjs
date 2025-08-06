@@ -852,14 +852,14 @@ export class Pattern {
     );
   }
 
-  log(func = (_, hap) => `[hap] ${hap.showWhole(true)}`, getData = (_, hap) => ({ hap })) {
+  log(func = (hap) => `[hap] ${hap.showWhole(true)}`, getData = (hap) => ({ hap })) {
     return this.onTrigger((...args) => {
       logger(func(...args), undefined, getData(...args));
     }, false);
   }
 
   logValues(func = id) {
-    return this.log((_, hap) => func(hap.value));
+    return this.log((hap) => func(hap.value));
   }
 
   //////////////////////////////////////////////////////////////////////
