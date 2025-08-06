@@ -21,6 +21,7 @@ import {
   numeralArgs,
   parseNumeral,
   pairs,
+  stringifyValues,
 } from './util.mjs';
 import drawLine from './drawLine.mjs';
 import { logger } from './logger.mjs';
@@ -852,13 +853,29 @@ export class Pattern {
     );
   }
 
+  /**
+   * Writes the content of the current event to the console, which is visible in the side menu
+   * or as the developer console.
+   * @name log
+   * @memberof Pattern
+   * @example
+   * s("bd sd").log()
+   */
   log(func = (hap) => `[hap] ${hap.showWhole(true)}`, getData = (hap) => ({ hap })) {
     return this.onTrigger((...args) => {
       logger(func(...args), undefined, getData(...args));
     }, false);
   }
 
-  logValues(func = id) {
+  /**
+   * A simplified version of `log` which writes all "values" (various configurable parameters)
+   * within the event to the console, which is visible in the side menu or as the developer console.
+   * @name logValues
+   * @memberof Pattern
+   * @example
+   * s("bd sd").gain("0.25 0.5 1").n("2 1 0").logValues()
+   */
+  logValues(func = (value) => `${stringifyValues(value, true)}`) {
     return this.log((hap) => func(hap.value));
   }
 

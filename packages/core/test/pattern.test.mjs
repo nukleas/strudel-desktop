@@ -1329,7 +1329,7 @@ describe('Pattern', () => {
   describe('logValues', () => {
     it('logs values to console', () => {
       const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const pattern = pure('a').note('c#').log();
+      const pattern = pure('a').note('c#').logValues();
       const haps = pattern.queryArc(0, 1);
 
       // Force a trigger
@@ -1338,7 +1338,7 @@ describe('Pattern', () => {
       });
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        '%c[hap] 0/1 → 1/1: value:a note:c#',
+        '%cvalue:a note:c#',
         'background-color: black;color:white;border-radius:15px',
       );
       mockConsoleLog.mockRestore();
