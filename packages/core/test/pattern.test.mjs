@@ -55,7 +55,7 @@ import {
   expand,
 } from '../index.mjs';
 
-import { log, logValues } from '../pattern.mjs'
+import { log, logValues } from '../pattern.mjs';
 
 import { steady } from '../signal.mjs';
 
@@ -1311,11 +1311,11 @@ describe('Pattern', () => {
   describe('log', () => {
     it('logs to console', () => {
       const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const pattern = pure('a').log()
-      const haps = pattern.queryArc(0, 1);  // query during first time arc
+      const pattern = pure('a').log();
+      const haps = pattern.queryArc(0, 1);
 
       // Force a trigger
-      haps.forEach(hap => {
+      haps.forEach((hap) => {
         hap.context?.onTrigger?.(hap);
       });
 
@@ -1329,11 +1329,11 @@ describe('Pattern', () => {
   describe('logValues', () => {
     it('logs values to console', () => {
       const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const pattern = pure('a').note("c#").log()
-      const haps = pattern.queryArc(0, 1);  // query during first time arc
+      const pattern = pure('a').note('c#').log();
+      const haps = pattern.queryArc(0, 1);
 
       // Force a trigger
-      haps.forEach(hap => {
+      haps.forEach((hap) => {
         hap.context?.onTrigger?.(hap);
       });
 
