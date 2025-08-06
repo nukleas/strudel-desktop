@@ -222,6 +222,7 @@ export const Note = {
 };
 
 // TODO: support octave numbers
+// Example: Note("Bb3").transpose("c3")
 export function transpose(note, step) {
   // example: E, 3
   const stepNumber = Step.tokenize(step)[1]; // 3
@@ -236,4 +237,15 @@ export function transpose(note, step) {
   return [targetNote, offsetAccidentals].join('');
 }
 
-//Note("Bb3").transpose("c3")
+// Converts a `scaleName` into a corresponding list of chromas between 0 and 12
+export function scaleToChromas (scaleName) {
+  if (Array.isArray(scaleName)) {
+    scaleName = scaleName.flat().join(' ');
+  }
+  const [tonic, name] = Scale.tokenize(scaleName);
+  const rootMidi = noteToMidi(tonic);
+  const chroma = rootMidi % 12;
+  const intervals = Scale.get(name).intervals;
+  const scaleSteps = intervals.map(Interval.semitones);
+  return scaleSteps.map(s => (s + chroma) % 12);
+}
