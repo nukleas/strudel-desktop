@@ -7,7 +7,7 @@ This program is free software: you can redistribute it and/or modify it under th
 import { Note, Interval, Scale } from '@tonaljs/tonal';
 import { register, _mod, silence, logger, pure, isNote } from '@strudel/core';
 import { stepInNamedScale, scaleToChromas } from './tonleiter.mjs';
-import { noteToMidi } from '../core/util.mjs'
+import { noteToMidi } from '../core/util.mjs';
 
 const octavesInterval = (octaves) => (octaves <= 0 ? -1 : 1) + octaves * 7 + 'P';
 
@@ -175,25 +175,18 @@ export const { scaleTranspose, scaleTrans, strans } = register(
 // Converts a step value, which is a number optionally decorated with sharps and flats,
 // to a number and an `offset` number of semitones
 function _convertStepToNumberAndOffset(step) {
-  if (isNote(step)) {
-    // legacy..
-    return pure(step);
-  }
   let asNumber = Number(step);
   let offset = 0;
   if (isNaN(asNumber)) {
     step = String(step);
     // Check to see if the step matches the expected format:
-    //   - A number (possibly negative)
-    //   - Some number of sharps or flats (but not both)
+    // - A number (possibly negative)
+    // - Some number of sharps or flats (but not both)
     const match = /^(-?\d+)(#+|b+)?$/.exec(step);
 
     if (!match) {
-      logger(
-        `[tonal] invalid scale step "${step}", expected number or integer with optional # b suffixes`,
-        'error',
-      );
-      return silence;
+      logger(`[tonal] invalid scale step "${step}", expected number or integer with optional # b suffixes`, 'error');
+      return [silence, 0];
     }
     asNumber = Number(match[1]);
     // These decorations will determine the semitone offset based on the number of
@@ -210,10 +203,13 @@ function _getNearestScaleNote(scaleName, note) {
   const octave = (midiNote / 12) >> 0;
   const targetChroma = midiNote % 12;
   const scaleChromas = scaleToChromas(scaleName);
-  return scaleChromas.reduce((prev, curr) => {
-    // Include equality so ties are broken upwards
-    return Math.abs(curr - targetChroma) <= Math.abs(prev - targetChroma) ? curr : prev;
-  }) + octave * 12;
+  return (
+    scaleChromas.reduce((prev, curr) => {
+      // Include equality so ties are broken upwards
+      return Math.abs(curr - targetChroma) <= Math.abs(prev - targetChroma) ? curr : prev;
+    }) +
+    octave * 12
+  );
 }
 
 /**
@@ -262,6 +258,10 @@ export const scale = register(
           if ((isObject && 'n' in value) || !isObject) {
             let step = isObject ? value.n : value;
             delete value.n; // remove n so it won't cause trouble
+            if (isNote(step)) {
+              // legacy..
+              return pure(step);
+            }
             let [number, offset] = _convertStepToNumberAndOffset(step);
             try {
               let note;

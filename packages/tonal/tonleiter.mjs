@@ -238,7 +238,7 @@ export function transpose(note, step) {
 }
 
 // Converts a `scaleName` into a corresponding list of chromas between 0 and 12
-export function scaleToChromas (scaleName) {
+export function scaleToChromas(scaleName) {
   if (Array.isArray(scaleName)) {
     scaleName = scaleName.flat().join(' ');
   }
@@ -247,5 +247,5 @@ export function scaleToChromas (scaleName) {
   const chroma = rootMidi % 12;
   const intervals = Scale.get(name).intervals;
   const scaleSteps = intervals.map(Interval.semitones);
-  return scaleSteps.map(s => (s + chroma) % 12);
+  return scaleSteps.map((s) => (s + chroma) % 12);
 }
