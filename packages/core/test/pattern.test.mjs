@@ -1338,7 +1338,7 @@ describe('Pattern', () => {
       });
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        '%cvalue:a note:c#',
+        '%c[hap] value:a note:c#',
         'background-color: black;color:white;border-radius:15px',
       );
       mockConsoleLog.mockRestore();

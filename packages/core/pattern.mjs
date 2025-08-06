@@ -854,8 +854,7 @@ export class Pattern {
   }
 
   /**
-   * Writes the content of the current event to the console, which is visible in the side menu
-   * or as the developer console.
+   * Writes the content of the current event to the console (visible in the side menu).
    * @name log
    * @memberof Pattern
    * @example
@@ -869,13 +868,13 @@ export class Pattern {
 
   /**
    * A simplified version of `log` which writes all "values" (various configurable parameters)
-   * within the event to the console, which is visible in the side menu or as the developer console.
+   * within the event to the console (visible in the side menu).
    * @name logValues
    * @memberof Pattern
    * @example
    * s("bd sd").gain("0.25 0.5 1").n("2 1 0").logValues()
    */
-  logValues(func = (value) => `${stringifyValues(value, true)}`) {
+  logValues(func = (value) => `[hap] ${stringifyValues(value, true)}`) {
     return this.log((hap) => func(hap.value));
   }
 
