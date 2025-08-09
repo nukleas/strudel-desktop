@@ -18,9 +18,10 @@ function wrapPhase(phase, maxPhase = 1) {
   return phase;
 }
 const blockSize = 128;
-// Smooth waveshape near discontinuities to remove frequencies above nyquist and prevent aliasing
+// Smooth waveshape near discontinuities to remove frequencies above Nyquist and prevent aliasing
 // referenced from https://www.kvraudio.com/forum/viewtopic.php?t=375517
 function polyBlep(phase, dt) {
+  dt = Math.min(dt, 1 - dt);
   // Start of cycle
   if (phase < dt) {
     phase /= dt;
@@ -451,7 +452,6 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
       // this.port.postMessage({ type: 'onended' });
       return false;
     }
-    const frequency = applySemitoneDetuneToFrequency(params.frequency[0], params.detune[0] / 100);
 
     const output = outputs[0];
     const voices = params.voices[0];
@@ -462,9 +462,6 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
 
     for (let n = 0; n < voices; n++) {
       const isOdd = (n & 1) == 1;
-
-      //applies unison "spread" detune in semitones
-      const freq = applySemitoneDetuneToFrequency(frequency, getUnisonDetune(voices, freqspread, n));
       let gainL = gain1;
       let gainR = gain2;
       // invert right and left gain
@@ -472,11 +469,14 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
         gainL = gain2;
         gainR = gain1;
       }
-      // We must wrap this here because it is passed into sawblep below which
-      // has domain [0, 1]
-      const dt = wrapPhase(freq / sampleRate);
-
       for (let i = 0; i < output[0].length; i++) {
+        // Main detuning
+        let freq = applySemitoneDetuneToFrequency(params.frequency[i] ?? params.frequency[0], params.detune[0] / 100);
+        // Individual voice detuning
+        freq = applySemitoneDetuneToFrequency(freq, getUnisonDetune(voices, freqspread, n));
+        // We must wrap this here because it is passed into sawblep below which
+        // has domain [0, 1]
+        const dt = _mod(freq / sampleRate, 1);
         this.phase[n] = this.phase[n] ?? Math.random();
         const v = waveshapes.sawblep(this.phase[n], dt);
 
