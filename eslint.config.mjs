@@ -83,4 +83,14 @@ export default [
       ],
     },
   },
+  {
+    // Properties provided by AudioWorkletGlobalScope
+    files: ['packages/superdough/worklets.mjs'],
+    languageOptions: {
+      globals: {
+        currentTime: 'readonly',
+        sampleRate: 'readonly',
+      },
+    },
+  },
 ];
