@@ -3418,6 +3418,8 @@ exports[`runs examples > example "fast" example index 0 1`] = `
 
 exports[`runs examples > example "fastChunk" example index 0 1`] = `
 [
+  "[ 0/1 → 1/4 | color:red note:0 ]",
+  "[ 1/4 → 1/2 | color:red note:1 ]",
   "[ 1/2 → 3/4 | note:E2 ]",
   "[ 3/4 → 1/1 | note:F2 ]",
   "[ 1/1 → 5/4 | note:G2 ]",
@@ -3426,6 +3428,8 @@ exports[`runs examples > example "fastChunk" example index 0 1`] = `
   "[ 7/4 → 2/1 | note:C3 ]",
   "[ 2/1 → 9/4 | note:D3 ]",
   "[ 9/4 → 5/2 | note:D2 ]",
+  "[ 5/2 → 11/4 | color:red note:2 ]",
+  "[ 11/4 → 3/1 | color:red note:3 ]",
   "[ 3/1 → 13/4 | note:G2 ]",
   "[ 13/4 → 7/2 | note:A2 ]",
   "[ 7/2 → 15/4 | note:B2 ]",
@@ -8411,6 +8415,39 @@ exports[`runs examples > example "scale" example index 2 1`] = `
   "[ 29/8 → 15/4 | note:F5 s:piano ]",
   "[ 15/4 → 31/8 | note:C5 s:piano ]",
   "[ 31/8 → 4/1 | note:A4 s:piano ]",
+]
+`;
+
+exports[`runs examples > example "scale" example index 3 1`] = `
+[
+  "[ 0/1 → 1/4 | note:C3 s:piano ]",
+  "[ 0/1 → 1/4 | note:B3 s:piano ]",
+  "[ 1/4 → 3/8 | note:Gb2 s:piano ]",
+  "[ 3/8 → 1/2 | note:F2 s:piano ]",
+  "[ 1/2 → 3/4 | note:A2 s:piano ]",
+  "[ 1/2 → 3/4 | note:D4 s:piano ]",
+  "[ 3/4 → 1/1 | note:G3 s:piano ]",
+  "[ 1/1 → 5/4 | note:C3 s:piano ]",
+  "[ 1/1 → 5/4 | note:C4 s:piano ]",
+  "[ 5/4 → 11/8 | note:Gb2 s:piano ]",
+  "[ 11/8 → 3/2 | note:E2 s:piano ]",
+  "[ 3/2 → 7/4 | note:A2 s:piano ]",
+  "[ 3/2 → 7/4 | note:Eb4 s:piano ]",
+  "[ 7/4 → 2/1 | note:F#3 s:piano ]",
+  "[ 2/1 → 9/4 | note:C3 s:piano ]",
+  "[ 2/1 → 9/4 | note:B3 s:piano ]",
+  "[ 9/4 → 19/8 | note:Gb2 s:piano ]",
+  "[ 19/8 → 5/2 | note:F2 s:piano ]",
+  "[ 5/2 → 11/4 | note:Ab2 s:piano ]",
+  "[ 5/2 → 11/4 | note:D4 s:piano ]",
+  "[ 11/4 → 3/1 | note:G3 s:piano ]",
+  "[ 3/1 → 13/4 | note:C3 s:piano ]",
+  "[ 3/1 → 13/4 | note:C4 s:piano ]",
+  "[ 13/4 → 27/8 | note:Gb2 s:piano ]",
+  "[ 27/8 → 7/2 | note:E2 s:piano ]",
+  "[ 7/2 → 15/4 | note:Ab2 s:piano ]",
+  "[ 7/2 → 15/4 | note:Eb4 s:piano ]",
+  "[ 15/4 → 4/1 | note:F#3 s:piano ]",
 ]
 `;
 
