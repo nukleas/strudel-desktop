@@ -1,8 +1,9 @@
 import reverbGen from './reverbGen.mjs';
+import { clamp } from './util.mjs';
 
 if (typeof AudioContext !== 'undefined') {
-  AudioContext.prototype.adjustLength = function (duration, buffer, speed = 1, offsetSeconds = 0) {
-    const offset = offsetSeconds * buffer.sampleRate;
+  AudioContext.prototype.adjustLength = function (duration, buffer, speed = 1, offsetAmount = 0) {
+    const sampleOffset = Math.floor(clamp(offsetAmount, 0, 1) * buffer.length);
     const newLength = buffer.sampleRate * duration;
     const newBuffer = this.createBuffer(buffer.numberOfChannels, buffer.length, buffer.sampleRate);
     for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
@@ -10,7 +11,8 @@ if (typeof AudioContext !== 'undefined') {
       let newData = newBuffer.getChannelData(channel);
 
       for (let i = 0; i < newLength; i++) {
-        let position = (offset + i * Math.abs(speed)) % oldData.length;
+        // loop the buffer around to prevent
+        let position = (sampleOffset + i * Math.abs(speed)) % oldData.length;
         if (speed < 1) {
           position = position * -1;
         }

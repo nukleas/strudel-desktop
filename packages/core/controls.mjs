@@ -1518,23 +1518,24 @@ export const { roomfade, rfade } = registerControl('roomfade', 'rfade');
 export const { ir, iresponse } = registerControl(['ir', 'i'], 'iresponse');
 
 /**
- * Sets the sample to use as an impulse response for the reverb.
- * @name iresponse
- * @param {string | Pattern} sample to use as an impulse response
- * @synonyms ir
+ * Sets speed of the sample for the impulse response.
+ * @name irspeed
+ * @param {string | Pattern} speed
  * @example
- * s("bd sd [~ bd] sd").room(.8).ir("<shaker_large:0 shaker_large:2>")
+ * samples('github:switchangel/pad')
+ * $: s("brk/2").fit().scrub(irand(16).div(16).seg(8)).ir("swpad:4").room(.2).irspeed("<2 1 .5>/2").irbegin(.5).roomsize(.5)
  *
  */
 export const { irspeed } = registerControl('irspeed');
 
 /**
- * Sets the sample to use as an impulse response for the reverb.
- * @name iresponse
- * @param {string | Pattern} sample to use as an impulse response
+ * Sets the beginning of the IR response sample
+ * @name irbegin
+ * @param {string | Pattern} begin between 0 and 1
  * @synonyms ir
  * @example
- * s("bd sd [~ bd] sd").room(.8).ir("<shaker_large:0 shaker_large:2>")
+ * samples('github:switchangel/pad')
+ * $: s("brk/2").fit().scrub(irand(16).div(16).seg(8)).ir("swpad:4").room(.65).irspeed("-2").irbegin("<0 .5 .75>/2").roomsize(.6)
  *
  */
 export const { irbegin } = registerControl('irbegin');
