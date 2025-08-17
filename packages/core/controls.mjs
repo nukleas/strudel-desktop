@@ -1516,6 +1516,28 @@ export const { roomfade, rfade } = registerControl('roomfade', 'rfade');
  *
  */
 export const { ir, iresponse } = registerControl(['ir', 'i'], 'iresponse');
+
+/**
+ * Sets the sample to use as an impulse response for the reverb.
+ * @name iresponse
+ * @param {string | Pattern} sample to use as an impulse response
+ * @synonyms ir
+ * @example
+ * s("bd sd [~ bd] sd").room(.8).ir("<shaker_large:0 shaker_large:2>")
+ *
+ */
+export const { irspeed } = registerControl('irspeed');
+
+/**
+ * Sets the sample to use as an impulse response for the reverb.
+ * @name iresponse
+ * @param {string | Pattern} sample to use as an impulse response
+ * @synonyms ir
+ * @example
+ * s("bd sd [~ bd] sd").room(.8).ir("<shaker_large:0 shaker_large:2>")
+ *
+ */
+export const { irbegin } = registerControl('irbegin');
 /**
  * Sets the room size of the reverb, see `room`.
  * When this property is changed, the reverb will be recaculated, so only change this sparsely..
