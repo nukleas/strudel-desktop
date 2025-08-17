@@ -401,7 +401,7 @@ function getFilterType(ftype) {
 //type orbit {
 // gain: number,
 // reverbNode: reverbNode
-// delayNode:
+// delayNode: delayNode
 //}
 let orbits = {};
 function connectToOrbit(node, orbit) {
@@ -706,7 +706,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     logger('[webaudio] skip hap: still loading', ac.currentTime - t);
     return;
   }
-  let chain = []; // audio nodes that will be connected to each other sequentially
+  const chain = []; // audio nodes that will be connected to each other sequentially
   chain.push(sourceNode);
   stretch !== undefined && chain.push(getWorklet(ac, 'phase-vocoder-processor', { pitchFactor: stretch }));
 
