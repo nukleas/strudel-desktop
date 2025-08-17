@@ -10,7 +10,7 @@ https://rohandrape.net/?t=hmt
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { timeCat, register, silence, stack, pure } from './pattern.mjs';
+import { timeCat, register, silence, stack, pure, _morph } from './pattern.mjs';
 import { rotate, flatten, splitAt, zipWith } from './util.mjs';
 import Fraction, { lcm } from './fraction.mjs';
 
@@ -212,22 +212,10 @@ export const euclidLegatoRot = register(['euclidLegatoRot'], function (pulses, s
  * @param {number} steps the number of steps to fill
  * @param {number} groove exists between the extremes of 0 (straight euclidian) and 1 (straight pulse)
  * @example
- * sound("hh").euclidish(7,12,tri.slow(8))
- * .pan(tri.slow(8))
+ * sound("hh").euclidish(7,12,sine.slow(8))
+ * .pan(sine.slow(8))
  */
 export const { euclidish, eish } = register(['euclidish', 'eish'], function (pulses, steps, perc, pat) {
-  const b = bjork(pulses, steps);
-  let trues = 0;
-  const offs = [];
-  for (const [pos, step] of b.entries()) {
-    if (step) {
-      offs.push([trues++, pos]);
-    }
-  }
-  const tweened = offs.map(([n, pos]) =>
-    Fraction(pos)
-      .div(steps)
-      .add(Fraction(n).div(pulses).sub(Fraction(pos).div(steps)).mul(perc)),
-  );
-  return pat.struct(stack(...tweened.map((pos) => pure(true)._fastGap(steps)._late(pos)))).setSteps(steps);
+  const morphed = _morph(bjork(pulses, steps), new Array(pulses).fill(1), perc);
+  return pat.struct(morphed).setSteps(steps);
 });

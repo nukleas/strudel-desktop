@@ -21,6 +21,7 @@ import {
   numeralArgs,
   parseNumeral,
   pairs,
+  zipWith,
 } from './util.mjs';
 import drawLine from './drawLine.mjs';
 import { logger } from './logger.mjs';
@@ -3400,3 +3401,69 @@ export const { beat } = register(
   ['beat'],
   __beat((x) => x.innerJoin()),
 );
+
+export const _morph = (from, to, by) => {
+  by = Fraction(by);
+  const dur = Fraction(1).div(from.length);
+  const positions = (list) => {
+    const result = [];
+    for (const [pos, value] of list.entries()) {
+      if (value) {
+        result.push([Fraction(pos).div(list.length), value]);
+      }
+    }
+    return result;
+  };
+  const arcs = zipWith(
+    ([posa, valuea], [posb, valueb]) => {
+      const b = by.mul(posb - posa).add(posa);
+      const e = b.add(dur);
+      return new TimeSpan(b, e);
+    },
+    positions(from),
+    positions(to),
+  );
+  function query(state) {
+    const cycle = state.span.begin.sam();
+    const cycleArc = state.span.cycleArc();
+    const result = [];
+    for (const whole of arcs) {
+      const part = whole.intersection(cycleArc);
+      if (part !== undefined) {
+        result.push(
+          new Hap(
+            whole.withTime((x) => x.add(cycle)),
+            part.withTime((x) => x.add(cycle)),
+            true,
+          ),
+        );
+      }
+    }
+    return result;
+  }
+  return new Pattern(query).splitQueries();
+};
+
+/**
+ * Takes two binary rhythms represented as lists of 1s and 0s, and a number
+ * between 0 and 1 that morphs between them. The two lists should contain the same
+ * number of true values.
+ * @example
+ * sound("hh").struct(morph([1,0,1,0,1,0,1,0], // straight rhythm
+ *                          [1,1,0,1,0,1,0], // wonky rhythm
+ *                          0.25 // creates a slightly wonky rhythm
+ *                         )
+ *                   )
+ * @example
+ * sound("hh").struct(morph("1:0:1:0:1:0:1:0", // straight rhythm
+ *                          "1:1:0:1:0:1:0", // wonky rhythm
+ *                          sine.slow(8) // slowly morph between the rhythms
+ *                         )
+ *                   )
+ */
+export const morph = (frompat, topat, bypat) => {
+  frompat = reify(frompat);
+  topat = reify(topat);
+  bypat = reify(bypat);
+  return frompat.innerBind((from) => topat.innerBind((to) => bypat.innerBind((by) => _morph(from, to, by))));
+};
