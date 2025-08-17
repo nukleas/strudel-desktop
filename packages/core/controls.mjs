@@ -541,28 +541,40 @@ export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
  *
  */
 
-// TODO: SUPRADOUGH implement post orbit "pump" sidechain effect
-// /**
-//  * modulate the amplitude of an orbit to create a "sidechain" like effect
-//  *
-//  * @name pump
-//  * @param {number | Pattern} speed modulation speed in cycles
-//  * @example
-//  * note("{f g c d}%16").s("sawtooth").pump(".25:.75")
-//  *
-//  */
-// export const { pump } = registerControl(['pump', 'pumpdepth']);
+/**
+ * modulate the amplitude of an orbit to create a "sidechain" like effect
+ *
+ * @name duckorbit
+ * @param {number | Pattern} orbit target orbit
+ * @example
+ * $: n(run(16)).scale("c:minor:pentatonic").s("sawtooth").delay(.7).orbit(2)
+ * $: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack(0.2).duckdepth(1)
+ *
+ */
+export const { duck } = registerControl('duckorbit', 'duck');
 
-// /**
-//  * modulate the amplitude of an orbit to create a "sidechain" like effect
-//  *
-//  * @name pumpdepth
-//  * @param {number | Pattern} depth depth of modulation from 0 to 1
-//  * @example
-//  * note("{f g c d}%16").s("sawtooth").pump(".25").depth("<.25 .5 .75 1>")
-//  *
-//  */
-// export const { pumpdepth } = registerControl('pumpdepth');
+/**
+ *  the amount of ducking applied to target orbit
+ *
+ * @name duckdepth
+ * @param {number | Pattern} depth depth of modulation from 0 to 1
+ * @example
+ * stack( n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2), s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack(0.2).duckdepth("<1 .9 .6 0>"))
+ *
+ */
+
+export const { duckdepth } = registerControl('duckdepth');
+
+/**
+ *  the attack time of the duck effect
+ *
+ * @name duckattack
+ * @param {number | Pattern} time
+ * @example
+ * stack( n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2), s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack("<0.2 0 0.4>").duckdepth(1))
+ *
+ */
+export const { duckattack } = registerControl('duckattack', 'duckatt');
 
 export const { drive } = registerControl('drive');
 
