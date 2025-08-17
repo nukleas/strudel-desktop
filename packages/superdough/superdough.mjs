@@ -432,11 +432,11 @@ function duckOrbit(audioContext, targetOrbit, t, attacktime = 0.1, duckdepth = 1
       () => {
         orbits[target].gain.gain.cancelScheduledValues(t);
         const currVal = orbits[target].gain.gain.value;
-        orbits[target].gain.gain.linearRampToValueAtTime(clamp(1 - Math.pow(duckdepth, 0.5), 0.01, currVal), t + 0.002);
+        orbits[target].gain.gain.linearRampToValueAtTime(clamp(1 - Math.pow(duckdepth, 0.5), 0.01, currVal), t);
         orbits[target].gain.gain.exponentialRampToValueAtTime(1, t + Math.max(0.002, attacktime));
       },
       0,
-      t,
+      t - 0.01,
     );
   });
 }

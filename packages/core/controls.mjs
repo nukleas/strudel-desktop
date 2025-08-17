@@ -547,7 +547,8 @@ export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
  * @name duckorbit
  * @param {number | Pattern} orbit target orbit
  * @example
- * stack( n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2), s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack(0.2).duckdepth(1))
+ * $: n(run(16)).scale("c:minor:pentatonic").s("sawtooth").delay(.7).orbit(2)
+ * $: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack(0.2).duckdepth(1)
  *
  */
 export const { duck } = registerControl('duckorbit', 'duck');
