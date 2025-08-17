@@ -21,6 +21,7 @@ import {
   numeralArgs,
   parseNumeral,
   pairs,
+  stringifyValues,
 } from './util.mjs';
 import drawLine from './drawLine.mjs';
 import { logger } from './logger.mjs';
@@ -852,14 +853,29 @@ export class Pattern {
     );
   }
 
-  log(func = (_, hap) => `[hap] ${hap.showWhole(true)}`, getData = (_, hap) => ({ hap })) {
+  /**
+   * Writes the content of the current event to the console (visible in the side menu).
+   * @name log
+   * @memberof Pattern
+   * @example
+   * s("bd sd").log()
+   */
+  log(func = (hap) => `[hap] ${hap.showWhole(true)}`, getData = (hap) => ({ hap })) {
     return this.onTrigger((...args) => {
       logger(func(...args), undefined, getData(...args));
     }, false);
   }
 
-  logValues(func = id) {
-    return this.log((_, hap) => func(hap.value));
+  /**
+   * A simplified version of `log` which writes all "values" (various configurable parameters)
+   * within the event to the console (visible in the side menu).
+   * @name logValues
+   * @memberof Pattern
+   * @example
+   * s("bd sd").gain("0.25 0.5 1").n("2 1 0").logValues()
+   */
+  logValues(func = (value) => `[hap] ${stringifyValues(value, true)}`) {
+    return this.log((hap) => func(hap.value));
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -1288,7 +1304,7 @@ export function sequenceP(pats) {
  * @synonyms polyrhythm, pr
  * @example
  * stack("g3", "b3", ["e4", "d4"]).note()
- * // "g3,b3,[e4,d4]".note()
+ * // "g3,b3,[e4 d4]".note()
  *
  * @example
  * // As a chained function:

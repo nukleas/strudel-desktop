@@ -95,7 +95,7 @@ function scaleOffset(scale, offset, note) {
  * "c2 c3".fast(2).transpose("<1P -2M 4P 3m>".slow(2)).note()
  */
 
-export const transpose = register(['transpose', 'trans'], function transposeFn(intervalOrSemitones, pat) {
+export const { transpose, trans } = register(['transpose', 'trans'], function transposeFn(intervalOrSemitones, pat) {
   return pat.withHap((hap) => {
     const note = hap.value.note ?? hap.value;
     if (typeof note === 'number') {
@@ -151,7 +151,7 @@ export const transpose = register(['transpose', 'trans'], function transposeFn(i
  * .note()
  */
 
-export const scaleTranspose = register(
+export const { scaleTranspose, scaleTrans, strans } = register(
   ['scaleTranspose', 'scaleTrans', 'strans'],
   function (offset /* : number | string */, pat) {
     return pat.withHap((hap) => {

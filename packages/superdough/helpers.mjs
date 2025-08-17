@@ -265,7 +265,7 @@ export function applyFM(param, value, begin) {
 
     modulator = fmmod.node;
     stop = fmmod.stop;
-    if (![fmAttack, fmDecay, fmSustain, fmRelease, fmVelocity].find((v) => v !== undefined)) {
+    if (![fmAttack, fmDecay, fmSustain, fmRelease, fmVelocity].some((v) => v !== undefined)) {
       // no envelope by default
       modulator.connect(param);
     } else {

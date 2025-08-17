@@ -8,18 +8,28 @@ import FFT from './fft.js';
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 const _mod = (n, m) => ((n % m) + m) % m;
 
+// Restrict phase to the range [0, maxPhase) via wrapping
+function wrapPhase(phase, maxPhase = 1) {
+  if (phase >= maxPhase) {
+    phase -= maxPhase;
+  } else if (phase < 0) {
+    phase += maxPhase;
+  }
+  return phase;
+}
 const blockSize = 128;
-// adjust waveshape to remove frequencies above nyquist to prevent aliasing
+// Smooth waveshape near discontinuities to remove frequencies above Nyquist and prevent aliasing
 // referenced from https://www.kvraudio.com/forum/viewtopic.php?t=375517
 function polyBlep(phase, dt) {
-  // 0 <= phase < 1
+  dt = Math.min(dt, 1 - dt);
+  // Start of cycle
   if (phase < dt) {
     phase /= dt;
     // 2 * (phase - phase^2/2 - 0.5)
     return phase + phase - phase * phase - 1;
   }
 
-  // -1 < phase < 0
+  // End of cycle
   else if (phase > 1 - dt) {
     phase = (phase - 1) / dt;
     // 2 * (phase^2/2 + phase + 0.5)
@@ -115,7 +125,6 @@ class LFOProcessor extends AudioWorkletProcessor {
 
   process(inputs, outputs, parameters) {
     const begin = parameters['begin'][0];
-    // eslint-disable-next-line no-undef
     if (currentTime >= parameters.end[0]) {
       return false;
     }
@@ -143,7 +152,6 @@ class LFOProcessor extends AudioWorkletProcessor {
     if (this.phase == null) {
       this.phase = _mod(time * frequency + phaseoffset, 1);
     }
-    // eslint-disable-next-line no-undef
     const dt = frequency / sampleRate;
     for (let n = 0; n < blockSize; n++) {
       for (let i = 0; i < output.length; i++) {
@@ -305,7 +313,6 @@ class LadderProcessor extends AudioWorkletProcessor {
     const drive = clamp(Math.exp(parameters.drive[0]), 0.1, 2000);
 
     let cutoff = parameters.frequency[0];
-    // eslint-disable-next-line no-undef
     cutoff = (cutoff * 2 * _PI) / sampleRate;
     cutoff = cutoff > 1 ? 1 : cutoff;
 
@@ -438,18 +445,13 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
     ];
   }
   process(input, outputs, params) {
-    // eslint-disable-next-line no-undef
     if (currentTime <= params.begin[0]) {
       return true;
     }
-    // eslint-disable-next-line no-undef
     if (currentTime >= params.end[0]) {
       // this.port.postMessage({ type: 'onended' });
       return false;
     }
-    let frequency = params.frequency[0];
-    //apply detune in cents
-    frequency = frequency * Math.pow(2, params.detune[0] / 1200);
 
     const output = outputs[0];
     const voices = params.voices[0];
@@ -460,9 +462,6 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
 
     for (let n = 0; n < voices; n++) {
       const isOdd = (n & 1) == 1;
-
-      //applies unison "spread" detune in semitones
-      const freq = applySemitoneDetuneToFrequency(frequency, getUnisonDetune(voices, freqspread, n));
       let gainL = gain1;
       let gainR = gain2;
       // invert right and left gain
@@ -470,21 +469,21 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
         gainL = gain2;
         gainR = gain1;
       }
-      // eslint-disable-next-line no-undef
-      const dt = freq / sampleRate;
-
       for (let i = 0; i < output[0].length; i++) {
+        // Main detuning
+        let freq = applySemitoneDetuneToFrequency(params.frequency[i] ?? params.frequency[0], params.detune[0] / 100);
+        // Individual voice detuning
+        freq = applySemitoneDetuneToFrequency(freq, getUnisonDetune(voices, freqspread, n));
+        // We must wrap this here because it is passed into sawblep below which
+        // has domain [0, 1]
+        const dt = _mod(freq / sampleRate, 1);
         this.phase[n] = this.phase[n] ?? Math.random();
         const v = waveshapes.sawblep(this.phase[n], dt);
 
         output[0][i] = output[0][i] + v * gainL;
         output[1][i] = output[1][i] + v * gainR;
 
-        this.phase[n] += dt;
-
-        if (this.phase[n] > 1.0) {
-          this.phase[n] = this.phase[n] - 1;
-        }
+        this.phase[n] = wrapPhase(this.phase[n] + dt);
       }
     }
     return true;
@@ -493,7 +492,7 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
 
 registerProcessor('supersaw-oscillator', SuperSawOscillatorProcessor);
 
-// Phase Vocoder sourced from // sourced from https://github.com/olvb/phaze/tree/master?tab=readme-ov-file
+// Phase Vocoder sourced from https://github.com/olvb/phaze/tree/master?tab=readme-ov-file
 const BUFFERED_BLOCK_SIZE = 2048;
 
 function genHannWindow(length) {
