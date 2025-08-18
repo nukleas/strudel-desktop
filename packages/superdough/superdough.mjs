@@ -282,7 +282,6 @@ export async function initAudioOnFirstClick(options) {
   return audioReady;
 }
 
-let delays = {};
 const maxfeedback = 0.98;
 
 let channelMerger, destinationGain;
