@@ -24,9 +24,9 @@ The signal chain in Strudel is as follows:
   - Muted sounds (one whose `s` value is `-`, `~`, or `_`) are skipped
 - A sound is produced (through, say, a sample or an oscillator)
   - This is where detune-based effects (like `detune`, `penv`, etc. occur)
-- The following will only occur if their respective parameters are turned on. Note that all of these are
-  _single use_ effects, meaning that multiple occurrences of them in a pattern will simply override the values
-  (i.e. you can't (currently) do `s("bd").lpf(100).distort(2).lpf(800)` to lowpass, distort, and then lowpass
+- The following will occur _in order_ and only if they've been called in the pattern. Note that all of these are
+  single use effects, meaning that multiple occurrences of them in a pattern will simply override the values
+  (e.g. you can't do `s("bd").lpf(100).distort(2).lpf(800)` to lowpass, distort, and then lowpass
   again)
   - Phase vocoder (`stretch`)
   - Gain is applied (`gain`)
@@ -127,6 +127,7 @@ Some parameters _do_ induce continuous variations in time, though:
 - The filter envelopes (`lpenv`, `hpenv`, `bpenv`)
 - Tremolo
 - Phaser
+- Ducking (`duckorbit`)
 
 # Filters
 
