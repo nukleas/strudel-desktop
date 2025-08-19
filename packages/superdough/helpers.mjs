@@ -211,7 +211,14 @@ export function getVibratoOscillator(param, value, t) {
 export function webAudioTimeout(audioContext, onComplete, startTime, stopTime) {
   const constantNode = new ConstantSourceNode(audioContext);
 
+  // Safari requires audio nodes to be connected in order for their onended events
+  // to fire, so we _mute it_ and then connect it to the destination
+  const zeroGain = gainNode(0);
+  zeroGain.connect(audioContext.destination);
+  constantNode.connect(zeroGain);
   constantNode.start(startTime);
+
+  // Schedule the `onComplete` callback to occur at `stopTime`
   constantNode.stop(stopTime);
   constantNode.onended = () => {
     onComplete();
