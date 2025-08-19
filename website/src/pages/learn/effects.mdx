@@ -19,15 +19,15 @@ The signal chain in Strudel is as follows:
 
 - An sound-generating event is triggered by a pattern
   - This has a start time and a duration, which is usually
-controlled by the note length and ADSR parameters
+    controlled by the note length and ADSR parameters
   - If we exceed the max polyphony, old sounds begin to die off
   - Muted sounds (one whose `s` value is `-`, `~`, or `_`) are skipped
 - A sound is produced (through, say, a sample or an oscillator)
   - This is where detune-based effects (like `detune`, `penv`, etc. occur)
 - The following will only occur if their respective parameters are turned on. Note that all of these are
-_single use_ effects, meaning that multiple occurrences of them in a pattern will simply override the values
-(i.e. you can't (currently) do `s("bd").lpf(100).distort(2).lpf(800)` to lowpass, distort, and then lowpass
-again)
+  _single use_ effects, meaning that multiple occurrences of them in a pattern will simply override the values
+  (i.e. you can't (currently) do `s("bd").lpf(100).distort(2).lpf(800)` to lowpass, distort, and then lowpass
+  again)
   - Phase vocoder (`stretch`)
   - Gain is applied (`gain`)
     - This is where the main (volume) ADSR happens
@@ -77,13 +77,14 @@ $: s("triangle*4").decay(0.5).n(irand(12)).scale('C minor')
 />
 
 versus the same pluck with a muted kick drum coming in and overwriting the `roomsize` value (occasionally)
+
 <MiniRepl
   client:visible
   tune={`
 $: s("triangle*4").decay(0.5).n(irand(12)).scale('C minor')
   .room(1).roomsize(10)
 
-$: s("bd*4").room(0.01).roomsize(0.01).postgain(0)`}
+$: s("bd\*4").room(0.01).roomsize(0.01).postgain(0)`}
 />
 
 This is due to them sharing the same orbit (the default of `1`). It can be corrected simply by updating the orbits to be
@@ -95,7 +96,7 @@ distinct:
 $: s("triangle*4").decay(0.5).n(irand(12)).scale('C minor')
   .room(1).roomsize(10).orbit(2)
 
-$: s("bd*4").room(0.01).roomsize(0.01).postgain(0)`}
+$: s("bd\*4").room(0.01).roomsize(0.01).postgain(0)`}
 />
 
 ## Continuous changes
@@ -115,17 +116,17 @@ Will not produce a continually LFO'd low-pass filter due to the `tri` only being
 <MiniRepl
   client:visible
   tune={`
-s("supersaw").seg(16).lpf(tri.range(100, 5000).slow(2))`
-}
+s("supersaw").seg(16).lpf(tri.range(100, 5000).slow(2))`}
 />
 
 Some parameters _do_ induce continuous variations in time, though:
-* The ADSR curve (governed by `attack`, `sustain`, `decay`, `release`)
-* The pitch envelope curve (governed by `penv` and its associated ADSR)
-* The FM curve (`fmenv`)
-* The filter envelopes (`lpenv`, `hpenv`, `bpenv`)
-* Tremolo
-* Phaser
+
+- The ADSR curve (governed by `attack`, `sustain`, `decay`, `release`)
+- The pitch envelope curve (governed by `penv` and its associated ADSR)
+- The FM curve (`fmenv`)
+- The filter envelopes (`lpenv`, `hpenv`, `bpenv`)
+- Tremolo
+- Phaser
 
 # Filters
 
