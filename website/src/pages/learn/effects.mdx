@@ -87,7 +87,7 @@ $: s("triangle*4").decay(0.5).n(irand(12)).scale('C minor')
 $: s("bd\*4").room(0.01).roomsize(0.01).postgain(0)`}
 />
 
-This is due to them sharing the same orbit (the default of `1`). It can be corrected simply by updating the orbits to be
+This is due to them sharing the same orbit: the default of `1`. It can be corrected simply by updating the orbits to be
 distinct:
 
 <MiniRepl
@@ -110,7 +110,7 @@ modified continuously in time. For example,
 s("supersaw").lpf(tri.range(100, 5000).slow(2))`}
 />
 
-Will not produce a continually LFO'd low-pass filter due to the `tri` only being sample every time the note hits
+Will not produce a continually LFO'd low-pass filter due to the `tri` only being sampled every time the note hits
 (in this case the default of once per cycle). You can fake it by introducing more sound-generating events, e.g.:
 
 <MiniRepl
