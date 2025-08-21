@@ -20,3 +20,13 @@ samples('http://localhost:5432')
 LOG=1 npx @strudel/sampler # adds logging
 PORT=5555 npx @strudel/sampler # changes port
 ```
+
+## static json
+
+when running with `--json`, you will simply get the json logged back:
+
+```sh
+npx --yes @strudel/sampler --json > strudel.json
+```
+
+this is useful if you want to create a sample pack from the current folder.

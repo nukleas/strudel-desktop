@@ -209,7 +209,8 @@ export function getVibratoOscillator(param, value, t) {
 // ConstantSource inherits AudioScheduledSourceNode, which has scheduling abilities
 // a bit of a hack, but it works very well :)
 export function webAudioTimeout(audioContext, onComplete, startTime, stopTime) {
-  const constantNode = audioContext.createConstantSource();
+  const constantNode = new ConstantSourceNode(audioContext);
+
   constantNode.start(startTime);
   constantNode.stop(stopTime);
   constantNode.onended = () => {
@@ -264,7 +265,7 @@ export function applyFM(param, value, begin) {
 
     modulator = fmmod.node;
     stop = fmmod.stop;
-    if (![fmAttack, fmDecay, fmSustain, fmRelease, fmVelocity].find((v) => v !== undefined)) {
+    if (![fmAttack, fmDecay, fmSustain, fmRelease, fmVelocity].some((v) => v !== undefined)) {
       // no envelope by default
       modulator.connect(param);
     } else {

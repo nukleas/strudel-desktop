@@ -6,7 +6,7 @@ This program is free software: you can redistribute it and/or modify it under th
 
 import Fraction from 'fraction.js';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
   TimeSpan,
@@ -54,6 +54,8 @@ import {
   sometimes,
   expand,
 } from '../index.mjs';
+
+import { log, logValues } from '../pattern.mjs';
 
 import { steady } from '../signal.mjs';
 
@@ -1304,6 +1306,42 @@ describe('Pattern', () => {
         fastcat('a', 'b', 'c').chunkBackInto(3, fast(2)).fast(3),
         fastcat('a', 'b', fastcat('c', 'c'), 'a', fastcat('b', 'b'), 'c', fastcat('a', 'a'), 'b', 'c'),
       );
+    });
+  });
+  describe('log', () => {
+    it('logs to console', () => {
+      const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const pattern = pure('a').log();
+      const haps = pattern.queryArc(0, 1);
+
+      // Force a trigger
+      haps.forEach((hap) => {
+        hap.context?.onTrigger?.(hap);
+      });
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        '%c[hap] 0/1 → 1/1: a',
+        'background-color: black;color:white;border-radius:15px',
+      );
+      mockConsoleLog.mockRestore();
+    });
+  });
+  describe('logValues', () => {
+    it('logs values to console', () => {
+      const mockConsoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const pattern = pure('a').note('c#').logValues();
+      const haps = pattern.queryArc(0, 1);
+
+      // Force a trigger
+      haps.forEach((hap) => {
+        hap.context?.onTrigger?.(hap);
+      });
+
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        '%c[hap] value:a note:c#',
+        'background-color: black;color:white;border-radius:15px',
+      );
+      mockConsoleLog.mockRestore();
     });
   });
 });

@@ -72,7 +72,7 @@ export class TimeSpan {
   }
 
   intersection(other) {
-    // Intersection of two timespans, returns None if they don't intersect.
+    // Intersection of two timespans, returns undefined if they don't intersect.
     const intersect_begin = this.begin.max(other.begin);
     const intersect_end = this.end.min(other.end);
 
