@@ -339,10 +339,8 @@ function getDelay(orbit, delaytime, delayfeedback, t, channels) {
     connectToOrbit(dly, orbit);
     delayNode = dly;
   }
-  delayNode.delayTime.value !== delaytime &&
-    delayNode.delayTime.setValueAtTime(delaytime, t);
-  delayNode.feedback.value !== delayfeedback &&
-    delayNode.feedback.setValueAtTime(delayfeedback, t);
+  delayNode.delayTime.value !== delaytime && delayNode.delayTime.setValueAtTime(delaytime, t);
+  delayNode.feedback.value !== delayfeedback && delayNode.feedback.setValueAtTime(delayfeedback, t);
   return delayNode;
 }
 
