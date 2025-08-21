@@ -26,7 +26,7 @@ PORT=5555 npx @strudel/sampler # changes port
 when running with `--json`, you will simply get the json logged back:
 
 ```sh
-npx @strudel/sampler --json > strudel.json
+npx --yes @strudel/sampler --json > strudel.json
 ```
 
 this is useful if you want to create a sample pack from the current folder.
