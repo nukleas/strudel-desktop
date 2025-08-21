@@ -8,8 +8,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview --port 3009 --host 0.0.0.0",
-    "astro": "astro",
-    "postinstall": "cp node_modules/hs2js/dist/tree-sitter.wasm public && cp node_modules/hs2js/dist/tree-sitter-haskell.wasm public"
+    "astro": "astro"
   },
   "dependencies": {
     "@algolia/client-search": "^5.20.0",
