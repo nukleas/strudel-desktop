@@ -74,7 +74,7 @@ const hasExcludedTags = (doc) =>
 
 const jsdocCompletions = jsdoc.docs
   .filter((doc) => isValidDoc(doc) && !hasExcludedTags(doc))
-   // https://codemirror.net/docs/ref/#autocomplete.Completion
+  // https://codemirror.net/docs/ref/#autocomplete.Completion
   .map((doc) => ({
     label: getDocLabel(doc),
     // detail: 'xxx', // An optional short piece of information to show (with a different style) after the label.
