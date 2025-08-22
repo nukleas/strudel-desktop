@@ -101,11 +101,11 @@ export function nearestNumberIndex(target, numbers, preferHigher) {
 let scaleSteps = {}; // [scaleName]: semitones[]
 
 export function stepInNamedScale(step, scale, anchor, preferHigher) {
-  let [root, scaleName] = Scale.tokenize(scale);
+  const [root, scaleName] = Scale.tokenize(scale);
   const rootMidi = x2midi(root);
   const rootChroma = midi2chroma(rootMidi);
   if (!scaleSteps[scaleName]) {
-    let { intervals } = Scale.get(`C ${scaleName}`);
+    const { intervals } = Scale.get(`C ${scaleName}`);
     // cache result
     scaleSteps[scaleName] = intervals.map(step2semitones);
   }
@@ -235,17 +235,4 @@ export function transpose(note, step) {
   const stepIndex = steps.indexOf(stepNumber); // 4 ("3" is normally 4 semitones)
   const offsetAccidentals = accidentalString(Step.accidentals(step) + Note.accidentals(note) + stepIndex - indexOffset); // "we need to add a # to to the G to make it a major third from E"
   return [targetNote, offsetAccidentals].join('');
-}
-
-// Converts a `scaleName` into a corresponding list of chromas between 0 and 12
-export function scaleToChromas(scaleName) {
-  if (Array.isArray(scaleName)) {
-    scaleName = scaleName.flat().join(' ');
-  }
-  const [tonic, name] = Scale.tokenize(scaleName);
-  const rootMidi = noteToMidi(tonic);
-  const chroma = rootMidi % 12;
-  const intervals = Scale.get(name).intervals;
-  const scaleSteps = intervals.map(Interval.semitones);
-  return scaleSteps.map((s) => (s + chroma) % 12);
 }

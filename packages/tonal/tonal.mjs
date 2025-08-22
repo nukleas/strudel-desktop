@@ -6,20 +6,28 @@ This program is free software: you can redistribute it and/or modify it under th
 
 import { Note, Interval, Scale } from '@tonaljs/tonal';
 import { register, _mod, silence, logger, pure, isNote } from '@strudel/core';
-import { stepInNamedScale, scaleToChromas } from './tonleiter.mjs';
+import { stepInNamedScale, nearestNumberIndex } from './tonleiter.mjs';
 import { noteToMidi } from '../core/util.mjs';
 
 const octavesInterval = (octaves) => (octaves <= 0 ? -1 : 1) + octaves * 7 + 'P';
 
-function scaleStep(step, scale) {
-  scale = scale.replaceAll(':', ' ');
-  step = Math.ceil(step);
-  let { intervals, tonic, empty } = Scale.get(scale);
-  if ((empty && isNote(scale)) || (empty && !tonic)) {
-    throw new Error(`incomplete scale. Make sure to use ":" instead of spaces, example: .scale("C:major")`);
+function getScale(scaleName) {
+  scaleName = scaleName.replaceAll(':', ' ');
+  const scale = Scale.get(scaleName);
+  const { tonic, empty } = scale;
+  if ((empty && isNote(scaleName)) || (empty && !tonic)) {
+    throw new Error(
+      `Scale name ${scaleName} is incomplete. Make sure to use ":" instead of spaces, example: .scale("C:major")`,
+    );
   } else if (empty) {
-    throw new Error(`invalid scale "${scale}"`);
+    throw new Error(`Invalid scale name "${scaleName}"`);
   }
+  return scale;
+}
+
+function scaleStep(step, scale) {
+  step = Math.ceil(step);
+  let { intervals, tonic } = getScale(scale);
   tonic = tonic || 'C';
   const { pc, oct = 3 } = Note.get(tonic);
   const octaveOffset = Math.floor(step / intervals.length);
@@ -31,8 +39,7 @@ function scaleStep(step, scale) {
 // transpose note inside scale by offset steps
 // function scaleOffset(scale: string, offset: number, note: string) {
 function scaleOffset(scale, offset, note) {
-  let [tonic, scaleName] = Scale.tokenize(scale);
-  let { notes } = Scale.get(`${tonic} ${scaleName}`);
+  let { notes } = getScale(scale);
   notes = notes.map((note) => Note.get(note).pc); // use only pc!
   offset = Number(offset);
   if (isNaN(offset)) {
@@ -197,19 +204,37 @@ function _convertStepToNumberAndOffset(step) {
   return [asNumber, offset];
 }
 
+let scaleToMidisAndNotes = {};
 // Finds the nearest scale note to `note`
-function _getNearestScaleNote(scaleName, note) {
-  let midiNote = typeof note === 'string' ? noteToMidi(note) : note;
-  const octave = (midiNote / 12) >> 0;
-  const targetChroma = midiNote % 12;
-  const scaleChromas = scaleToChromas(scaleName);
-  return (
-    scaleChromas.reduce((prev, curr) => {
-      // Include equality so ties are broken upwards
-      return Math.abs(curr - targetChroma) <= Math.abs(prev - targetChroma) ? curr : prev;
-    }) +
-    octave * 12
-  );
+function _getNearestScaleNote(scaleName, note, preferHigher = true) {
+  let noteMidi = typeof note === 'string' ? noteToMidi(note) : note;
+  noteMidi = Math.max(noteMidi, 24); // we will not play notes below C0
+  if (scaleToMidisAndNotes[scaleName] === undefined) {
+    const { intervals, tonic } = getScale(scaleName);
+    const { pc } = Note.get(tonic);
+    const expandedIntervals = intervals.concat('8P'); // add the octave for wrapping
+    const sNotes = expandedIntervals.map((interval) => Note.transpose(pc + '0', interval));
+    const sMidi = sNotes.map(noteToMidi);
+    // Cache
+    scaleToMidisAndNotes[scaleName] = [sMidi, sNotes];
+  }
+  const [scaleMidis, scaleNotes] = scaleToMidisAndNotes[scaleName];
+  const rootMidi = scaleMidis[0];
+  const octaveDiff = Math.floor((noteMidi - rootMidi) / 12);
+  let filteredNotes = []; // we must filter the notes to avoid negative octave values
+  let filteredMidis = [];
+  for (let i = 0; i < scaleMidis.length; i++) {
+    const newMidi = scaleMidis[i] + 12 * octaveDiff;
+    if (newMidi < 24) {
+      continue;
+    }
+    filteredMidis.push(newMidi);
+    const oldNote = scaleNotes[i];
+    const newNote = Note.transpose(oldNote, Interval.fromSemitones(12 * octaveDiff));
+    filteredNotes.push(newNote);
+  }
+  const noteIdx = nearestNumberIndex(noteMidi, filteredMidis, preferHigher);
+  return filteredNotes[noteIdx];
 }
 
 /**
@@ -254,15 +279,15 @@ export const scale = register(
       pat
         .fmap((value) => {
           const isObject = typeof value === 'object';
-          // The case where the note has been defined via `n`
-          if ((isObject && 'n' in value) || !isObject) {
-            let step = isObject ? value.n : value;
+          // The case where the note has been defined via `n` or `pure`
+          if (!isObject || (isObject && ('n' in value || 'value' in value))) {
+            const step = isObject ? (value.n ?? value.value) : value;
             delete value.n; // remove n so it won't cause trouble
             if (isNote(step)) {
               // legacy..
               return pure(step);
             }
-            let [number, offset] = _convertStepToNumberAndOffset(step);
+            const [number, offset] = _convertStepToNumberAndOffset(step);
             try {
               let note;
               if (isObject && value.anchor) {
@@ -280,7 +305,7 @@ export const scale = register(
           }
           // The case where the note has been defined via `note`
           else {
-            let note = _getNearestScaleNote(scale, value.note);
+            const note = _getNearestScaleNote(scale, value.note);
             return pure(isObject ? { ...value, note } : note);
           }
         })

@@ -70,14 +70,31 @@ describe('tonal', () => {
     });
     it('snaps notes (upwards) to scale', () => {
       const inputNotes = ['Cb', 'Eb', 'G', 'A#', 'Bb'];
-      let expectedNotes = ['B2', 'E3', 'G3', 'B3', 'B3'];
-
-      // Notes are converted to midi by scale
-      expectedNotes = expectedNotes.map((note) => noteToMidi(note));
+      const expectedNotes = ['B2', 'E3', 'G3', 'B3', 'B3'];
 
       expect(
         note(seq(inputNotes))
           .scale('C major')
+          .firstCycleValues.map((h) => h.note),
+      ).toEqual(expectedNotes);
+    });
+    it('snaps notes to the correct octave', () => {
+      const inputNotes = ['Cb0', 'Eb4', 'G1', 'A#19', 'Bb8'];
+      const expectedNotes = ['B#0', 'D#4', 'G#1', 'A#19', 'A#8'];
+
+      expect(
+        note(seq(inputNotes))
+          .scale('A# minor') // A#, B#, C#, D#, E#, F#, G#
+          .firstCycleValues.map((h) => h.note),
+      ).toEqual(expectedNotes);
+    });
+    it('handles scale names provided with colons', () => {
+      const inputNotes = ['Cb', 'E', 'G', 'A#', 'Bb'];
+      const expectedNotes = ['A#2', 'D#3', 'G#3', 'A#3', 'A#3'];
+
+      expect(
+        note(seq(inputNotes))
+          .scale('F#:pentatonic') // F#, G#, A#, C#, and D#
           .firstCycleValues.map((h) => h.note),
       ).toEqual(expectedNotes);
     });
