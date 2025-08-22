@@ -252,6 +252,8 @@ function _getNearestScaleNote(scaleName, note, preferHigher = true) {
  * n("<[0,7b] [-4# -4] [-2,7##] 4 [0,7] [-4# -4b] [-2,7###] 4b>*4")
  * .scale("C:<major minor>/2")
  * .s("piano")
+ * @example
+ * note("C1*16").transpose(irand(36)).scale('Cb2 major').scaleTranspose(3)
  */
 
 export const scale = register(
