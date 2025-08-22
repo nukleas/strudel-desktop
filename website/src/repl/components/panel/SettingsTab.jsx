@@ -311,7 +311,8 @@ export function SettingsTab({ started }) {
           onClick={() => {
             confirmDialog('Sure?').then((r) => {
               if (r) {
-                settingsMap.set(defaultSettings);
+                const { userPatterns } = settingsMap.get(); // keep current patterns
+                settingsMap.set({...defaultSettings, userPatterns});
               }
             });
           }}
