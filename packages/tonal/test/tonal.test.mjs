@@ -80,7 +80,7 @@ describe('tonal', () => {
     });
     it('snaps notes to the correct octave', () => {
       const inputNotes = ['Cb0', 'Eb4', 'G1', 'A#19', 'Bb8'];
-      const expectedNotes = ['B#0', 'D#4', 'G#1', 'A#19', 'A#8'];
+      const expectedNotes = ['B#-1', 'D#4', 'G#1', 'A#19', 'A#8'];
 
       expect(
         note(seq(inputNotes))

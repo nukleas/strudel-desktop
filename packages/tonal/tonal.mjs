@@ -128,10 +128,7 @@ export const { transpose, trans } = register(['transpose', 'trans'], function tr
     const interval = !isNaN(Number(intervalOrSemitones))
       ? Interval.fromSemitones(intervalOrSemitones)
       : String(intervalOrSemitones);
-    // TODO: move simplify to player to preserve enharmonics
-    // tone.js doesn't understand multiple sharps flats e.g. F##3 has to be turned into G3
-    // TODO: check if this is still relevant..
-    const targetNote = Note.simplify(Note.transpose(note, interval));
+    const targetNote = Note.transpose(note, interval);
     if (typeof hap.value === 'object') {
       return hap.withValue(() => ({ ...hap.value, note: targetNote }));
     }
@@ -208,7 +205,6 @@ let scaleToMidisAndNotes = {};
 // Finds the nearest scale note to `note`
 function _getNearestScaleNote(scaleName, note, preferHigher = true) {
   let noteMidi = typeof note === 'string' ? noteToMidi(note) : note;
-  noteMidi = Math.max(noteMidi, 24); // we will not play notes below C0
   if (scaleToMidisAndNotes[scaleName] === undefined) {
     const { intervals, tonic } = getScale(scaleName);
     const { pc } = Note.get(tonic);
@@ -221,20 +217,10 @@ function _getNearestScaleNote(scaleName, note, preferHigher = true) {
   const [scaleMidis, scaleNotes] = scaleToMidisAndNotes[scaleName];
   const rootMidi = scaleMidis[0];
   const octaveDiff = Math.floor((noteMidi - rootMidi) / 12);
-  let filteredNotes = []; // we must filter the notes to avoid negative octave values
-  let filteredMidis = [];
-  for (let i = 0; i < scaleMidis.length; i++) {
-    const newMidi = scaleMidis[i] + 12 * octaveDiff;
-    if (newMidi < 24) {
-      continue;
-    }
-    filteredMidis.push(newMidi);
-    const oldNote = scaleNotes[i];
-    const newNote = Note.transpose(oldNote, Interval.fromSemitones(12 * octaveDiff));
-    filteredNotes.push(newNote);
-  }
-  const noteIdx = nearestNumberIndex(noteMidi, filteredMidis, preferHigher);
-  return filteredNotes[noteIdx];
+  const alignedMidis = scaleMidis.map((m) => m + 12 * octaveDiff);
+  const noteIdx = nearestNumberIndex(noteMidi, alignedMidis, preferHigher);
+  const noteMatch = scaleNotes[noteIdx];
+  return Note.transpose(noteMatch, Interval.fromSemitones(12 * octaveDiff));
 }
 
 /**
