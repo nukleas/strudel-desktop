@@ -1,11 +1,11 @@
 import { describe, bench } from 'vitest';
 
-import { calculateTactus, sequence, stack } from '../index.mjs';
+import { calculateSteps, sequence, stack } from '../index.mjs';
 
 const pat64 = sequence(...Array(64).keys());
 
 describe('steps', () => {
-  calculateTactus(true);
+  calculateSteps(true);
   bench(
     '+tactus',
     () => {
@@ -14,7 +14,7 @@ describe('steps', () => {
     { time: 1000 },
   );
 
-  calculateTactus(false);
+  calculateSteps(false);
   bench(
     '-tactus',
     () => {
@@ -25,7 +25,7 @@ describe('steps', () => {
 });
 
 describe('stack', () => {
-  calculateTactus(true);
+  calculateSteps(true);
   bench(
     '+tactus',
     () => {
@@ -34,7 +34,7 @@ describe('stack', () => {
     { time: 1000 },
   );
 
-  calculateTactus(false);
+  calculateSteps(false);
   bench(
     '-tactus',
     () => {
@@ -43,4 +43,4 @@ describe('stack', () => {
     { time: 1000 },
   );
 });
-calculateTactus(true);
+calculateSteps(true);
