@@ -88,6 +88,45 @@ export function registerControl(names, ...aliases) {
 export const { s, sound } = registerControl(['s', 'n', 'gain'], 'sound');
 
 /**
+ * Position in the wavetable of the wavetable oscillator
+ *
+ * @name wtPos
+ * @param {number | Pattern} position Position in the wavetable from 0 to 1
+ * @synonyms wavetablePosition
+ *
+ */
+export const { wtPos, wavetablePosition } = registerControl('wtPos', 'wavetablePosition');
+
+/**
+ * Amount of warp (alteration of the waveform) to apply to the wavetable oscillator
+ *
+ * @name wtWarp
+ * @param {number | Pattern} amount Warp of the wavetable from 0 to 1
+ * @synonyms wavetableWarp
+ *
+ */
+export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWarp');
+
+/**
+ * Amount of warp (alteration of the waveform) to apply to the wavetable oscillator.
+ *
+ * The current options are:
+ * 0 = asym
+ * 1 = mirror
+ * 2 = bend+
+ * 3 = bend-
+ * 4 = bend+/-
+ * 5 = sync
+ * 6 = quantize
+ *
+ * @name wtWarpMode
+ * @param {number | Pattern} mode Warp mode: an integer
+ * @synonyms wavetableWarpMode
+ *
+ */
+export const { wtWarpMode, wavetableWarpMode } = registerControl('wtWarpMode', 'wavetableWarpMode');
+
+/**
  * Define a custom webaudio node to use as a sound source.
  *
  * @name source

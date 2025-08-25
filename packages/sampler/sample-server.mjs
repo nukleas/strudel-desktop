@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 import cowsay from 'cowsay';
-import { createReadStream, existsSync } from 'fs';
+import { createReadStream, existsSync, writeFileSync } from 'fs';
 import { readdir } from 'fs/promises';
 import http from 'http';
-import { join, sep } from 'path';
+import { join, sep, resolve } from 'path';
 import os from 'os';
 
 // eslint-disable-next-line
@@ -36,17 +36,19 @@ async function getFilesInDirectory(directory) {
   return files;
 }
 
-async function getBanks(directory) {
+async function getBanks(directory, flat = false) {
   let files = await getFilesInDirectory(directory);
   let banks = {};
   directory = directory.split(sep).join('/');
   files = files.map((path) => {
     path = path.split(sep).join('/');
-    const [bank] = path.split('/').slice(-2);
+    const subDir = path.replace(directory, '');
+    const subDirFlat = subDir.replaceAll('/', '_').slice(1); // remove initial underscore
+    const subDirFlatStem = subDirFlat.replace(/\.[^.]+$/, ''); // remove extension
+    let bank = flat ? subDirFlatStem : subDir.split('/')[0];
     banks[bank] = banks[bank] || [];
-    const relativeUrl = path.replace(directory, '');
-    banks[bank].push(relativeUrl);
-    return relativeUrl;
+    banks[bank].push(subDir);
+    return subDir;
   });
   banks._base = `http://localhost:5432`;
   return { banks, files };
@@ -54,14 +56,25 @@ async function getBanks(directory) {
 
 const args = process.argv.slice(2);
 
+function getArgValue(flag) {
+  const i = args.indexOf(flag);
+  if (i !== -1) {
+    const nextIsFlag = args[i + 1]?.startsWith('--') ?? true;
+    if (nextIsFlag) return true;
+    return args[i + 1];
+  }
+}
+
 // eslint-disable-next-line
-const directory = process.cwd();
+let directory = getArgValue('--dir') || process.cwd();
+directory = resolve(directory);
 
 if (args.includes('--json')) {
-  const { banks, files } = await getBanks(directory);
+  const { banks } = await getBanks(directory, getArgValue('--flat'));
   const json = JSON.stringify(banks);
-  console.log(json);
-  process.exit(0);
+  const outFile = resolve(directory, 'strudel.json');
+  writeFileSync(outFile, json, 'utf8');
+  console.log(`Wrote json to ${outFile}`);
 }
 
 console.log(
@@ -74,7 +87,7 @@ console.log(
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  const { banks, files } = await getBanks(directory);
+  const { banks, files } = await getBanks(directory, getArgValue('--flat'));
   if (req.url === '/') {
     res.setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify(banks));
@@ -82,7 +95,7 @@ const server = http.createServer(async (req, res) => {
   let subpath = decodeURIComponent(req.url);
   const filePath = join(directory, subpath.split('/').join(sep));
 
-  //console.log('GET:', filePath);
+  // console.log('GET:', filePath);
   const isFound = existsSync(filePath);
   if (!isFound) {
     res.statusCode = 404;
