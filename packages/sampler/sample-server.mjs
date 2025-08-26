@@ -10,14 +10,6 @@ import os from 'os';
 // eslint-disable-next-line
 const LOG = !!process.env.LOG || false;
 
-console.log(
-  cowsay.say({
-    text: 'welcome to @strudel/sampler',
-    e: 'oO',
-    T: 'U ',
-  }),
-);
-
 async function getFilesInDirectory(directory) {
   let files = [];
   const dirents = await readdir(directory, { withFileTypes: true });
@@ -60,8 +52,26 @@ async function getBanks(directory) {
   return { banks, files };
 }
 
+const args = process.argv.slice(2);
+
 // eslint-disable-next-line
 const directory = process.cwd();
+
+if (args.includes('--json')) {
+  const { banks, files } = await getBanks(directory);
+  const json = JSON.stringify(banks);
+  console.log(json);
+  process.exit(0);
+}
+
+console.log(
+  cowsay.say({
+    text: 'welcome to @strudel/sampler',
+    e: 'oO',
+    T: 'U ',
+  }),
+);
+
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const { banks, files } = await getBanks(directory);
