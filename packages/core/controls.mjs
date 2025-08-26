@@ -542,13 +542,19 @@ export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
  */
 
 /**
- * Modulate the amplitude of an orbit to create a "sidechain" like effect
+ * Modulate the amplitude of an orbit to create a "sidechain" like effect.
+ *
+ * Can be applied to multiple orbits with the ':' mininotation, e.g. `duckorbit("2:3")`
  *
  * @name duckorbit
  * @param {number | Pattern} orbit target orbit
  * @example
  * $: n(run(16)).scale("c:minor:pentatonic").s("sawtooth").delay(.7).orbit(2)
  * $: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack(0.2).duckdepth(1)
+ * @example
+ * $: n(run(16)).scale("c:minor:pentatonic").s("sawtooth").delay(.7).orbit(2)
+ * $: s("hh*16").orbit(3)
+ * $: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit("2:3").duckattack(0.2).duckdepth(1)
  *
  */
 export const { duck } = registerControl('duckorbit', 'duck');
@@ -556,39 +562,69 @@ export const { duck } = registerControl('duckorbit', 'duck');
 /**
  * The amount of ducking applied to target orbit
  *
+ * Can vary across orbits with the ':' mininotation, e.g. `duckdepth("0.3:0.1")`.
+ * Note: this requires first applying the effect to multiple orbits with e.g. `duckorbit("2:3")`.
+ *
  * @name duckdepth
  * @param {number | Pattern} depth depth of modulation from 0 to 1
  * @example
  * stack( n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2), s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack(0.2).duckdepth("<1 .9 .6 0>"))
+ * @example
+ * $: n(run(16)).scale("c:minor:pentatonic").s("sawtooth").delay(.7).orbit(2)
+ * $: s("hh*16").orbit(3)
+ * $: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit("2:3").duckattack(0.2).duckdepth("1:0.5")
  *
  */
-
 export const { duckdepth } = registerControl('duckdepth');
 
 /**
- * The attack time of the duck effect. Can be used to prevent clicking or for creative rhythmic effects
+ * The time required for the ducked signal(s) to reach their lowest volume.
+ * Can be used to prevent clicking or for creative rhythmic effects.
+
+ * Can vary across orbits with the ':' mininotation, e.g. `duckonset("0:0.003")`.
+ * Note: this requires first applying the effect to multiple orbits with e.g. `duckorbit("2:3")`.
+ *
+ * @name duckonset
+ * @synonyms duckons
+ *
+ * @param {number | Pattern} time The onset time in seconds
+ * @example
+ * // Clicks
+ * sound: n(run(8)).scale("c:minor").s("sawtooth").lpf(200).delay(.7).orbit(2)
+ * duckerWithClick: s("bd*4").duckorbit(2).duckonset(0).postgain(0)
+ * @example
+ * // No clicks
+ * sound: n(run(8)).scale("c:minor").s("sawtooth").lpf(200).delay(.7).orbit(2)
+ * duckerWithoutClick: s("bd*4").duckorbit(2).duckonset(0.003).postgain(0)
+ * @example
+ * // Rhythmic
+ * noise: s("pink").distort("2:1").orbit(4) // used rhythmically with 0.3 onset below
+ * hhat: s("hh*16").orbit(7)
+ * ducker: s("bd*4").bank("tr909").duckorbit("4:7").duckonset("0.3:0.003").duckattack(0.25)
+ *
+ */
+export const { duckonset } = registerControl('duckonset', 'duckons');
+
+/**
+ * The time required for the ducked signal(s) to return to their normal volume.
+
+ * Can vary across orbits with the ':' mininotation, e.g. `duckonset("0:0.003")`.
+ * Note: this requires first applying the effect to multiple orbits with e.g. `duckorbit("2:3")`.
  *
  * @name duckattack
- * @param {number | Pattern} time
+ * @synonyms duckatt
+ *
+ * @param {number | Pattern} time The attack time in seconds
  * @example
- * sound: n(run(8)).scale("c:minor").s("sawtooth").lpf(200).delay(.7).orbit(2)
- * duckerWithClick: s("bd*4").duckorbit(2).duckattack(0).postgain(0)
- * _duckerWithoutClick: s("bd*4").duckorbit(2).duckattack(0.003).postgain(0)
+ * sound: n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2)
+ * ducker: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack("<0.2 0 0.4>").duckdepth(1)
+ * @example
+ * moreduck: n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2)
+ * lessduck: s("hh*16").orbit(5)
+ * ducker: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit("2:5").duckattack("0.4:0.1")
  *
  */
 export const { duckattack } = registerControl('duckattack', 'duckatt');
-
-/**
- * The release time of the duck effect
- *
- * @name duckrelease
- * @param {number | Pattern} time
- * @example
- * sound: n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2)
- * ducker: s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckrelease("<0.2 0 0.4>").duckdepth(1)
- *
- */
-export const { duckrelease } = registerControl('duckrelease', 'duckrelease');
 
 export const { drive } = registerControl('drive');
 

@@ -421,10 +421,10 @@ function setOrbit(audioContext, orbit, channels) {
   }
 }
 
-function duckOrbit(audioContext, targetOrbit, t, attacktime = 0.003, releasetime = 0.1, duckdepth = 1) {
+function duckOrbit(audioContext, targetOrbit, t, onsettime = 0.003, attacktime = 0.1, duckdepth = 1) {
   const targetArr = [targetOrbit].flat();
+  const onsetArr = [onsettime].flat();
   const attackArr = [attacktime].flat();
-  const releaseArr = [releasetime].flat();
   const depthArr = [duckdepth].flat();
 
   targetArr.forEach((target, idx) => {
@@ -432,8 +432,8 @@ function duckOrbit(audioContext, targetOrbit, t, attacktime = 0.003, releasetime
       errorLogger(new Error(`duck target orbit ${target} does not exist`), 'superdough');
       return;
     }
-    const attack = attackArr[idx] ?? attackArr[0];
-    const release = Math.max(releaseArr[idx] ?? releaseArr[0], 0.002);
+    const onset = onsetArr[idx] ?? onsetArr[0];
+    const attack = Math.max(attackArr[idx] ?? attackArr[0], 0.002);
     const depth = depthArr[idx] ?? depthArr[0];
     const gainParam = orbits[target].output.gain;
     webAudioTimeout(
@@ -448,8 +448,8 @@ function duckOrbit(audioContext, targetOrbit, t, attacktime = 0.003, releasetime
         // that method
         gainParam.setValueAtTime(currVal, t);
 
-        gainParam.exponentialRampToValueAtTime(duckedVal, t + attack);
-        gainParam.exponentialRampToValueAtTime(1, t + attack + release);
+        gainParam.exponentialRampToValueAtTime(duckedVal, t + onset);
+        gainParam.exponentialRampToValueAtTime(1, t + onset + attack);
       },
       0,
       t - 0.01,
@@ -578,8 +578,8 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     postgain = getDefaultValue('postgain'),
     density = getDefaultValue('density'),
     duckorbit,
+    duckonset,
     duckattack,
-    duckrelease,
     duckdepth,
     // filters
     fanchor = getDefaultValue('fanchor'),
@@ -658,7 +658,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   setOrbit(ac, orbit, channels, t, cycle, cps);
 
   if (duckorbit != null) {
-    duckOrbit(ac, duckorbit, t, duckattack, duckrelease, duckdepth);
+    duckOrbit(ac, duckorbit, t, duckonset, duckattack, duckdepth);
   }
 
   gain = applyGainCurve(nanFallback(gain, 1));
