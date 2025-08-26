@@ -580,7 +580,7 @@ export const { duckdepth } = registerControl('duckdepth');
 /**
  * The time required for the ducked signal(s) to reach their lowest volume.
  * Can be used to prevent clicking or for creative rhythmic effects.
-
+ *
  * Can vary across orbits with the ':' mininotation, e.g. `duckonset("0:0.003")`.
  * Note: this requires first applying the effect to multiple orbits with e.g. `duckorbit("2:3")`.
  *
@@ -607,7 +607,7 @@ export const { duckonset } = registerControl('duckonset', 'duckons');
 
 /**
  * The time required for the ducked signal(s) to return to their normal volume.
-
+ *
  * Can vary across orbits with the ':' mininotation, e.g. `duckonset("0:0.003")`.
  * Note: this requires first applying the effect to multiple orbits with e.g. `duckorbit("2:3")`.
  *
