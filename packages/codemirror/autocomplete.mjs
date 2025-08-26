@@ -58,7 +58,7 @@ export const Autocomplete = ({ doc, label }) =>
   h`
   <div class="autocomplete-info-tooltip">
     <h3 class="autocomplete-info-function-name">${label || getDocLabel(doc)}</h3>
-    ${doc.description ? `<p class="autocomplete-info-function-description">${doc.description}</p>` : ''}
+    ${doc.description ? `<div class="autocomplete-info-function-description">${doc.description}</div>` : ''}
     ${buildParamsList(doc.params)}
     ${buildExamples(doc.examples)}
   </div>
