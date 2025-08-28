@@ -1008,7 +1008,6 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
         this.numFrames = this.tables[0].length;
       }
     };
-    this.lfoPhase = 0;
   }
 
   _chooseMip(dphi) {
@@ -1183,12 +1182,11 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     for (let i = 0; i < outL.length; i++) {
       const detune = pv(parameters.detune, i);
       const spread = pv(parameters.spread, i) * 0.5 + 0.5;
-      const tablePos = pv(parameters.position, i); //Math.sin(2 * Math.PI * this.lfoPhase);
-      // morph across frames
+      const tablePos = pv(parameters.position, i);
       const idx = tablePos * (this.numFrames - 1);
       const fIdx = idx | 0;
       const frac = idx - fIdx;
-      const warpAmount = 0.5 * Math.sin(2 * Math.PI * this.lfoPhase) + 0.5; // pv(parameters.warp, i);
+      const warpAmount = pv(parameters.warp, i);
       const warpMode = pv(parameters.warpMode, i);
       const voices = pv(parameters.voices, i);
       const gain1 = Math.sqrt(1 - spread);
@@ -1222,8 +1220,6 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
         outR[i] += (s * gainR) / Math.sqrt(voices);
         this.phase[n] = wrapPhase(this.phase[n] + dPhase);
       }
-      this.lfoPhase += 1 / sampleRate;
-      if (this.lfoPhase >= 1) this.lfoPhase -= 1;
     }
     return true;
   }

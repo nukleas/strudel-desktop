@@ -232,7 +232,7 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
 
   const out = ac.createGain(); // we need a separate gain for the cutgroups because firefox...
   node.connect(out);
-  let handle = { node: out, bufferSource: source };
+  let handle = { node: out, bufferSource: source, oscillator: worklet };
   let timeoutNode = webAudioTimeout(
     ac,
     () => {
