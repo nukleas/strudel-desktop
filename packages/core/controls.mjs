@@ -110,14 +110,8 @@ export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWar
 /**
  * Amount of warp (alteration of the waveform) to apply to the wavetable oscillator.
  *
- * The current options are:
- * 0 = asym
- * 1 = mirror
- * 2 = bend+
- * 3 = bend-
- * 4 = bend+/-
- * 5 = sync
- * 6 = quantize
+ * The current options are: none, asym, bendp, bendm, bendmp, sync, quant, fold, pwm, orbit,
+ * spin, chaos, primes, binary, brownian, reciprocal, wormhole, logistic, sigmoid, fractal, flip
  *
  * @name wtWarpMode
  * @param {number | Pattern} mode Warp mode: an integer
