@@ -2,8 +2,7 @@
 
 Live coding patterns on the web
 https://strudel.cc/
-
-Development is moving to https://codeberg.org/uzu/strudel
+Mastodon: <a rel="me" href="https://social.toplap.org/@strudel">social.toplap.org/@strudel</a>
 
 - Try it here: <https://strudel.cc>
 - Docs: <https://strudel.cc/learn>
