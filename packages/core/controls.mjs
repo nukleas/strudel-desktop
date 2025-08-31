@@ -1516,6 +1516,29 @@ export const { roomfade, rfade } = registerControl('roomfade', 'rfade');
  *
  */
 export const { ir, iresponse } = registerControl(['ir', 'i'], 'iresponse');
+
+/**
+ * Sets speed of the sample for the impulse response.
+ * @name irspeed
+ * @param {string | Pattern} speed
+ * @example
+ * samples('github:switchangel/pad')
+ * $: s("brk/2").fit().scrub(irand(16).div(16).seg(8)).ir("swpad:4").room(.2).irspeed("<2 1 .5>/2").irbegin(.5).roomsize(.5)
+ *
+ */
+export const { irspeed } = registerControl('irspeed');
+
+/**
+ * Sets the beginning of the IR response sample
+ * @name irbegin
+ * @param {string | Pattern} begin between 0 and 1
+ * @synonyms ir
+ * @example
+ * samples('github:switchangel/pad')
+ * $: s("brk/2").fit().scrub(irand(16).div(16).seg(8)).ir("swpad:4").room(.65).irspeed("-2").irbegin("<0 .5 .75>/2").roomsize(.6)
+ *
+ */
+export const { irbegin } = registerControl('irbegin');
 /**
  * Sets the room size of the reverb, see `room`.
  * When this property is changed, the reverb will be recaculated, so only change this sparsely..

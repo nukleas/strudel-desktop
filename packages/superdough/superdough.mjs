@@ -282,7 +282,6 @@ export async function initAudioOnFirstClick(options) {
   return audioReady;
 }
 
-let delays = {};
 const maxfeedback = 0.98;
 
 let channelMerger, destinationGain;
@@ -326,7 +325,7 @@ export const panic = () => {
   channelMerger == null;
 };
 
-function getDelay(orbit, delaytime, delayfeedback, t, channels) {
+function getDelay(orbit, delaytime, delayfeedback, t) {
   if (delayfeedback > maxfeedback) {
     //logger(`delayfeedback was clamped to ${maxfeedback} to save your ears`);
   }
@@ -442,19 +441,22 @@ function duckOrbit(audioContext, targetOrbit, t, attacktime = 0.1, duckdepth = 1
 }
 
 let hasChanged = (now, before) => now !== undefined && now !== before;
-function getReverb(orbit, duration, fade, lp, dim, ir) {
+function getReverb(orbit, duration, fade, lp, dim, ir, irspeed, irbegin) {
   // If no reverb has been created for a given orbit, create one
   if (!orbits[orbit].reverbNode) {
     const ac = getAudioContext();
-    const reverb = ac.createReverb(duration, fade, lp, dim, ir);
+    const reverb = ac.createReverb(duration, fade, lp, dim, ir, irspeed, irbegin);
     connectToOrbit(reverb, orbit);
     orbits[orbit].reverbNode = reverb;
   }
+
   if (
     hasChanged(duration, orbits[orbit].reverbNode.duration) ||
     hasChanged(fade, orbits[orbit].reverbNode.fade) ||
     hasChanged(lp, orbits[orbit].reverbNode.lp) ||
     hasChanged(dim, orbits[orbit].reverbNode.dim) ||
+    hasChanged(irspeed, orbits[orbit].reverbNode.irspeed) ||
+    hasChanged(irbegin, orbits[orbit].reverbNode.irbegin) ||
     orbits[orbit].reverbNode.ir !== ir
   ) {
     // only regenerate when something has changed
@@ -462,7 +464,7 @@ function getReverb(orbit, duration, fade, lp, dim, ir) {
     // stack(s("a"), s("b").rsize(8)).room(.5)
     // this only works when args may stay undefined until here
     // setting default values breaks this
-    orbits[orbit].reverbNode.generate(duration, fade, lp, dim, ir);
+    orbits[orbit].reverbNode.generate(duration, fade, lp, dim, ir, irspeed, irbegin);
   }
   return orbits[orbit].reverbNode;
 }
@@ -619,6 +621,8 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     roomdim,
     roomsize,
     ir,
+    irspeed,
+    irbegin,
     i = getDefaultValue('i'),
     velocity = getDefaultValue('velocity'),
     analyze, // analyser wet
@@ -832,7 +836,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   // delay
   let delaySend;
   if (delay > 0 && delaytime > 0 && delayfeedback > 0) {
-    const delayNode = getDelay(orbit, delaytime, delayfeedback, t, orbitChannels);
+    const delayNode = getDelay(orbit, delaytime, delayfeedback, t);
     delaySend = effectSend(post, delayNode, delay);
     audioNodes.push(delaySend);
   }
@@ -850,7 +854,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
       }
       roomIR = await loadBuffer(url, ac, ir, 0);
     }
-    const reverbNode = getReverb(orbit, roomsize, roomfade, roomlp, roomdim, roomIR, orbitChannels);
+    const reverbNode = getReverb(orbit, roomsize, roomfade, roomlp, roomdim, roomIR, irspeed, irbegin);
     reverbSend = effectSend(post, reverbNode, room);
     audioNodes.push(reverbSend);
   }

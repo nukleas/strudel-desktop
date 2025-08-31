@@ -3277,7 +3277,7 @@ export const slice = register(
  * @memberof Pattern
  *  @returns Pattern
  * @example
- * s("bd!8").onTriggerTime((hap) => {console.info(hap)})
+ * s("bd!8").onTriggerTime((hap) => {console.log(hap)})
  */
 Pattern.prototype.onTriggerTime = function (func) {
   return this.onTrigger((hap, currentTime, _cps, targetTime) => {
