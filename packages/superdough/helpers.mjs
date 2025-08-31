@@ -211,11 +211,29 @@ export function getVibratoOscillator(param, value, t) {
 export function webAudioTimeout(audioContext, onComplete, startTime, stopTime) {
   const constantNode = new ConstantSourceNode(audioContext);
 
-  constantNode.start(startTime);
-  constantNode.stop(stopTime);
+  // Certain browsers requires audio nodes to be connected in order for their onended events
+  // to fire, so we _mute it_ and then connect it to the destination
+  const zeroGain = gainNode(0);
+  zeroGain.connect(audioContext.destination);
+  constantNode.connect(zeroGain);
+
+  // Schedule the `onComplete` callback to occur at `stopTime`
   constantNode.onended = () => {
+    // Ensure garbage collection
+    try {
+      zeroGain.disconnect();
+    } catch {
+      // pass
+    }
+    try {
+      constantNode.disconnect();
+    } catch {
+      // pass
+    }
     onComplete();
   };
+  constantNode.start(startTime);
+  constantNode.stop(stopTime);
   return constantNode;
 }
 const mod = (freq, range = 1, type = 'sine') => {

@@ -178,6 +178,16 @@ the version number).
 It is also possible, of course, to just remove it from cache (deleting cache in browser Privacy settings,
 or from the dev console if you're technically minded, or by using a cache deleting extension).
 
+## Generating strudel.json
+
+You can use [@strudel/sampler](https://www.npmjs.com/package/@strudel/sampler) to generate a strudel.json file for you, by running:
+
+```sh
+npx --yes @strudel/sampler --json > strudel.json
+```
+
+See other uses of strudel/sampler further below, under "From Disk via @strudel/sampler".
+
 ## Github Shortcut
 
 Because loading samples from github is common, there is a shortcut:
@@ -360,6 +370,10 @@ Sampler effects are functions that can be used to change the behaviour of sample
 ### splice
 
 <JsDoc client:idle name="splice" h={0} />
+
+### scrub
+
+<JsDoc client:idle name="Pattern.scrub" h={0} />{' '}
 
 ### speed
 
