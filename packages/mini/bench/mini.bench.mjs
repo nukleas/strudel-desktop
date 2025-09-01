@@ -1,10 +1,10 @@
 import { describe, bench } from 'vitest';
 
-import { calculateTactus } from '../../core/index.mjs';
+import { calculateSteps } from '../../core/index.mjs';
 import { mini } from '../index.mjs';
 
 describe('mini', () => {
-  calculateTactus(true);
+  calculateSteps(true);
   bench(
     '+tactus',
     () => {
@@ -13,7 +13,7 @@ describe('mini', () => {
     { time: 1000 },
   );
 
-  calculateTactus(false);
+  calculateSteps(false);
   bench(
     '-tactus',
     () => {
@@ -21,5 +21,5 @@ describe('mini', () => {
     },
     { time: 1000 },
   );
-  calculateTactus(true);
+  calculateSteps(true);
 });

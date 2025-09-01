@@ -9,12 +9,13 @@ import {
   getVibratoOscillator,
   webAudioTimeout,
   getWorklet,
+  noises,
 } from './helpers.mjs';
 import { getNoiseMix, getNoiseOscillator } from './noise.mjs';
 
-const getFrequencyFromValue = (value) => {
+const getFrequencyFromValue = (value, defaultNote = 36) => {
   let { note, freq } = value;
-  note = note || 36;
+  note = note || defaultNote;
   if (typeof note === 'string') {
     note = noteToMidi(note); // e.g. c3 => 48
   }
@@ -40,7 +41,17 @@ const waveformAliases = [
   ['saw', 'sawtooth'],
   ['sin', 'sine'],
 ];
-const noises = ['pink', 'white', 'brown', 'crackle'];
+
+function makeSaturationCurve(amount, n_samples) {
+  const k = typeof amount === 'number' ? amount : 50;
+  const curve = new Float32Array(n_samples);
+
+  for (let i = 0; i < n_samples; i++) {
+    const x = (i * 2) / n_samples - 1;
+    curve[i] = Math.tanh(x * k);
+  }
+  return curve;
+}
 
 export function registerSynthSounds() {
   [...waveforms].forEach((s) => {
@@ -84,6 +95,75 @@ export function registerSynthSounds() {
       { type: 'synth', prebake: true },
     );
   });
+
+  registerSound(
+    'sbd',
+    (t, value, onended) => {
+      const { duration, decay = 0.5, pdecay = 0.5, penv = 36, clip } = value;
+      const ctx = getAudioContext();
+      const attackhold = 0.02;
+      const noiselvl = 1.2;
+      const noisedecay = 0.025;
+      const mixGain = 1;
+
+      const o = ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.value = getFrequencyFromValue(value, 29);
+      o.detune.setValueAtTime(penv * 100, 0);
+      o.detune.setValueAtTime(penv * 100, t);
+      o.detune.exponentialRampToValueAtTime(0.001, t + pdecay);
+      const g = gainNode(1);
+      g.gain.setValueAtTime(1, t + attackhold);
+      g.gain.exponentialRampToValueAtTime(0.001, t + attackhold + decay);
+      o.start(t);
+
+      const noise = getNoiseOscillator('brown', t, 2);
+      const noiseGain = gainNode(1);
+      noiseGain.gain.setValueAtTime(noiselvl, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + noisedecay);
+
+      const sat = new WaveShaperNode(ctx);
+      // tri to sine diode shaper emulation
+      sat.curve = makeSaturationCurve(2, ctx.sampleRate);
+
+      const mix = gainNode(mixGain);
+
+      o.onended = () => {
+        o.disconnect();
+        g.disconnect();
+        sat.disconnect();
+        noise.node.disconnect();
+        noiseGain.disconnect();
+        mix.disconnect();
+        onended();
+      };
+
+      const node = o.connect(sat).connect(g).connect(mix);
+      noise.node.connect(noiseGain).connect(mix);
+
+      const holdEnd = t + decay;
+      let end = holdEnd + 0.01;
+      if (clip != null) {
+        end = Math.min(t + clip * duration, end);
+      }
+
+      // prevent clicking
+      mix.gain.setValueAtTime(mixGain, end - 0.01);
+      mix.gain.linearRampToValueAtTime(0, end);
+
+      o.stop(end);
+      noise.stop(end);
+
+      return {
+        node,
+        stop: (endTime) => {
+          o.stop(endTime);
+        },
+      };
+    },
+    { type: 'synth', prebake: true },
+  );
+
   registerSound(
     'supersaw',
     (begin, value, onended) => {
@@ -121,10 +201,7 @@ export function registerSynthSounds() {
       const gainAdjustment = 1 / Math.sqrt(voices);
       getPitchEnvelope(o.parameters.get('detune'), value, begin, holdend);
       const vibratoOscillator = getVibratoOscillator(o.parameters.get('detune'), value, begin);
-      // const fm = applyFM(o.parameters.get('frequency'), value, begin);
-      // https://codeberg.org/uzu/strudel/issues/1428
-      // if you think about re-enabling this, please test with fm > 1 first
-      // it's like 10x gain, so it's really dangerous
+      const fm = applyFM(o.parameters.get('frequency'), value, begin);
       let envGain = gainNode(1);
       envGain = o.connect(envGain);
 
@@ -136,7 +213,7 @@ export function registerSynthSounds() {
           destroyAudioWorkletNode(o);
           envGain.disconnect();
           onended();
-          // fm?.stop();
+          fm?.stop();
           vibratoOscillator?.stop();
         },
         begin,

@@ -487,3 +487,13 @@ export function getCurrentKeyboardState() {
 //   }
 //   return lcm((x * y) / gcd(x, y), ...z);
 // };
+
+// Takes values -- typically derived from events, i.e. `hap`s -- and renders them
+// into a readable format
+export function stringifyValues(value, compact = false) {
+  return typeof value === 'object'
+    ? compact
+      ? JSON.stringify(value).slice(1, -1).replaceAll('"', '').replaceAll(',', ' ')
+      : JSON.stringify(value)
+    : value;
+}

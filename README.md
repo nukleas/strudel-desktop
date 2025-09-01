@@ -3,8 +3,6 @@
 Live coding patterns on the web
 https://strudel.cc/
 
-Development is moving to https://codeberg.org/uzu/strudel
-
 - Try it here: <https://strudel.cc>
 - Docs: <https://strudel.cc/learn>
 - Technical Blog Post: <https://loophole-letters.vercel.app/strudel>
@@ -47,3 +45,5 @@ There is a #strudel channel on the TidalCycles discord: <https://discord.com/inv
 You can also ask questions and find related discussions on the tidal club forum: <https://club.tidalcycles.org/>
 
 The discord and forum is shared with the haskell (tidal) and python (vortex) siblings of this project.
+
+We also have a mastodon account: <a rel="me" href="https://social.toplap.org/@strudel">social.toplap.org/@strudel</a>

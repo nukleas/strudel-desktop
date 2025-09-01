@@ -36,7 +36,7 @@ export async function prebake() {
     samples(`${ds}/tidal-drum-machines.json`),
     samples(`${ds}/piano.json`),
     samples(`${ds}/Dirt-Samples.json`),
-    samples(`${ds}/EmuSP12.json`),
+    samples(`${ds}/uzu-drumkit.json`),
     samples(`${ds}/vcsl.json`),
     samples(`${ds}/mridangam.json`),
   ]);
