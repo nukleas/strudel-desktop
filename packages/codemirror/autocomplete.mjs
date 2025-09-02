@@ -74,15 +74,26 @@ const isValidDoc = (doc) => {
 const hasExcludedTags = (doc) =>
   ['superdirtOnly', 'noAutocomplete'].some((tag) => doc.tags?.find((t) => t.originalTitle === tag));
 
-const jsdocCompletions = jsdoc.docs
-  .filter((doc) => isValidDoc(doc) && !hasExcludedTags(doc))
-  // https://codemirror.net/docs/ref/#autocomplete.Completion
-  .map((doc) => ({
-    label: getDocLabel(doc),
-    // detail: 'xxx', // An optional short piece of information to show (with a different style) after the label.
-    info: () => Autocomplete({ doc }),
-    type: 'function', // https://codemirror.net/docs/ref/#autocomplete.Completion.type
-  }));
+const jsdocCompletions = (() => {
+  const seen = new Set(); // avoid repetition
+  const completions = [];
+  for (const doc of jsdoc.docs) {
+    if (!isValidDoc(doc) || hasExcludedTags(doc)) continue;
+    let labels = [getDocLabel(doc), ...(doc.synonyms || [])];
+    for (const label of labels) {
+      // https://codemirror.net/docs/ref/#autocomplete.Completion
+      if (label && !seen.has(label)) {
+        seen.add(label);
+        completions.push({
+          label,
+          info: () => Autocomplete({ doc }),
+          type: 'function', // https://codemirror.net/docs/ref/#autocomplete.Completion.type
+        });
+      }
+    }
+  }
+  return completions;
+})();
 
 export const strudelAutocomplete = (context) => {
   const word = context.matchBefore(/\w*/);
