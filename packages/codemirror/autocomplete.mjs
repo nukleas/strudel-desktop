@@ -86,7 +86,7 @@ const jsdocCompletions = (() => {
         seen.add(label);
         completions.push({
           label,
-          info: () => Autocomplete({ doc }),
+          info: () => Autocomplete({ doc, label }),
           type: 'function', // https://codemirror.net/docs/ref/#autocomplete.Completion.type
         });
       }

@@ -3,22 +3,27 @@ import { useMemo, useState } from 'react';
 import jsdocJson from '../../../../../doc.json';
 import { Textbox } from '../textbox/Textbox';
 
-const isValid = ({ name, description }) =>
-  name && !name.startsWith('_') && !!description;
+const isValid = ({ name, description }) => name && !name.startsWith('_') && !!description;
 
 const availableFunctions = (() => {
   const seen = new Set(); // avoid repetition
   const functions = [];
   for (const doc of jsdocJson.docs) {
     if (!isValid(doc)) continue;
-    let docAndSynonyms = [doc.name, ...(doc.synonyms || [])];
-    for (const s of docAndSynonyms) {
+    functions.push(doc);
+    const synonyms = doc.synonyms || [];
+    for (const s of synonyms) {
       if (!s || seen.has(s)) continue;
       seen.add(s);
+      // Swap `doc.name` in for `s` in the list of synonyms
+      const notS = synonyms.filter((x) => x && x !== s);
+      const synonymsWithDoc = Array.from(new Set([doc.name, ...notS]));
       functions.push({
         ...doc,
         name: s, // update names for the synonym
         longname: s,
+        synonyms: synonymsWithDoc,
+        synonyms_text: synonymsWithDoc.join(', '),
       });
     }
   }
