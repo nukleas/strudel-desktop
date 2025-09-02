@@ -2,9 +2,28 @@ import { useMemo, useState } from 'react';
 
 import jsdocJson from '../../../../../doc.json';
 import { Textbox } from '../textbox/Textbox';
-const availableFunctions = jsdocJson.docs
-  .filter(({ name, description }) => name && !name.startsWith('_') && !!description)
-  .sort((a, b) => /* a.meta.filename.localeCompare(b.meta.filename) +  */ a.name.localeCompare(b.name));
+
+const isValid = ({ name, description }) =>
+  name && !name.startsWith('_') && !!description;
+
+const availableFunctions = (() => {
+  const seen = new Set(); // avoid repetition
+  const functions = [];
+  for (const doc of jsdocJson.docs) {
+    if (!isValid(doc)) continue;
+    let docAndSynonyms = [doc.name, ...(doc.synonyms || [])];
+    for (const s of docAndSynonyms) {
+      if (!s || seen.has(s)) continue;
+      seen.add(s);
+      functions.push({
+        ...doc,
+        name: s, // update names for the synonym
+        longname: s,
+      });
+    }
+  }
+  return functions.sort((a, b) => /* a.meta.filename.localeCompare(b.meta.filename) +  */ a.name.localeCompare(b.name));
+})();
 
 const getInnerText = (html) => {
   var div = document.createElement('div');
