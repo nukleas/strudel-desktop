@@ -336,7 +336,7 @@ function getDelay(orbit, delaytime, delayfeedback, t) {
     const dly = ac.createFeedbackDelay(1, delaytime, delayfeedback);
     dly.start?.(t); // for some reason, this throws when audion extension is installed..
     connectToOrbit(dly, orbit);
-    delayNode = dly;
+    orbits[orbit].delayNode = dly;
   }
   delayNode.delayTime.value !== delaytime && delayNode.delayTime.setValueAtTime(delaytime, t);
   delayNode.feedback.value !== delayfeedback && delayNode.feedback.setValueAtTime(delayfeedback, t);
@@ -464,7 +464,7 @@ function getReverb(orbit, duration, fade, lp, dim, ir, irspeed, irbegin) {
     const ac = getAudioContext();
     const reverb = ac.createReverb(duration, fade, lp, dim, ir, irspeed, irbegin);
     connectToOrbit(reverb, orbit);
-    reverbNode = reverb;
+    orbits[orbit].reverbNode = reverb;
   }
 
   if (
