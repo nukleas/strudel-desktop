@@ -170,9 +170,13 @@ Using "!" we can repeat without speeding up:
 
 ## Randomness
 
-Events with a "?" placed after them will have a 50% chance of playing:
+Events with a "?" placed after them will have a 50% chance of being removed from the pattern:
 
 <MiniRepl client:idle tune={`note("[g3,b3,e4]*8?")`} punchcard />
+
+Adding a number between 0 and 1 after the "?" will affect the likelihood of the event being removed. For example, events with "?0.1" placed after them will have a 10% chance of being removed:
+
+<MiniRepl client:idle tune={`note("[g3,b3,e4]*8?0.1")`} punchcard />
 
 Events separated by a "|" will be chosen from at random:
 
