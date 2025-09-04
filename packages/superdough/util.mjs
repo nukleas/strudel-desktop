@@ -76,3 +76,5 @@ export function cycleToSeconds(cycle, cps) {
 export function secondsToCycle(t, cps) {
   return t * cps;
 }
+
+export const ffloor = (x) => x | 0; // fast floor for positive numbers

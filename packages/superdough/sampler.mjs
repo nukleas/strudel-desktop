@@ -1,5 +1,6 @@
 import { noteToMidi, valueToMidi, getSoundIndex } from './util.mjs';
-import { getAudioContext, registerSound } from './index.mjs';
+import { registerSound } from './index.mjs';
+import { getAudioContext } from './audioContext.mjs';
 import { getADSRValues, getParamADSR, getPitchEnvelope, getVibratoOscillator } from './helpers.mjs';
 import { logger } from './logger.mjs';
 

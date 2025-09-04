@@ -1,5 +1,6 @@
 import { clamp, midiToFreq, noteToMidi } from './util.mjs';
-import { registerSound, getAudioContext, soundMap, getLfo } from './superdough.mjs';
+import { registerSound, soundMap, getLfo } from './superdough.mjs';
+import { getAudioContext } from './audioContext.mjs';
 import {
   applyFM,
   gainNode,

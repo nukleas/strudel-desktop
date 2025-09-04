@@ -13,6 +13,7 @@ import { createFilter, gainNode, getCompressor, getDistortion, getWorklet, webAu
 import { map } from 'nanostores';
 import { logger, errorLogger } from './logger.mjs';
 import { loadBuffer } from './sampler.mjs';
+import { getAudioContext } from './audioContext.mjs';
 
 export const DEFAULT_MAX_POLYPHONY = 128;
 const DEFAULT_AUDIO_DEVICE_NAME = 'System Standard';
@@ -192,25 +193,6 @@ export function setVersionDefaults(version) {
 }
 
 export const resetLoadedSounds = () => soundMap.set({});
-
-let audioContext;
-
-export const setDefaultAudioContext = () => {
-  audioContext = new AudioContext();
-  return audioContext;
-};
-
-export const getAudioContext = () => {
-  if (!audioContext) {
-    return setDefaultAudioContext();
-  }
-
-  return audioContext;
-};
-
-export function getAudioContextCurrentTime() {
-  return getAudioContext().currentTime;
-}
 
 let workletsLoading;
 function loadWorklets() {

@@ -1,5 +1,5 @@
-import { getAudioContext } from './superdough.mjs';
-import { clamp, nanFallback } from './util.mjs';
+import { getAudioContext } from './audioContext.mjs';
+import { clamp, ffloor, nanFallback } from './util.mjs';
 import { getNoiseBuffer } from './noise.mjs';
 
 export const noises = ['pink', 'white', 'brown', 'crackle'];
@@ -308,6 +308,110 @@ export function applyFM(param, value, begin) {
   return { stop };
 }
 
+// Saturation curves
+
+const __squash = (x) => x / (1 + x); // [0, inf) to [0, 1)
+
+const _scurve = (x, k) => ((1 + k) * x) / (1 + k * Math.abs(x));
+const _soft = (x, k) => Math.tanh(x * (1 + k));
+const _hard = (x, k) => clamp((1 + k) * x, -1, 1);
+const _sine = (x, k) => Math.sin(x * (1 + k));
+
+const _fold = (x, k) => {
+  let y = (1 + k) * x;
+  while (y > 1 || y < -1) {
+    y = y > 1 ? 2 - y : -2 - y;
+  }
+  return y;
+};
+
+const _sineFold = (x, k) => Math.sin((Math.PI / 2) * _fold(x, k));
+
+const _pow = (x, k) => {
+  const t = __squash(k);
+  const p = 1 / (1 + 0.5 * t); // tame k
+  return _soft(Math.sign(x) * Math.pow(Math.abs(x), p), 0.5 * k);
+};
+
+const _cubic = (x, k) => {
+  const t = __squash(k);
+  const cubic = (x - (t / 3) * x * x * x) / (1 - t / 3); // normalized to go from (-1, 1)
+  return _soft(cubic, k);
+};
+
+const _diode = (x, k, asym = false) => {
+  const g = 1 + k; // gain
+  const t = __squash(k);
+  const bias = 0.15 * t;
+  const pos = _soft(x + bias, k);
+  const neg = _soft(asym ? bias : -x + bias, k);
+  const y = pos - neg;
+  // We divide by the derivative at 0 so that the distortion is roughly
+  // the identity map near 0 => small values are preserved and undistorted
+  const sech = 1 / Math.cosh(g * bias);
+  const sech2 = sech * sech; // derivative of tanh is sech^2
+  const denom = Math.max(1e-8, (asym ? 1 : 2) * g * sech2); // g from chain rule; 2 if both pos/neg have x
+  return _soft(y / denom, k);
+};
+
+const _asym = (x, k) => _diode(x, k, true);
+
+const _chebyshev = (x, k) => {
+  const kl = Math.log1p(k);
+  let tnm1 = 1;
+  let tnm2 = x;
+  let tn;
+  let y = 0;
+  const iterations = 1 + ffloor(Math.min(16 * kl, 255));
+  for (let i = 1; i < iterations; i++) {
+    if (i < 2) {
+      // Already set inital conditions
+      y += i == 0 ? tnm1 : tnm2;
+      continue;
+    }
+    tn = 2 * x * tnm1 - tnm2; // https://en.wikipedia.org/wiki/Chebyshev_polynomials#Recurrence_definition
+    tnm2 = tnm1;
+    tnm1 = tn;
+    if (i % 2 === 0) {
+      y += tn;
+    }
+  }
+  // Soft clip
+  return _soft(y, 0);
+};
+
+export const distortionAlgorithms = {
+  scurve: _scurve,
+  soft: _soft,
+  hard: _hard,
+  sine: _sine,
+  fold: _fold,
+  sinefold: _sineFold,
+  pow: _pow,
+  cubic: _cubic,
+  diode: _diode,
+  asym: _asym,
+  chebyshev: _chebyshev,
+};
+const _algoNames = Object.freeze(Object.keys(distortionAlgorithms));
+
+export const getDistortionAlgorithm = (algo) => {
+  let index = algo;
+  if (typeof algo === 'string') {
+    index = _algoNames.indexOf(algo);
+    if (index === -1) {
+      logger(`[superdough] Could not find waveshaping algorithm ${algo}.
+        Available options are ${_algoNames.join(', ')}.
+        Defaulting to ${_algoNames[0]}.`);
+      index = 0;
+    }
+  }
+  const name = _algoNames[index % _algoNames.length]; // allow for wrapping if algo was a number
+  const algorithm = distortionAlgorithms[name];
+  return { algorithm, index };
+};
+
 export const getDistortion = (distort, postgain, algorithm) => {
-  return getWorklet(getAudioContext(), 'distort-processor', { distort, postgain, algorithm });
+  const { _algorithm, index } = getDistortionAlgorithm(algorithm);
+  return getWorklet(getAudioContext(), 'distort-processor', { distort, postgain, algorithm: index });
 };
