@@ -307,3 +307,7 @@ export function applyFM(param, value, begin) {
   }
   return { stop };
 }
+
+export const getDistortion = (distort, postgain, algorithm) => {
+  return getWorklet(getAudioContext(), 'distort-processor', { distort, postgain, algorithm });
+};

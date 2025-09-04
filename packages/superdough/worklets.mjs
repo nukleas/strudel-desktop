@@ -7,6 +7,9 @@ import FFT from './fft.js';
 
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 const _mod = (n, m) => ((n % m) + m) % m;
+const ffloor = (x) => x | 0;
+const pv = (arr, n) => arr[n] ?? arr[0];
+const mix = (a, b, t) => (1 - t) * a + t * b;
 
 // Restrict phase to the range [0, maxPhase) via wrapping
 function wrapPhase(phase, maxPhase = 1) {
@@ -341,11 +344,85 @@ class LadderProcessor extends AudioWorkletProcessor {
 }
 registerProcessor('ladder-processor', LadderProcessor);
 
+// Saturation curves
+
+const __squash = (x) => x / (1 + x); // [0, inf) to [0, 1)
+
+const _scurve = (x, k) => ((1 + k) * x) / (1 + k * Math.abs(x));
+const _soft = (x, k) => Math.tanh(x * (1 + k));
+const _hard = (x, k) => clamp((1 + k) * x, -1, 1);
+const _sine = (x, k) => Math.sin(x * (1 + k));
+
+const _fold = (x, k) => {
+  let y = (1 + k) * x;
+  while (y > 1 || y < -1) {
+    y = y > 1 ? 2 - y : -2 - y;
+  }
+  return y;
+};
+
+const _sineFold = (x, k) => Math.sin((Math.PI / 2) * _fold(x, k));
+
+const _pow = (x, k) => {
+  const t = __squash(k);
+  const p = 1 / (1 + 0.5 * t); // tame k
+  return _soft(Math.sign(x) * Math.pow(Math.abs(x), p), 0.5 * k);
+};
+
+const _diode = (x, k, asym = false) => {
+  const g = 1 + k; // gain
+  const t = __squash(k);
+  const bias = 0.15 * t;
+  const pos = _soft(x + bias, k);
+  const neg = _soft(asym ? bias : -x + bias, k);
+  const y = pos - neg;
+  // We divide by the derivative at 0 so that the distortion is roughly
+  // the identity map near 0 => small values are preserved and undistorted
+  const sech = 1 / Math.cosh(g * bias);
+  const sech2 = sech * sech; // derivative of tanh is sech^2
+  const denom = Math.max(1e-8, (asym ? 1 : 2) * g * sech2); // g from chain rule; 2 if both pos/neg have x
+  return _soft(y / denom, k);
+};
+
+const _asym = (x, k) => _diode(x, k, true);
+
+const _cubic = (x, k) => {
+  const t = __squash(k);
+  const cubic = (x - (t / 3) * x * x * x) / (1 - t / 3); // normalized to go from (-1, 1)
+  return _soft(cubic, k);
+};
+
+export const saturationAlgos = {
+  scurve: _scurve,
+  soft: _soft,
+  hard: _hard,
+  sine: _sine,
+  fold: _fold,
+  sinefold: _sineFold,
+  pow: _pow,
+  cubic: _cubic,
+  diode: _diode,
+  asym: _asym,
+};
+const _algoNames = Object.freeze(Object.keys(saturationAlgos));
+
+const _getAlgorithm = (algo) => {
+  let algoName = typeof algo === 'string' ? algo : _algoNames[algo % _algoNames.length];
+  if (!_algoNames.includes(algoName)) {
+    algoName = _algoNames[0];
+    logger(`[superdough] Could not find waveshaping algorithm ${algo}.
+      Available options are ${_algoNames.join(', ')}.
+      Defaulting to ${algoName}.`);
+  }
+  return saturationAlgos[algoName];
+};
+
 class DistortProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
       { name: 'distort', defaultValue: 0 },
       { name: 'postgain', defaultValue: 1 },
+      { name: 'algorithm', defaultValue: 0, min: 0, max: _algoNames.length - 1 },
     ];
   }
 
@@ -363,13 +440,13 @@ class DistortProcessor extends AudioWorkletProcessor {
       return false;
     }
     this.started = hasInput;
-
-    const shape = Math.expm1(parameters.distort[0]);
-    const postgain = Math.max(0.001, Math.min(1, parameters.postgain[0]));
-
     for (let n = 0; n < blockSize; n++) {
-      for (let i = 0; i < input.length; i++) {
-        output[i][n] = (((1 + shape) * input[i][n]) / (1 + shape * Math.abs(input[i][n]))) * postgain;
+      const postgain = clamp(pv(parameters.postgain, n), 0.001, 1);
+      const shape = Math.expm1(pv(parameters.distort, n));
+      const algorithm = _getAlgorithm(pv(parameters.algorithm, n));
+      for (let ch = 0; ch < input.length; ch++) {
+        const x = input[ch][n];
+        output[ch][n] = postgain * algorithm(x, shape);
       }
     }
     return true;

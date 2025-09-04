@@ -9,7 +9,7 @@ import './reverb.mjs';
 import './vowel.mjs';
 import { clamp, nanFallback, _mod, cycleToSeconds, secondsToCycle } from './util.mjs';
 import workletsUrl from './worklets.mjs?audioworklet';
-import { createFilter, gainNode, getCompressor, getWorklet, webAudioTimeout } from './helpers.mjs';
+import { createFilter, gainNode, getCompressor, getDistortion, getWorklet, webAudioTimeout } from './helpers.mjs';
 import { map } from 'nanostores';
 import { logger, errorLogger } from './logger.mjs';
 import { loadBuffer } from './sampler.mjs';
@@ -608,6 +608,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     shapevol = getDefaultValue('shapevol'),
     distort,
     distortvol = getDefaultValue('distortvol'),
+    distorttype,
     pan,
     vowel,
     delay = getDefaultValue('delay'),
@@ -782,8 +783,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   // effects
   coarse !== undefined && chain.push(getWorklet(ac, 'coarse-processor', { coarse }));
   crush !== undefined && chain.push(getWorklet(ac, 'crush-processor', { crush }));
-  shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
-  distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
+  distort !== undefined && chain.push(getDistortion(distort, distortvol, distorttype));
 
   if (tremolosync != null) {
     tremolo = cps * tremolosync;
