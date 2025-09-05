@@ -72,21 +72,19 @@
 
 /* Override default styles from the codemirror inline css for autocomplete info tooltip*/
 .cm-tooltip.cm-completionInfo {
-  padding: 12px !important;
-  padding-bottom: 12px !important;
+  padding: 0 !important;
   border: 1px solid var(--foreground) !important;
   border-radius: 4px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
   max-width: 500px !important;
   min-width: 300px !important;
   max-height: 400px !important;
-  white-space: normal !important;
-  overflow: auto !important;
   background-color: var(--lineHighlight) !important;
 }
 
 /* Main tooltip container */
-.autocomplete-info-tooltip {
+.autocomplete-info-container {
+  padding: 12px !important;
   border-radius: 4px !important;
   color: var(--foreground);
   font-family: var(--font-family, 'SF Mono', 'Monaco', monospace);
@@ -95,6 +93,16 @@
   max-width: 600px;
   max-height: 400px;
   min-width: 400px;
+  white-space: normal !important;
+  overflow-y: auto !important;
+}
+
+.autocomplete-info-tooltip {
+  overflow-y: auto !important;
+}
+
+.autocomplete-info-function-description {
+  white-space: pre-wrap !important;
 }
 
 .autocomplete-info-function-name {
