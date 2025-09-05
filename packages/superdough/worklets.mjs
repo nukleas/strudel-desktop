@@ -909,7 +909,6 @@ class ByteBeatProcessor extends AudioWorkletProcessor {
 
 registerProcessor('byte-beat-processor', ByteBeatProcessor);
 
-
 export const WarpMode = Object.freeze({
   NONE: 0,
   ASYM: 1,

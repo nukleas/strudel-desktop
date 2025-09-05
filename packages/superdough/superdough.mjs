@@ -686,13 +686,8 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   let sourceNode;
   if (source) {
     sourceNode = source(t, value, hapDuration, cps);
-  } else {
-    const soundSource = wt ?? s;
-    const sound = getSound(soundSource);
-    if (!sound) {
-      throw new Error(`sound ${soundSource} not found! Is it loaded?`);
-    }
-    const { onTrigger } = sound;
+  } else if (getSound(s)) {
+    const { onTrigger } = getSound(s);
     const onEnded = () => {
       audioNodes.forEach((n) => n?.disconnect());
       activeSoundSources.delete(chainID);
@@ -703,6 +698,8 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
       sourceNode = soundHandle.node;
       activeSoundSources.set(chainID, soundHandle);
     }
+  } else {
+    throw new Error(`sound ${s} not found! Is it loaded?`);
   }
   if (!sourceNode) {
     // if onTrigger does not return anything, we will just silently skip
