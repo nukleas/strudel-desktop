@@ -312,7 +312,7 @@ export function SettingsTab({ started }) {
             confirmDialog('Sure?').then((r) => {
               if (r) {
                 const { userPatterns } = settingsMap.get(); // keep current patterns
-                settingsMap.set({...defaultSettings, userPatterns});
+                settingsMap.set({ ...defaultSettings, userPatterns });
               }
             });
           }}
