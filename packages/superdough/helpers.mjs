@@ -315,10 +315,9 @@ const __squash = (x) => x / (1 + x); // [0, inf) to [0, 1)
 const _scurve = (x, k) => ((1 + k) * x) / (1 + k * Math.abs(x));
 const _soft = (x, k) => Math.tanh(x * (1 + k));
 const _hard = (x, k) => clamp((1 + k) * x, -1, 1);
-const _sine = (x, k) => Math.sin(x * (1 + k));
 
 const _fold = (x, k) => {
-  let y = (1 + k) * x;
+  let y = (1 + 0.5 * k) * x;
   while (y > 1 || y < -1) {
     y = y > 1 ? 2 - y : -2 - y;
   }
@@ -327,29 +326,23 @@ const _fold = (x, k) => {
 
 const _sineFold = (x, k) => Math.sin((Math.PI / 2) * _fold(x, k));
 
-const _pow = (x, k) => {
-  const t = __squash(k);
-  const p = 1 / (1 + 0.5 * t); // tame k
-  return _soft(Math.sign(x) * Math.pow(Math.abs(x), p), 0.5 * k);
-};
-
 const _cubic = (x, k) => {
-  const t = __squash(k);
+  const t = __squash(Math.log1p(k));
   const cubic = (x - (t / 3) * x * x * x) / (1 - t / 3); // normalized to go from (-1, 1)
   return _soft(cubic, k);
 };
 
 const _diode = (x, k, asym = false) => {
-  const g = 1 + k; // gain
-  const t = __squash(k);
-  const bias = 0.15 * t;
-  const pos = _soft(x + bias, k);
-  const neg = _soft(asym ? bias : -x + bias, k);
+  const g = 1 + 2 * k; // gain
+  const t = __squash(Math.log1p(k));
+  const bias = 0.07 * t;
+  const pos = _soft(x + bias, 2 * k);
+  const neg = _soft(asym ? bias : -x + bias, 2 * k);
   const y = pos - neg;
   // We divide by the derivative at 0 so that the distortion is roughly
   // the identity map near 0 => small values are preserved and undistorted
   const sech = 1 / Math.cosh(g * bias);
-  const sech2 = sech * sech; // derivative of tanh is sech^2
+  const sech2 = sech * sech; // derivative of soft (i.e. tanh) is sech^2
   const denom = Math.max(1e-8, (asym ? 1 : 2) * g * sech2); // g from chain rule; 2 if both pos/neg have x
   return _soft(y / denom, k);
 };
@@ -357,13 +350,12 @@ const _diode = (x, k, asym = false) => {
 const _asym = (x, k) => _diode(x, k, true);
 
 const _chebyshev = (x, k) => {
-  const kl = Math.log1p(k);
+  const kl = 10 * Math.log1p(k);
   let tnm1 = 1;
   let tnm2 = x;
   let tn;
   let y = 0;
-  const iterations = 1 + ffloor(Math.min(16 * kl, 255));
-  for (let i = 1; i < iterations; i++) {
+  for (let i = 1; i < 64; i++) {
     if (i < 2) {
       // Already set inital conditions
       y += i == 0 ? tnm1 : tnm2;
@@ -373,24 +365,22 @@ const _chebyshev = (x, k) => {
     tnm2 = tnm1;
     tnm1 = tn;
     if (i % 2 === 0) {
-      y += tn;
+      y += Math.min(1.3 * kl / i, 2) * tn;
     }
   }
   // Soft clip
-  return _soft(y, 0);
+  return _soft(y, kl / 20);
 };
 
 export const distortionAlgorithms = {
   scurve: _scurve,
   soft: _soft,
   hard: _hard,
-  sine: _sine,
-  fold: _fold,
-  sinefold: _sineFold,
-  pow: _pow,
   cubic: _cubic,
   diode: _diode,
   asym: _asym,
+  fold: _fold,
+  sinefold: _sineFold,
   chebyshev: _chebyshev,
 };
 const _algoNames = Object.freeze(Object.keys(distortionAlgorithms));
