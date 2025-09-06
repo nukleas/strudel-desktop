@@ -590,12 +590,12 @@ export const { duckdepth } = registerControl('duckdepth');
  * @param {number | Pattern} time The onset time in seconds
  * @example
  * // Clicks
- * sound: n(run(8)).scale("c:minor").s("sawtooth").lpf(200).delay(.7).orbit(2)
- * duckerWithClick: s("bd*4").duckorbit(2).duckonset(0).postgain(0)
+ * sound: freq("63.2388").s("sine").orbit(2).gain(4)
+ * duckerWithClick: s("bd*4").duckorbit(2).duckattack(0.3).duckonset(0).postgain(0)
  * @example
  * // No clicks
- * sound: n(run(8)).scale("c:minor").s("sawtooth").lpf(200).delay(.7).orbit(2)
- * duckerWithoutClick: s("bd*4").duckorbit(2).duckonset(0.003).postgain(0)
+ * sound: freq("63.2388").s("sine").orbit(2).gain(4)
+ * duckerWithoutClick: s("bd*4").duckorbit(2).duckattack(0.3).duckonset(0.01).postgain(0)
  * @example
  * // Rhythmic
  * noise: s("pink").distort("2:1").orbit(4) // used rhythmically with 0.3 onset below

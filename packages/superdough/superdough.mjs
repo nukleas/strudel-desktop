@@ -420,7 +420,7 @@ function setOrbit(audioContext, orbit, channels) {
   }
 }
 
-function duckOrbit(audioContext, targetOrbit, t, onsettime = 0.003, attacktime = 0.1, duckdepth = 1) {
+function duckOrbit(audioContext, targetOrbit, t, onsettime = 0, attacktime = 0.1, duckdepth = 1) {
   const targetArr = [targetOrbit].flat();
   const onsetArr = [onsettime].flat();
   const attackArr = [attacktime].flat();
@@ -438,17 +438,18 @@ function duckOrbit(audioContext, targetOrbit, t, onsettime = 0.003, attacktime =
     webAudioTimeout(
       audioContext,
       () => {
-        gainParam.cancelScheduledValues(t);
+        const now = audioContext.currentTime;
+
+        // cancelScheduledValues and setValueAtTime together emulate cancelAndHoldAtTime
+        // on browsers which lack that method
         const currVal = gainParam.value;
+        gainParam.cancelScheduledValues(now);
+        gainParam.setValueAtTime(currVal, now);
+
+        const t0 = Math.max(t, now); // guard against now > t
         const duckedVal = clamp(1 - Math.sqrt(depth), 0.01, currVal);
-
-        // Guarantees the value is set to currVal at time t. This in conjunction with
-        // cancelScheduledValues above emulates cancelAndHoldAtTime on browsers which lack
-        // that method
-        gainParam.setValueAtTime(currVal, t);
-
-        gainParam.exponentialRampToValueAtTime(duckedVal, t + onset);
-        gainParam.exponentialRampToValueAtTime(1, t + onset + attack);
+        gainParam.exponentialRampToValueAtTime(duckedVal, t0 + onset);
+        gainParam.exponentialRampToValueAtTime(1, t0 + onset + attack);
       },
       0,
       t - 0.01,
