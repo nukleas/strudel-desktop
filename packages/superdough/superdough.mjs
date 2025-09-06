@@ -333,10 +333,10 @@ function getDelay(orbit, delaytime, delayfeedback, t) {
   let delayNode = orbits[orbit].delayNode;
   if (delayNode === undefined) {
     const ac = getAudioContext();
-    const dly = ac.createFeedbackDelay(1, delaytime, delayfeedback);
-    dly.start?.(t); // for some reason, this throws when audion extension is installed..
-    connectToOrbit(dly, orbit);
-    orbits[orbit].delayNode = dly;
+    delayNode = ac.createFeedbackDelay(1, delaytime, delayfeedback);
+    delayNode.start?.(t); // for some reason, this throws when audion extension is installed..
+    connectToOrbit(delayNode, orbit);
+    orbits[orbit].delayNode = delayNode;
   }
   delayNode.delayTime.value !== delaytime && delayNode.delayTime.setValueAtTime(delaytime, t);
   delayNode.feedback.value !== delayfeedback && delayNode.feedback.setValueAtTime(delayfeedback, t);
@@ -462,9 +462,9 @@ function getReverb(orbit, duration, fade, lp, dim, ir, irspeed, irbegin) {
   let reverbNode = orbits[orbit].reverbNode;
   if (reverbNode === undefined) {
     const ac = getAudioContext();
-    const reverb = ac.createReverb(duration, fade, lp, dim, ir, irspeed, irbegin);
-    connectToOrbit(reverb, orbit);
-    orbits[orbit].reverbNode = reverb;
+    reverbNode = ac.createReverb(duration, fade, lp, dim, ir, irspeed, irbegin);
+    connectToOrbit(reverbNode, orbit);
+    orbits[orbit].reverbNode = reverbNode;
   }
 
   if (
