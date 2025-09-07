@@ -168,6 +168,20 @@ Using "!" we can repeat without speeding up:
 
 <MiniRepl client:idle tune={`note("<[g3,b3,e4]!2 [a3,c3,e4] [b3,d3,f#4]>*2")`} punchcard />
 
+## Randomness
+
+Events with a "?" placed after them will have a 50% chance of being removed from the pattern:
+
+<MiniRepl client:idle tune={`note("[g3,b3,e4]*8?")`} punchcard />
+
+Adding a number between 0 and 1 after the "?" will affect the likelihood of the event being removed. For example, events with "?0.1" placed after them will have a 10% chance of being removed:
+
+<MiniRepl client:idle tune={`note("[g3,b3,e4]*8?0.1")`} punchcard />
+
+Events separated by a "|" will be chosen from at random:
+
+<MiniRepl client:idle tune={`note("[g3,b3,e4] | [a3,c3,e4] | [b3,d3,f#4]")`} punchcard />
+
 ## Mini-notation review
 
 To recap what we've learned so far, compare the following patterns:
@@ -179,6 +193,8 @@ To recap what we've learned so far, compare the following patterns:
 <MiniRepl client:idle tune={`note("<[g3,b3,e4] _ [a3,c3,e4] [b3,d3,f#4]>*2")`} />
 <MiniRepl client:idle tune={`note("<[g3,b3,e4]@2 [a3,c3,e4] [b3,d3,f#4]>*2")`} />
 <MiniRepl client:idle tune={`note("<[g3,b3,e4]!2 [a3,c3,e4] [b3,d3,f#4]>*2")`} />
+<MiniRepl client:idle tune={`note("<[g3,b3,e4]? [a3,c3,e4] [b3,d3,f#4]>*2")`} />
+<MiniRepl client:idle tune={`note("<[g3|b3|e4] [a3,c3,e4] [b3,d3,f#4]>*2")`} />
 
 ## Euclidian rhythms
 
