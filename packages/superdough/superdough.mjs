@@ -413,7 +413,7 @@ function connectToOrbit(node, orbit) {
 function setOrbit(audioContext, orbit, channels) {
   if (orbits[orbit] == null) {
     orbits[orbit] = {
-      gain: new GainNode(audioContext, { gain: 1 }),
+      gain: new GainNode(audioContext, { gain: 1, channelCount: 2, channelCountMode: 'explicit' }),
     };
     connectToDestination(orbits[orbit].gain, channels);
   }
