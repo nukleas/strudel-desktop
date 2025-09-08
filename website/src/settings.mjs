@@ -8,6 +8,14 @@ export const audioEngineTargets = {
   osc: 'osc',
 };
 
+export const soundFilterType = {
+  USER: 'user',
+  DRUMS: 'drums',
+  SAMPLES: 'samples',
+  SYNTHS: 'synths',
+  ALL: 'all',
+};
+
 export const defaultSettings = {
   activeFooter: 'intro',
   keybindings: 'codemirror',
@@ -28,7 +36,7 @@ export const defaultSettings = {
   fontSize: 18,
   latestCode: '',
   isZen: false,
-  soundsFilter: 'all',
+  soundsFilter: soundFilterType.ALL,
   patternFilter: 'community',
   // panelPosition: window.innerWidth > 1000 ? 'right' : 'bottom', //FIX: does not work on astro
   panelPosition: 'right',

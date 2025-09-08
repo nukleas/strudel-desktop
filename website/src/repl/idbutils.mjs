@@ -12,15 +12,19 @@ export const userSamplesDBConfig = {
 };
 
 // deletes all of the databases, useful for debugging
-function clearIDB() {
+function clearAllIDB() {
   window.indexedDB
     .databases()
     .then((r) => {
-      for (var i = 0; i < r.length; i++) window.indexedDB.deleteDatabase(r[i].name);
+      for (var i = 0; i < r.length; i++) clearIDB(r[i].name);
     })
     .then(() => {
       alert('All data cleared.');
     });
+}
+
+export function clearIDB(dbName) {
+  return window.indexedDB.deleteDatabase(dbName);
 }
 
 // queries the DB, and registers the sounds so they can be played
