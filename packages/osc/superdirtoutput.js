@@ -6,5 +6,5 @@ const trigger = /* isTauri() ? oscTriggerTauri : */ oscTrigger;
 
 export const superdirtOutput = (hap, deadline, hapDuration, cps, targetTime) => {
   const currentTime = performance.now() / 1000;
-  return trigger(null, hap, currentTime, cps, targetTime);
+  return trigger(hap, currentTime, cps, targetTime);
 };
