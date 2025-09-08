@@ -79,7 +79,7 @@ export function SoundsTab() {
           }}
         ></ButtonGroup>
       </div>
-      {
+      {soundsFilter === soundFilterType.USER && soundEntries.length > 0 && (
         <ActionButton
           label="delete-all"
           onClick={async () => {
@@ -95,7 +95,7 @@ export function SoundsTab() {
             }
           }}
         />
-      }
+      )}
 
       <div className="min-h-0 max-h-full grow overflow-auto  text-sm break-normal pb-2">
         {soundEntries.map(([name, { data, onTrigger }]) => {
@@ -174,7 +174,7 @@ export function SoundsTab() {
         ) : (
           ''
         )}
-        {!soundEntries.length && soundsFilter !== 'importSounds' ? 'No custom sounds loaded (yet).' : ''}
+        {!soundEntries.length && soundsFilter !== 'importSounds' ? 'No sounds loaded' : ''}
       </div>
     </div>
   );
