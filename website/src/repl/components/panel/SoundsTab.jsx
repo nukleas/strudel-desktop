@@ -79,26 +79,26 @@ export function SoundsTab() {
           }}
         ></ButtonGroup>
       </div>
-      <div>
-        {soundsFilter === soundFilterType.USER && soundEntries.length > 0 && (
-          <ActionButton
-            className="pl-2"
-            label="delete-all"
-            onClick={async () => {
-              try {
-                const confirmed = await confirmDialog('Delete all imported user samples?');
-                if (confirmed) {
-                  clearIDB(userSamplesDBConfig.dbName);
-                  soundMap.set({});
-                  await prebake();
-                }
-              } catch (e) {
-                console.error(e);
+
+      {soundsFilter === soundFilterType.USER && soundEntries.length > 0 && (
+        <ActionButton
+          className="pl-2"
+          label="delete-all"
+          onClick={async () => {
+            try {
+              const confirmed = await confirmDialog('Delete all imported user samples?');
+              if (confirmed) {
+                clearIDB(userSamplesDBConfig.dbName);
+                soundMap.set({});
+                await prebake();
               }
-            }}
-          />
-        )}
-      </div>
+            } catch (e) {
+              console.error(e);
+            }
+          }}
+        />
+      )}
+
 
       <div className="min-h-0 max-h-full grow overflow-auto  text-sm break-normal bg-background p-2 rounded-md">
         {soundEntries.map(([name, { data, onTrigger }]) => {
