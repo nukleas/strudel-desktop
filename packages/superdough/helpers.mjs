@@ -1,6 +1,7 @@
 import { getAudioContext } from './audioContext.mjs';
-import { clamp, ffloor, nanFallback } from './util.mjs';
+import { clamp, nanFallback } from './util.mjs';
 import { getNoiseBuffer } from './noise.mjs';
+import { logger } from './logger.mjs';
 
 export const noises = ['pink', 'white', 'brown', 'crackle'];
 
@@ -365,7 +366,7 @@ const _chebyshev = (x, k) => {
     tnm2 = tnm1;
     tnm1 = tn;
     if (i % 2 === 0) {
-      y += Math.min(1.3 * kl / i, 2) * tn;
+      y += Math.min((1.3 * kl) / i, 2) * tn;
     }
   }
   // Soft clip

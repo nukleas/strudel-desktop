@@ -4,7 +4,7 @@
 
 import OLAProcessor from './ola-processor';
 import FFT from './fft.js';
-import { getDistortionAlgorithm  } from './helpers.mjs';
+import { getDistortionAlgorithm } from './helpers.mjs';
 
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 const _mod = (n, m) => ((n % m) + m) % m;

@@ -1586,7 +1586,7 @@ export const { shape } = registerControl(['shape', 'shapevol']);
  * @example
  * note("d1!8").s("sine").penv(36).pdecay(.12).decay(.23).distort("8:.4")
  * @example
- * s("bd*4").bank("tr909").distort("4:0.5:fold")
+ * s("bd:4*4").bank("tr808").distort("3:0.5:diode")
  *
  */
 export const { distort, dist } = registerControl(['distort', 'distortvol', 'distorttype'], 'dist');
@@ -1614,8 +1614,8 @@ export const { distortvol } = registerControl('distortvol', 'distvol');
  * @example
  * s("sine").note("F1*2").release(1)
  *   .penv(24).pdecay(0.05)
- *   .distort(70)
- *   .distorttype("<fold decimate scurve hard soft diode asym>")
+ *   .distort(rand.range(1, 8))
+ *   .distorttype("<fold chebyshev scurve diode asym sinefold>")
  */
 export const { distorttype } = registerControl('distorttype', 'disttype');
 
