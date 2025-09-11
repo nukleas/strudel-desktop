@@ -311,17 +311,17 @@ export function applyFM(param, value, begin) {
 // Saturation curves
 
 const __squash = (x) => x / (1 + x); // [0, inf) to [0, 1)
+const _mod = (n, m) => ((n % m) + m) % m;
 
 const _scurve = (x, k) => ((1 + k) * x) / (1 + k * Math.abs(x));
 const _soft = (x, k) => Math.tanh(x * (1 + k));
 const _hard = (x, k) => clamp((1 + k) * x, -1, 1);
 
 const _fold = (x, k) => {
+  // Closed form folding for audio rate
   let y = (1 + 0.5 * k) * x;
-  while (y > 1 || y < -1) {
-    y = y > 1 ? 2 - y : -2 - y;
-  }
-  return y;
+  const window = _mod(y + 1, 4);
+  return 1 - Math.abs(window - 2);
 };
 
 const _sineFold = (x, k) => Math.sin((Math.PI / 2) * _fold(x, k));
