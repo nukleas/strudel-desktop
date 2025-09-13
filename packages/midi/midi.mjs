@@ -333,7 +333,7 @@ Pattern.prototype.midi = function (midiport, options = {}) {
       logger(`Midi device disconnected! Available: ${getMidiDeviceNamesString(outputs)}`),
   });
 
-  return this.onTrigger((time_deprecate, hap, currentTime, cps, targetTime) => {
+  return this.onTrigger((hap, currentTime, cps, targetTime) => {
     if (!WebMidi.enabled) {
       logger('Midi not enabled');
       return;
@@ -493,6 +493,9 @@ export async function midin(input) {
         otherInputs?.length ? `Also available: ${getMidiDeviceNamesString(otherInputs)}` : ''
       }`,
     );
+  }
+  // ensure refs for this input are initialized
+  if (!refs[input]) {
     refs[input] = {};
   }
   const cc = (cc) => ref(() => refs[input][cc] || 0);

@@ -1,6 +1,6 @@
 {
   "name": "@strudel/webaudio",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "Web Audio helpers for Strudel",
   "main": "index.mjs",
   "type": "module",
@@ -35,7 +35,8 @@
   "dependencies": {
     "@strudel/core": "workspace:*",
     "@strudel/draw": "workspace:*",
-    "superdough": "workspace:*"
+    "superdough": "workspace:*",
+    "supradough": "workspace:*"
   },
   "devDependencies": {
     "vite": "^6.0.11"

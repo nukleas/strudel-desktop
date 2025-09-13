@@ -5,7 +5,12 @@ This program is free software: you can redistribute it and/or modify it under th
 */
 
 import * as strudel from '@strudel/core';
-import { superdough, getAudioContext, setLogger, doughTrigger } from 'superdough';
+import { superdough, getAudioContext, setLogger, doughTrigger, registerWorklet } from 'superdough';
+import './supradough.mjs';
+import { workletUrl } from 'supradough';
+
+registerWorklet(workletUrl);
+
 const { Pattern, logger, repl } = strudel;
 
 setLogger(logger);
@@ -15,14 +20,10 @@ const hap2value = (hap) => {
   return hap.value;
 };
 
-export const webaudioOutputTrigger = (t, hap, ct, cps) => superdough(hap2value(hap), t - ct, hap.duration / cps, cps);
 // uses more precise, absolute t if available, see https://github.com/tidalcycles/strudel/pull/1004
-export const webaudioOutput = (hap, deadline, hapDuration, cps, t) => {
-  return superdough(hap2value(hap), t ? `=${t}` : deadline, hapDuration, cps);
-};
-
-Pattern.prototype.webaudio = function () {
-  return this.onTrigger(webaudioOutputTrigger);
+// TODO: refactor output callbacks to eliminate deadline
+export const webaudioOutput = (hap, _deadline, hapDuration, cps, t) => {
+  return superdough(hap2value(hap), t, hapDuration, cps, hap.whole?.begin.valueOf());
 };
 
 export function webaudioRepl(options = {}) {

@@ -1,8 +1,8 @@
 import { closeBrackets } from '@codemirror/autocomplete';
 export { toggleComment, toggleBlockComment, toggleLineComment, toggleBlockCommentByLine } from '@codemirror/commands';
 // import { search, highlightSelectionMatches } from '@codemirror/search';
-import { history } from '@codemirror/commands';
-import { javascript } from '@codemirror/lang-javascript';
+import { indentWithTab } from '@codemirror/commands';
+import { javascript, javascriptLanguage } from '@codemirror/lang-javascript';
 import { defaultHighlightStyle, syntaxHighlighting, bracketMatching } from '@codemirror/language';
 import { Compartment, EditorState, Prec } from '@codemirror/state';
 import {
@@ -24,6 +24,7 @@ import { initTheme, activateTheme, theme } from './themes.mjs';
 import { sliderPlugin, updateSliderWidgets } from './slider.mjs';
 import { widgetPlugin, updateWidgets } from './widget.mjs';
 import { persistentAtom } from '@nanostores/persistent';
+import { basicSetup } from './basicSetup.mjs';
 
 const extensions = {
   isLineWrappingEnabled: (on) => (on ? EditorView.lineWrapping : []),
@@ -37,6 +38,14 @@ const extensions = {
   isActiveLineHighlighted: (on) => (on ? [highlightActiveLine(), highlightActiveLineGutter()] : []),
   isFlashEnabled,
   keybindings,
+  isTabIndentationEnabled: (on) => (on ? keymap.of([indentWithTab]) : []),
+  isMultiCursorEnabled: (on) =>
+    on
+      ? [
+          EditorState.allowMultipleSelections.of(true),
+          EditorView.clickAddsSelectionRange.of((ev) => ev.metaKey || ev.ctrlKey),
+        ]
+      : [],
 };
 const compartments = Object.fromEntries(Object.keys(extensions).map((key) => [key, new Compartment()]));
 
@@ -51,6 +60,8 @@ export const defaultSettings = {
   isFlashEnabled: true,
   isTooltipEnabled: false,
   isLineWrappingEnabled: false,
+  isTabIndentationEnabled: false,
+  isMultiCursorEnabled: false,
   theme: 'strudelTheme',
   fontFamily: 'monospace',
   fontSize: 18,
@@ -75,13 +86,17 @@ export function initEditor({ initialCode = '', onChange, onEvaluate, onStop, roo
       /* search(),
       highlightSelectionMatches(), */
       ...initialSettings,
+      basicSetup,
       mondo ? [] : javascript(),
+      javascriptLanguage.data.of({
+        closeBrackets: { brackets: ['(', '[', '{', "'", '"', '<'] },
+        bracketMatching: { brackets: ['(', '[', '{', "'", '"', '<'] },
+      }),
       sliderPlugin,
       widgetPlugin,
       // indentOnInput(), // works without. already brought with javascript extension?
       // bracketMatching(), // does not do anything
       syntaxHighlighting(defaultHighlightStyle),
-      history(),
       EditorView.updateListener.of((v) => onChange(v)),
       drawSelection({ cursorBlinkRate: 0 }),
       Prec.highest(

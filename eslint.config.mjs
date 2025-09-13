@@ -42,6 +42,7 @@ export default [
       '**/hydra.mjs',
       '**/jsdoc-synonyms.js',
       'packages/hs2js/src/hs2js.mjs',
+      'packages/supradough/dough-export.mjs',
       '**/samples',
     ],
   },
@@ -81,6 +82,16 @@ export default [
           devDependencies: true,
         },
       ],
+    },
+  },
+  {
+    // Properties provided by AudioWorkletGlobalScope
+    files: ['packages/superdough/worklets.mjs'],
+    languageOptions: {
+      globals: {
+        currentTime: 'readonly',
+        sampleRate: 'readonly',
+      },
     },
   },
 ];

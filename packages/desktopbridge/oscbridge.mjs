@@ -4,7 +4,7 @@ import { Invoke } from './utils.mjs';
 
 const collator = new ClockCollator({});
 
-export async function oscTriggerTauri(t_deprecate, hap, currentTime, cps = 1, targetTime) {
+export async function oscTriggerTauri(hap, currentTime, cps = 1, targetTime) {
   const controls = parseControlsFromHap(hap, cps);
   const params = [];
   const timestamp = collator.calculateTimestamp(currentTime, targetTime);

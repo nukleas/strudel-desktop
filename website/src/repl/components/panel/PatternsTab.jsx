@@ -12,8 +12,8 @@ import { useMemo } from 'react';
 import { getMetadata } from '../../../metadata_parser.js';
 import { useExamplePatterns } from '../../useExamplePatterns.jsx';
 import { parseJSON, isUdels } from '../../util.mjs';
-import { ButtonGroup } from './Forms.jsx';
-import { settingsMap, useSettings } from '../../../settings.mjs';
+import { useSettings } from '../../../settings.mjs';
+import { ActionButton } from '../button/action-button.jsx';
 import { Pagination } from '../pagination/Pagination.jsx';
 import { useState } from 'react';
 import { useDebounce } from '../usedebounce.jsx';
@@ -75,15 +75,6 @@ function PatternButtons({ patterns, activePattern, onClick, started }) {
   );
 }
 
-function ActionButton({ children, onClick, label, labelIsHidden }) {
-  return (
-    <button className="hover:opacity-50 text-nowrap" onClick={onClick} title={label}>
-      {labelIsHidden !== true && label}
-      {children}
-    </button>
-  );
-}
-
 const updateCodeWindow = (context, patternData, reset = false) => {
   context.handleUpdate(patternData, reset);
 };
@@ -125,7 +116,7 @@ function UserPatterns({ context }) {
             style={{ display: 'none' }}
             type="file"
             multiple
-            accept="text/plain,application/json"
+            accept="text/plain,text/x-markdown,application/json"
             onChange={(e) => importPatterns(e.target.files)}
           />
           import

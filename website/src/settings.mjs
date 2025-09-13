@@ -8,6 +8,14 @@ export const audioEngineTargets = {
   osc: 'osc',
 };
 
+export const soundFilterType = {
+  USER: 'user',
+  DRUMS: 'drums',
+  SAMPLES: 'samples',
+  SYNTHS: 'synths',
+  ALL: 'all',
+};
+
 export const defaultSettings = {
   activeFooter: 'intro',
   keybindings: 'codemirror',
@@ -21,12 +29,14 @@ export const defaultSettings = {
   isSyncEnabled: false,
   isLineWrappingEnabled: false,
   isPatternHighlightingEnabled: true,
+  isTabIndentationEnabled: false,
+  isMultiCursorEnabled: false,
   theme: 'strudelTheme',
   fontFamily: 'monospace',
   fontSize: 18,
   latestCode: '',
   isZen: false,
-  soundsFilter: 'all',
+  soundsFilter: soundFilterType.ALL,
   patternFilter: 'community',
   // panelPosition: window.innerWidth > 1000 ? 'right' : 'bottom', //FIX: does not work on astro
   panelPosition: 'right',
@@ -77,6 +87,8 @@ export function useSettings() {
     isLineWrappingEnabled: parseBoolean(state.isLineWrappingEnabled),
     isFlashEnabled: parseBoolean(state.isFlashEnabled),
     isSyncEnabled: isUdels() ? true : parseBoolean(state.isSyncEnabled),
+    isTabIndentationEnabled: parseBoolean(state.isTabIndentationEnabled),
+    isMultiCursorEnabled: parseBoolean(state.isMultiCursorEnabled),
     fontSize: Number(state.fontSize),
     panelPosition: state.activeFooter !== '' && !isUdels() ? state.panelPosition : 'bottom', // <-- keep this 'bottom' where it is!
     isPanelPinned: parseBoolean(state.isPanelPinned),

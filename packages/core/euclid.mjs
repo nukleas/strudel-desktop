@@ -10,7 +10,7 @@ https://rohandrape.net/?t=hmt
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { timeCat, register, silence } from './pattern.mjs';
+import { timeCat, register, silence, stack, pure, _morph } from './pattern.mjs';
 import { rotate, flatten, splitAt, zipWith } from './util.mjs';
 import Fraction, { lcm } from './fraction.mjs';
 
@@ -195,4 +195,27 @@ export const euclidLegato = register(['euclidLegato'], function (pulses, steps, 
  */
 export const euclidLegatoRot = register(['euclidLegatoRot'], function (pulses, steps, rotation, pat) {
   return _euclidLegato(pulses, steps, rotation, pat);
+});
+
+/**
+ * A 'euclid' variant with an additional parameter that morphs the resulting
+ * rhythm from 0 (no morphing) to 1 (completely 'even'). For example
+ * `sound("bd").euclidish(3,8,0)` would be the same as
+ * `sound("bd").euclid(3,8)`, and `sound("bd").euclidish(3,8,1)` would be the
+ * same as `sound("bd bd bd")`. `sound("bd").euclidish(3,8,0.5)` would have a
+ * groove somewhere between.
+ * Inspired by the work of Malcom Braff.
+ * @name euclidish
+ * @synonyms eish
+ * @memberof Pattern
+ * @param {number} pulses the number of onsets
+ * @param {number} steps the number of steps to fill
+ * @param {number} groove exists between the extremes of 0 (straight euclidian) and 1 (straight pulse)
+ * @example
+ * sound("hh").euclidish(7,12,sine.slow(8))
+ * .pan(sine.slow(8))
+ */
+export const { euclidish, eish } = register(['euclidish', 'eish'], function (pulses, steps, perc, pat) {
+  const morphed = _morph(bjork(pulses, steps), new Array(pulses).fill(1), perc);
+  return pat.struct(morphed).setSteps(steps);
 });

@@ -60,7 +60,7 @@ export function parseControlsFromHap(hap, cps) {
 
 const collator = new ClockCollator({});
 
-export async function oscTrigger(t_deprecate, hap, currentTime, cps = 1, targetTime) {
+export async function oscTrigger(hap, currentTime, cps = 1, targetTime) {
   const osc = await connect();
   const controls = parseControlsFromHap(hap, cps);
   const keyvals = Object.entries(controls).flat();

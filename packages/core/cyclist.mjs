@@ -5,7 +5,7 @@ This program is free software: you can redistribute it and/or modify it under th
 */
 
 import createClock from './zyklus.mjs';
-import { logger } from './logger.mjs';
+import { errorLogger, logger } from './logger.mjs';
 
 export class Cyclist {
   constructor({
@@ -67,6 +67,7 @@ export class Cyclist {
               // the following line is dumb and only here for backwards compatibility
               // see https://codeberg.org/uzu/strudel/pulls/1004
               const deadline = targetTime - phase;
+              // this onTrigger has another signature
               onTrigger?.(hap, deadline, duration, this.cps, targetTime);
               if (hap.value.cps !== undefined && this.cps != hap.value.cps) {
                 this.cps = hap.value.cps;
@@ -75,7 +76,7 @@ export class Cyclist {
             }
           });
         } catch (e) {
-          logger(`[cyclist] error: ${e.message}`);
+          errorLogger(e);
           onError?.(e);
         }
       },

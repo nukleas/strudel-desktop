@@ -21,6 +21,8 @@ import {
   numeralArgs,
   parseNumeral,
   pairs,
+  zipWith,
+  stringifyValues,
 } from './util.mjs';
 import drawLine from './drawLine.mjs';
 import { logger } from './logger.mjs';
@@ -852,14 +854,29 @@ export class Pattern {
     );
   }
 
-  log(func = (_, hap) => `[hap] ${hap.showWhole(true)}`, getData = (_, hap) => ({ hap })) {
+  /**
+   * Writes the content of the current event to the console (visible in the side menu).
+   * @name log
+   * @memberof Pattern
+   * @example
+   * s("bd sd").log()
+   */
+  log(func = (hap) => `[hap] ${hap.showWhole(true)}`, getData = (hap) => ({ hap })) {
     return this.onTrigger((...args) => {
       logger(func(...args), undefined, getData(...args));
     }, false);
   }
 
-  logValues(func = id) {
-    return this.log((_, hap) => func(hap.value));
+  /**
+   * A simplified version of `log` which writes all "values" (various configurable parameters)
+   * within the event to the console (visible in the side menu).
+   * @name logValues
+   * @memberof Pattern
+   * @example
+   * s("bd sd").gain("0.25 0.5 1").n("2 1 0").logValues()
+   */
+  logValues(func = (value) => `[hap] ${stringifyValues(value, true)}`) {
+    return this.log((hap) => func(hap.value));
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -1288,7 +1305,7 @@ export function sequenceP(pats) {
  * @synonyms polyrhythm, pr
  * @example
  * stack("g3", "b3", ["e4", "d4"]).note()
- * // "g3,b3,[e4,d4]".note()
+ * // "g3,b3,[e4 d4]".note()
  *
  * @example
  * // As a chained function:
@@ -1569,7 +1586,7 @@ export const func = curry((a, b) => reify(b).func(a));
 /**
  * Registers a new pattern method. The method is added to the Pattern class + the standalone function is returned from register.
  *
- * @param {string} name name of the function
+ * @param {string | string[]} name name of the function, or an array of names to be used as synonyms
  * @param {function} func function with 1 or more params, where last is the current pattern
  * @noAutocomplete
  *
@@ -2522,7 +2539,7 @@ export const { fastchunk, fastChunk } = register(
 /**
  * Like `chunk`, but the function is applied to a looped subcycle of the source pattern.
  * @name chunkInto
- * @synonym chunkinto
+ * @synonyms chunkinto
  * @memberof Pattern
  * @example
  * sound("bd sd ht lt bd - cp lt").chunkInto(4, hurry(2))
@@ -2535,7 +2552,7 @@ export const { chunkinto, chunkInto } = register(['chunkinto', 'chunkInto'], fun
 /**
  * Like `chunkInto`, but moves backwards through the chunks.
  * @name chunkBackInto
- * @synonym chunkbackinto
+ * @synonyms chunkbackinto
  * @memberof Pattern
  * @example
  * sound("bd sd ht lt bd - cp lt").chunkInto(4, hurry(2))
@@ -2565,7 +2582,7 @@ export const bypass = register(
  * Loops the pattern inside an `offset` for `cycles`.
  * If you think of the entire span of time in cycles as a ribbon, you can cut a single piece and loop it.
  * @name ribbon
- * @synonym rib
+ * @synonyms rib
  * @param {number} offset start point of loop in cycles
  * @param {number} cycles loop length in cycles
  * @example
@@ -3260,10 +3277,10 @@ export const slice = register(
  * @memberof Pattern
  *  @returns Pattern
  * @example
- * s("bd!8").onTriggerTime((hap) => {console.info(hap)})
+ * s("bd!8").onTriggerTime((hap) => {console.log(hap)})
  */
 Pattern.prototype.onTriggerTime = function (func) {
-  return this.onTrigger((t_deprecate, hap, currentTime, cps = 1, targetTime) => {
+  return this.onTrigger((hap, currentTime, _cps, targetTime) => {
     const diff = targetTime - currentTime;
     window.setTimeout(() => {
       func(hap);
@@ -3400,3 +3417,69 @@ export const { beat } = register(
   ['beat'],
   __beat((x) => x.innerJoin()),
 );
+
+export const _morph = (from, to, by) => {
+  by = Fraction(by);
+  const dur = Fraction(1).div(from.length);
+  const positions = (list) => {
+    const result = [];
+    for (const [pos, value] of list.entries()) {
+      if (value) {
+        result.push([Fraction(pos).div(list.length), value]);
+      }
+    }
+    return result;
+  };
+  const arcs = zipWith(
+    ([posa, valuea], [posb, valueb]) => {
+      const b = by.mul(posb - posa).add(posa);
+      const e = b.add(dur);
+      return new TimeSpan(b, e);
+    },
+    positions(from),
+    positions(to),
+  );
+  function query(state) {
+    const cycle = state.span.begin.sam();
+    const cycleArc = state.span.cycleArc();
+    const result = [];
+    for (const whole of arcs) {
+      const part = whole.intersection(cycleArc);
+      if (part !== undefined) {
+        result.push(
+          new Hap(
+            whole.withTime((x) => x.add(cycle)),
+            part.withTime((x) => x.add(cycle)),
+            true,
+          ),
+        );
+      }
+    }
+    return result;
+  }
+  return new Pattern(query).splitQueries();
+};
+
+/**
+ * Takes two binary rhythms represented as lists of 1s and 0s, and a number
+ * between 0 and 1 that morphs between them. The two lists should contain the same
+ * number of true values.
+ * @example
+ * sound("hh").struct(morph([1,0,1,0,1,0,1,0], // straight rhythm
+ *                          [1,1,0,1,0,1,0], // wonky rhythm
+ *                          0.25 // creates a slightly wonky rhythm
+ *                         )
+ *                   )
+ * @example
+ * sound("hh").struct(morph("1:0:1:0:1:0:1:0", // straight rhythm
+ *                          "1:1:0:1:0:1:0", // wonky rhythm
+ *                          sine.slow(8) // slowly morph between the rhythms
+ *                         )
+ *                   )
+ */
+export const morph = (frompat, topat, bypat) => {
+  frompat = reify(frompat);
+  topat = reify(topat);
+  bypat = reify(bypat);
+  return frompat.innerBind((from) => topat.innerBind((to) => bypat.innerBind((by) => _morph(from, to, by))));
+};
