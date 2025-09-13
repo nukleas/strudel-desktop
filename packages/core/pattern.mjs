@@ -1246,7 +1246,8 @@ export const silence = gap(1);
 /* Like silence, but with a 'steps' (relative duration) of 0 */
 export const nothing = gap(0);
 
-/** A discrete value that repeats once per cycle.
+/**
+ * A discrete value that repeats once per cycle.
  *
  * @returns {Pattern}
  * @example
@@ -1299,7 +1300,8 @@ export function sequenceP(pats) {
   return result;
 }
 
-/** The given items are played at the same time at the same length.
+/**
+ * The given items are played at the same time at the same length.
  *
  * @return {Pattern}
  * @synonyms polyrhythm, pr
@@ -1382,11 +1384,11 @@ export function stackBy(by, ...pats) {
     .setSteps(steps);
 }
 
-/** Concatenation: combines a list of patterns, switching between them successively, one per cycle:
- *
- * synonyms: `cat`
+/**
+ * Concatenation: combines a list of patterns, switching between them successively, one per cycle.
  *
  * @return {Pattern}
+ * @synonyms cat
  * @example
  * slowcat("e5", "b4", ["d5", "c5"])
  *

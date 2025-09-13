@@ -16,8 +16,7 @@ const availableFunctions = (() => {
       if (!s || seen.has(s)) continue;
       seen.add(s);
       // Swap `doc.name` in for `s` in the list of synonyms
-      const notS = synonyms.filter((x) => x && x !== s);
-      const synonymsWithDoc = Array.from(new Set([doc.name, ...notS]));
+      const synonymsWithDoc = [doc.name, ...synonyms].filter((x) => x && x !== s);
       functions.push({
         ...doc,
         name: s, // update names for the synonym
