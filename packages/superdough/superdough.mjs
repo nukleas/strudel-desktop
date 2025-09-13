@@ -196,7 +196,7 @@ export const resetLoadedSounds = () => soundMap.set({});
 let audioContext;
 
 export const setDefaultAudioContext = () => {
-  audioContext = new AudioContext();
+  audioContext = new AudioContext({ latencyHint: 'playback' });
   return audioContext;
 };
 
@@ -212,11 +212,17 @@ export function getAudioContextCurrentTime() {
   return getAudioContext().currentTime;
 }
 
+let externalWorklets = [];
+export function registerWorklet(url) {
+  externalWorklets.push(url);
+}
+
 let workletsLoading;
 function loadWorklets() {
   if (!workletsLoading) {
     const audioCtx = getAudioContext();
-    workletsLoading = audioCtx.audioWorklet.addModule(workletsUrl);
+    const allWorkletURLs = externalWorklets.concat([workletsUrl]);
+    workletsLoading = Promise.all(allWorkletURLs.map((workletURL) => audioCtx.audioWorklet.addModule(workletURL)));
   }
 
   return workletsLoading;
@@ -414,7 +420,7 @@ function setOrbit(audioContext, orbit, channels) {
     orbits[orbit] = {
       // Setup output node through which all audio filters prior to hitting
       // the destination (and thus allows for global volume automation)
-      output: new GainNode(audioContext, { gain: 1 }),
+      output: new GainNode(audioContext, { gain: 1, channelCount: 2, channelCountMode: 'explicit' }),
     };
     connectToDestination(orbits[orbit].output, channels);
   }

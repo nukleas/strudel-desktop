@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 
 import cowsay from 'cowsay';
-import { createReadStream, existsSync } from 'fs';
+import { createReadStream, existsSync, writeFileSync } from 'fs';
 import { readdir } from 'fs/promises';
 import http from 'http';
-import { join, sep } from 'path';
+import { join, resolve, sep } from 'path';
+import readline from 'readline';
 import os from 'os';
 
-// eslint-disable-next-line
 const LOG = !!process.env.LOG || false;
+const VALID_AUDIO_EXTENSIONS = ['wav', 'mp3', 'ogg'];
+
+const isAudioFile = (f) => {
+  const ext = f.split('.').slice(-1)[0].toLowerCase();
+  return VALID_AUDIO_EXTENSIONS.includes(ext);
+};
 
 async function getFilesInDirectory(directory) {
   let files = [];
@@ -21,32 +27,32 @@ async function getFilesInDirectory(directory) {
         continue;
       }
       try {
-        const subFiles = (await getFilesInDirectory(fullPath)).filter((f) =>
-          ['wav', 'mp3', 'ogg'].includes(f.split('.').slice(-1)[0].toLowerCase()),
-        );
+        const subFiles = (await getFilesInDirectory(fullPath)).filter(isAudioFile);
         files = files.concat(subFiles);
         LOG && console.log(`${dirent.name} (${subFiles.length})`);
       } catch (err) {
         LOG && console.warn(`skipped due to error: ${fullPath}`);
       }
     } else {
-      files.push(fullPath);
+      isAudioFile(fullPath) && files.push(fullPath);
     }
   }
   return files;
 }
 
-async function getBanks(directory) {
+async function getBanks(directory, flat = false) {
   let files = await getFilesInDirectory(directory);
   let banks = {};
   directory = directory.split(sep).join('/');
   files = files.map((path) => {
     path = path.split(sep).join('/');
-    const [bank] = path.split('/').slice(-2);
+    const subDir = path.replace(directory, '');
+    const subDirFlat = subDir.replaceAll('/', '_').slice(1); // remove initial underscore
+    const subDirFlatStem = subDirFlat.replace(/\.[^.]+$/, ''); // remove extension
+    let bank = flat ? subDirFlatStem : path.split('/').slice(-2)[0];
     banks[bank] = banks[bank] || [];
-    const relativeUrl = path.replace(directory, '');
-    banks[bank].push(relativeUrl);
-    return relativeUrl;
+    banks[bank].push(subDir);
+    return subDir;
   });
   banks._base = `http://localhost:5432`;
   return { banks, files };
@@ -54,14 +60,44 @@ async function getBanks(directory) {
 
 const args = process.argv.slice(2);
 
-// eslint-disable-next-line
-const directory = process.cwd();
+function getArgValue(flag) {
+  const i = args.indexOf(flag);
+  if (i !== -1) {
+    const nextIsFlag = args[i + 1]?.startsWith('--') ?? true;
+    if (nextIsFlag) return true;
+    return args[i + 1];
+  }
+}
 
+function getInput(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) =>
+    rl.question(query, (response) => {
+      rl.close();
+      resolve(response);
+    }),
+  );
+}
+
+let directory = getArgValue('--dir') || process.cwd();
+directory = resolve(directory);
 if (args.includes('--json')) {
-  const { banks, files } = await getBanks(directory);
+  const { banks } = await getBanks(directory, getArgValue('--flat'));
   const json = JSON.stringify(banks);
-  console.log(json);
-  process.exit(0);
+  const outFile = resolve(directory, 'strudel.json');
+  if (existsSync(outFile)) {
+    const answer = await getInput(`Warning: File already exists at ${outFile}. Overwrite? (y/N): `);
+    if (answer.toLowerCase() !== 'y') {
+      console.log('Aborted.');
+      process.exit(0);
+    }
+  }
+  writeFileSync(outFile, json, 'utf8');
+  console.log(`Wrote json to ${outFile}`);
 }
 
 console.log(
@@ -74,7 +110,7 @@ console.log(
 
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  const { banks, files } = await getBanks(directory);
+  const { banks, files } = await getBanks(directory, getArgValue('--flat'));
   if (req.url === '/') {
     res.setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify(banks));
@@ -82,7 +118,7 @@ const server = http.createServer(async (req, res) => {
   let subpath = decodeURIComponent(req.url);
   const filePath = join(directory, subpath.split('/').join(sep));
 
-  //console.log('GET:', filePath);
+  // console.log('GET:', filePath);
   const isFound = existsSync(filePath);
   if (!isFound) {
     res.statusCode = 404;

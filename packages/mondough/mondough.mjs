@@ -108,7 +108,7 @@ export function mondo(code, offset = 0) {
   return pat.markcss('color: var(--caret,--foreground);text-decoration:underline');
 }
 
-let getLocations = (code, offset) => runner.parser.get_locations(code, offset);
+export let getLocations = (code, offset) => runner.parser.get_locations(code, offset);
 
 export const mondi = (str, offset) => {
   const code = `[${str}]`;

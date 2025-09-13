@@ -56,11 +56,13 @@ const buildExamples = (examples) =>
 
 export const Autocomplete = ({ doc, label }) =>
   h`
-  <div class="autocomplete-info-tooltip">
-    <h3 class="autocomplete-info-function-name">${label || getDocLabel(doc)}</h3>
-    ${doc.description ? `<p class="autocomplete-info-function-description">${doc.description}</p>` : ''}
-    ${buildParamsList(doc.params)}
-    ${buildExamples(doc.examples)}
+  <div class="autocomplete-info-container">
+    <div class="autocomplete-info-tooltip">
+      <h3 class="autocomplete-info-function-name">${label || getDocLabel(doc)}</h3>
+      ${doc.description ? `<div class="autocomplete-info-function-description">${doc.description}</div>` : ''}
+      ${buildParamsList(doc.params)}
+      ${buildExamples(doc.examples)}
+    </div>
   </div>
 `[0];
 
@@ -98,4 +100,4 @@ export const strudelAutocomplete = (context) => {
 };
 
 export const isAutoCompletionEnabled = (enabled) =>
-  enabled ? [autocompletion({ override: [strudelAutocomplete] })] : [];
+  enabled ? [autocompletion({ override: [strudelAutocomplete], closeOnBlur: false })] : [];
