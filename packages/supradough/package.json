@@ -1,7 +1,7 @@
 {
-  "name": "@strudel/xen",
-  "version": "1.2.4",
-  "description": "Xenharmonic API for strudel",
+  "name": "supradough",
+  "version": "1.2.3",
+  "description": "platform agnostic synth and sampler intended for live coding. a reimplementation of superdough.",
   "main": "index.mjs",
   "type": "module",
   "publishConfig": {
@@ -9,12 +9,11 @@
   },
   "scripts": {
     "build": "vite build",
-    "test": "vitest run",
     "prepublishOnly": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://codeberg.org/uzu/strudel.git"
+    "url": "git+https://github.com/tidalcycles/strudel.git"
   },
   "keywords": [
     "tidalcycles",
@@ -26,14 +25,13 @@
   "author": "Felix Roos <flix91@gmail.com>",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://codeberg.org/uzu/strudel/issues"
+    "url": "https://github.com/tidalcycles/strudel/issues"
   },
-  "homepage": "https://codeberg.org/uzu/strudel#readme",
-  "dependencies": {
-    "@strudel/core": "workspace:*"
-  },
+  "homepage": "https://github.com/tidalcycles/strudel#readme",
   "devDependencies": {
     "vite": "^6.0.11",
-    "vitest": "^3.0.4"
-  }
+    "vite-plugin-bundle-audioworklet": "workspace:*",
+    "wav-encoder": "^1.3.0"
+  },
+  "dependencies": {}
 }
