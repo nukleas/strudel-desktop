@@ -174,7 +174,7 @@ let curves = ['linear', 'exponential'];
 export function getPitchEnvelope(param, value, t, holdEnd) {
   // envelope is active when any of these values is set
   const hasEnvelope = value.pattack ?? value.pdecay ?? value.psustain ?? value.prelease ?? value.penv;
-  if (!hasEnvelope) {
+  if (hasEnvelope === undefined) {
     return;
   }
   const penv = nanFallback(value.penv, 1, true);
