@@ -16,10 +16,7 @@ These functions allow the use of scales other than your typical chromatic 12 bas
 
 Here's an example of how to configure a basic hexany scale:
 
-<MiniRepl
-  client:idle
-  tune={`"0 1 2 3 4 5".tune("hexany15").mul("220").freq()`}
-/>
+<MiniRepl client:idle tune={`"0 1 2 3 4 5".tune("hexany15").mul("220").freq()`} />
 
 Try other scales like `hexany1`, `iraq`, `gumbeng`, `gunkali`, or `tranh3`
 
@@ -67,6 +64,7 @@ Another helpful trick when exploring new tunings is to strum them.
 Many have a much more enchanting sound that was chosen over many generations of musicians for being strummed.
 
 Take the `sanza` tuning:
+
 <MiniRepl
   client:idle
   tune={`"4 5 6 7 8 9".tune("sanza")
@@ -77,10 +75,7 @@ Take the `sanza` tuning:
 Notes 7 and 9 will clash quite a bit if you arp them normally. Many tunings will have this sort of sound, and it can feel distracting on its own.
 See how close they are on the pitch wheel?
 
-<MiniRepl
-  client:idle
-  tune={`"[7 9]!3".tune("sanza").mul(getFreq('c3')).freq()._pitchwheel()`}
-/>
+<MiniRepl client:idle tune={`"[7 9]!3".tune("sanza").mul(getFreq('c3')).freq()._pitchwheel()`} />
 
 This quality is often due to how the tunings were formed with instruments that were played differently than a piano.
 As such, some tunings are much better strummed, with the subtle clash of the detuned notes actually making the sound much more magical:
