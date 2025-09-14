@@ -7365,6 +7365,64 @@ exports[`runs examples > example "ply" example index 0 1`] = `
 ]
 `;
 
+exports[`runs examples > example "plyForEach" example index 0 1`] = `
+[
+  "[ 0/1 → 1/4 | note:C3 ]",
+  "[ 1/4 → 1/2 | note:Eb3 ]",
+  "[ 1/2 → 3/4 | note:G3 ]",
+  "[ 3/4 → 1/1 | note:Bb3 ]",
+  "[ 1/1 → 9/8 | note:Eb3 ]",
+  "[ 9/8 → 5/4 | note:G3 ]",
+  "[ 5/4 → 11/8 | note:Bb3 ]",
+  "[ 11/8 → 3/2 | note:D4 ]",
+  "[ 3/2 → 13/8 | note:G3 ]",
+  "[ 13/8 → 7/4 | note:Bb3 ]",
+  "[ 7/4 → 15/8 | note:D4 ]",
+  "[ 15/8 → 2/1 | note:F4 ]",
+  "[ 2/1 → 9/4 | note:C3 ]",
+  "[ 9/4 → 5/2 | note:Eb3 ]",
+  "[ 5/2 → 11/4 | note:G3 ]",
+  "[ 11/4 → 3/1 | note:Bb3 ]",
+  "[ 3/1 → 25/8 | note:Eb3 ]",
+  "[ 25/8 → 13/4 | note:G3 ]",
+  "[ 13/4 → 27/8 | note:Bb3 ]",
+  "[ 27/8 → 7/2 | note:D4 ]",
+  "[ 7/2 → 29/8 | note:G3 ]",
+  "[ 29/8 → 15/4 | note:Bb3 ]",
+  "[ 15/4 → 31/8 | note:D4 ]",
+  "[ 31/8 → 4/1 | note:F4 ]",
+]
+`;
+
+exports[`runs examples > example "plyWith" example index 0 1`] = `
+[
+  "[ 0/1 → 1/4 | note:C3 ]",
+  "[ 1/4 → 1/2 | note:Eb3 ]",
+  "[ 1/2 → 3/4 | note:G3 ]",
+  "[ 3/4 → 1/1 | note:Bb3 ]",
+  "[ 1/1 → 9/8 | note:Eb3 ]",
+  "[ 9/8 → 5/4 | note:G3 ]",
+  "[ 5/4 → 11/8 | note:Bb3 ]",
+  "[ 11/8 → 3/2 | note:D4 ]",
+  "[ 3/2 → 13/8 | note:G3 ]",
+  "[ 13/8 → 7/4 | note:Bb3 ]",
+  "[ 7/4 → 15/8 | note:D4 ]",
+  "[ 15/8 → 2/1 | note:F4 ]",
+  "[ 2/1 → 9/4 | note:C3 ]",
+  "[ 9/4 → 5/2 | note:Eb3 ]",
+  "[ 5/2 → 11/4 | note:G3 ]",
+  "[ 11/4 → 3/1 | note:Bb3 ]",
+  "[ 3/1 → 25/8 | note:Eb3 ]",
+  "[ 25/8 → 13/4 | note:G3 ]",
+  "[ 13/4 → 27/8 | note:Bb3 ]",
+  "[ 27/8 → 7/2 | note:D4 ]",
+  "[ 7/2 → 29/8 | note:G3 ]",
+  "[ 29/8 → 15/4 | note:Bb3 ]",
+  "[ 15/4 → 31/8 | note:D4 ]",
+  "[ 31/8 → 4/1 | note:F4 ]",
+]
+`;
+
 exports[`runs examples > example "polymeter" example index 0 1`] = `
 [
   "[ 0/1 → 1/6 | note:c ]",
