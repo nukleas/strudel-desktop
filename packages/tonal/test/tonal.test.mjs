@@ -66,7 +66,7 @@ describe('tonal', () => {
         n(seq('0b#', '1#b', '2#b#'))
           .scale('C major')
           .firstCycleValues.map((h) => h.note),
-      ).toEqual(['', '', '']);
+      ).toEqual([]);
     });
     it('snaps notes (upwards) to scale', () => {
       const inputNotes = ['Cb', 'Eb', 'G', 'A#', 'Bb'];

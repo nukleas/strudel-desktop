@@ -189,8 +189,7 @@ function _convertStepToNumberAndOffset(step) {
     const match = /^(-?\d+)(#+|b+)?$/.exec(step);
 
     if (!match) {
-      logger(`[tonal] invalid scale step "${step}", expected number or integer with optional # b suffixes`, 'error');
-      return [silence, 0];
+      throw new Error(`invalid scale step "${step}", expected number or integer with optional # b suffixes`);
     }
     asNumber = Number(match[1]);
     // These decorations will determine the semitone offset based on the number of
@@ -275,8 +274,8 @@ export const scale = register(
               // legacy..
               return pure(step);
             }
-            const [number, offset] = _convertStepToNumberAndOffset(step);
             try {
+              const [number, offset] = _convertStepToNumberAndOffset(step);
               let note;
               if (isObject && value.anchor) {
                 note = stepInNamedScale(number, scale, value.anchor);
@@ -287,7 +286,7 @@ export const scale = register(
               value = pure(isObject ? { ...value, note } : note);
             } catch (err) {
               logger(`[tonal] ${err.message}`, 'error');
-              value = silence;
+              return silence;
             }
             return value;
           }
