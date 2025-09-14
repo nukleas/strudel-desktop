@@ -1,4 +1,6 @@
 // this is dough, the superdough without dependencies
+// @ts-check
+// @ts-ignore ignore next line because sampleRate is unknown
 const SAMPLE_RATE = typeof sampleRate !== 'undefined' ? sampleRate : 48000;
 const PI_DIV_SR = Math.PI / SAMPLE_RATE;
 const ISR = 1 / SAMPLE_RATE;
@@ -641,8 +643,8 @@ const note2midi = (note, defaultOctave = 3) => {
   }
   const chroma = chromas[pc.toLowerCase()];
   const offset = acc?.split('').reduce((o, char) => o + accs[char], 0) || 0;
-  oct = Number(oct || defaultOctave);
-  return (oct + 1) * 12 + chroma + offset;
+  const octave = Number(oct || defaultOctave);
+  return (octave + 1) * 12 + chroma + offset;
 };
 const midi2freq = (midi) => Math.pow(2, (midi - 69) / 12) * 440;
 const note2freq = (note) => {
@@ -654,9 +656,152 @@ const note2freq = (note) => {
 };
 
 export class DoughVoice {
+  /** @type {number} */
+  id = 0;
+  /** @type {number[]} */
   out = [0, 0];
+
+  /** @type {number | undefined} */
+  attack;
+  /** @type {number | undefined} */
+  decay;
+  /** @type {number | undefined} */
+  sustain;
+  /** @type {number} */
+  release;
+  /** @type {number} */
+  _begin;
+  /** @type {number} */
+  _duration;
+
+  /** @type {any} */
+  _sound;
+  /** @type {number} */
+  _channels = 1;
+  /** @type {BufferPlayer[] | undefined} */
+  _buffers;
+  /** @type {string | undefined} */
+  unit;
+
+  /** @type {ADSR | undefined} */
+  _penv;
+  /** @type {number | undefined} */
+  penv;
+  /** @type {number | undefined} */
+  pattack;
+  /** @type {number | undefined} */
+  pdecay;
+  /** @type {number | undefined} */
+  psustain;
+  /** @type {number | undefined} */
+  prelease;
+
+  /** @type {number | undefined} */
+  vib;
+
+  _vib;
+  /** @type {number | undefined} */
+  vibmod;
+
+  /** @type {SineOsc | undefined} */
+  _fm;
+  /** @type {number | undefined} */
+  fmh;
+  /** @type {number | undefined} */
+  fmi;
+
+  /** @type {ADSR | undefined} */
+  _fmenv;
+  /** @type {number | undefined} */
+  fmattack;
+  /** @type {number | undefined} */
+  fmdecay;
+  /** @type {number | undefined} */
+  fmsustain;
+  /** @type {number | undefined} */
+  fmrelease;
+
+  /** @type {ADSR | undefined} */
+  _lpenv;
+  lpenv;
+  /** @type {number | undefined} */
+  lpattack;
+  /** @type {number | undefined} */
+  lpdecay;
+  /** @type {number | undefined} */
+  lpsustain;
+  /** @type {number | undefined} */
+  lprelease;
+
+  /** @type {ADSR | undefined} */
+  _hpenv;
+  /** @type {number | undefined} */
+  hpenv;
+  /** @type {number | undefined} */
+  hpattack;
+  /** @type {number | undefined} */
+  hpdecay;
+  /** @type {number | undefined} */
+  hpsustain;
+  /** @type {number | undefined} */
+  hprelease;
+
+  /** @type {ADSR | undefined} */
+  _bpenv;
+  /** @type {number | undefined} */
+  bpenv;
+  /** @type {number | undefined} */
+  bpattack;
+  /** @type {number | undefined} */
+  bpdecay;
+  /** @type {number | undefined} */
+  bpsustain;
+  /** @type {number | undefined} */
+  bprelease;
+
+  /** @type {number | undefined} */
+  cutoff;
+  /** @type {number | undefined} */
+  hcutoff;
+  /** @type {number | undefined} */
+  bandf;
+  /** @type {number | undefined} */
+  coarse;
+  /** @type {number | undefined} */
+  crush;
+  /** @type {number | undefined} */
+  distort;
+
+  /** @type {number} */
+  freq;
+  /** @type {string | undefined} */
+  note;
+
+  /** @type {TwoPoleFilter[] | null | undefined} */
+  _lpf;
+  /** @type {TwoPoleFilter[] | null | undefined} */
+  _hpf;
+  /** @type {TwoPoleFilter[] | null | undefined} */
+  _bpf;
+  /** @type {Chorus[] | null | undefined} */
+  _chorus;
+  /** @type {Coarse[] | null | undefined} */
+  _coarse;
+  /** @type {Crush[] | null | undefined} */
+  _crush;
+  /** @type {Distort[] | null | undefined} */
+  _distort;
+
+  /**
+   * @param {DoughVoice} value
+   */
   constructor(value) {
-    value.freq ??= note2freq(value.note);
+    // mandatory controls
+    this.freq ??= note2freq(value.note);
+    this._begin = value._begin;
+    this._duration = value._duration;
+    this.release = value.release ?? 0;
+    // the rest.. we use $ for readability
     let $ = this;
     Object.assign($, value);
     $.s = $.s ?? getDefaultValue('s');
@@ -773,7 +918,7 @@ export class DoughVoice {
     let freq = this.freq * this.speed;
 
     // frequency modulation
-    if (this._fm) {
+    if (this._fm && this.fmh !== undefined && this.fmi !== undefined) {
       let fmi = this.fmi;
       if (this._fmenv) {
         const env = this._fmenv.update(t, gate, this.fmattack, this.fmdecay, this.fmsustain, this.fmrelease);
@@ -785,37 +930,31 @@ export class DoughVoice {
     }
 
     // vibrato
-    if (this._vib) {
+    if (this._vib && this.vibmod !== undefined) {
       freq = freq * 2 ** ((this._vib.update(this.vib) * this.vibmod) / 12);
     }
 
     // pitch envelope
-    if (this._penv) {
+    if (this._penv && this.penv !== undefined) {
       const env = this._penv.update(t, gate, this.pattack, this.pdecay, this.psustain, this.prelease);
       freq = freq + env * this.penv;
     }
 
     // filters
     let lpf = this.cutoff;
-    if (this._lpf) {
-      if (this._lpenv) {
-        const env = this._lpenv.update(t, gate, this.lpattack, this.lpdecay, this.lpsustain, this.lprelease);
-        lpf = this.lpenv * env * lpf + lpf;
-      }
+    if (lpf !== undefined && this._lpenv) {
+      const env = this._lpenv.update(t, gate, this.lpattack, this.lpdecay, this.lpsustain, this.lprelease);
+      lpf = this.lpenv * env * lpf + lpf;
     }
     let hpf = this.hcutoff;
-    if (this._hpf) {
-      if (this._hpenv) {
-        const env = this._hpenv.update(t, gate, this.hpattack, this.hpdecay, this.hpsustain, this.hprelease);
-        hpf = 2 ** this.hpenv * env * hpf + hpf;
-      }
+    if (hpf !== undefined && this._hpenv && this.hpenv !== undefined) {
+      const env = this._hpenv.update(t, gate, this.hpattack, this.hpdecay, this.hpsustain, this.hprelease);
+      hpf = 2 ** this.hpenv * env * hpf + hpf;
     }
     let bpf = this.bandf;
-    if (this._bpf) {
-      if (this._bpenv) {
-        const env = this._bpenv.update(t, gate, this.bpattack, this.bpdecay, this.bpsustain, this.bprelease);
-        bpf = 2 ** this.bpenv * env * bpf + bpf;
-      }
+    if (bpf !== undefined && this._bpenv && this.bpenv !== undefined) {
+      const env = this._bpenv.update(t, gate, this.bpattack, this.bpdecay, this.bpsustain, this.bprelease);
+      bpf = 2 ** this.bpenv * env * bpf + bpf;
     }
     // gain envelope
     const env = this._adsr.update(t, gate, this.attack, this.decay, this.sustain, this.release);
@@ -891,8 +1030,8 @@ export class Dough {
     this.sampleRate = sampleRate;
     this.t = Math.floor(currentTime * sampleRate); // samples
     // console.log('init dough', this.sampleRate, this.t);
-    this._delayL = new PitchDelay();
-    this._delayR = new PitchDelay();
+    this._delayL = new Delay();
+    this._delayR = new Delay();
   }
   loadSample(name, channels, sampleRate) {
     BufferPlayer.samples.set(name, { channels, sampleRate });
@@ -965,8 +1104,9 @@ export class Dough {
       }
     }
     // todo: how to change delaytime / delayfeedback from a voice?
-    const delayL = this._delayL.update(this.delaysend[0], this.delaytime, this.delayspeed);
-    const delayR = this._delayR.update(this.delaysend[1], this.delaytime, this.delayspeed);
+    const delayL = this._delayL.update(this.delaysend[0], this.delaytime);
+    const delayR = this._delayR.update(this.delaysend[1], this.delaytime);
+
     this.delaysend[0] = delayL * this.delayfeedback;
     this.delaysend[1] = delayR * this.delayfeedback;
     this.out[0] += delayL;

@@ -91,6 +91,7 @@ export const { s, sound } = registerControl(['s', 'n', 'gain'], 'sound');
  * Define a custom webaudio node to use as a sound source.
  *
  * @name source
+ * @synonyms src
  * @param {function} getSource
  * @synonyms src
  *
@@ -536,6 +537,7 @@ export const { tremolophase } = registerControl('tremolophase', 'tremphase');
  * Shape of amplitude modulation
  *
  * @name tremoloshape
+ * @synonyms tremshape
  * @param {number | Pattern} shape tri | square | sine | saw | ramp
  * @example
  * note("{f g c d}%16").tremsync(4).tremoloshape("<sine tri square>").s("sawtooth")
@@ -551,6 +553,7 @@ export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
  * note("{f g g c d a a#}%16".sub(17)).s("supersaw").lpenv(8).lpf(150).lpq(.8).ftype('ladder').drive("<.5 4>")
  *
  */
+export const { drive } = registerControl('drive');
 
 /**
  * Modulate the amplitude of an orbit to create a "sidechain" like effect.
@@ -558,6 +561,7 @@ export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
  * Can be applied to multiple orbits with the ':' mininotation, e.g. `duckorbit("2:3")`
  *
  * @name duckorbit
+ * @synonyms duck
  * @param {number | Pattern} orbit target orbit
  * @example
  * $: n(run(16)).scale("c:minor:pentatonic").s("sawtooth").delay(.7).orbit(2)
@@ -636,8 +640,6 @@ export const { duckonset } = registerControl('duckonset', 'duckons');
  *
  */
 export const { duckattack } = registerControl('duckattack', 'duckatt');
-
-export const { drive } = registerControl('drive');
 
 /**
  * Create byte beats with custom expressions
@@ -761,7 +763,7 @@ export const { phasercenter, phc } = registerControl('phasercenter', 'phc');
  * The amount the signal is affected by the phaser effect. Defaults to 0.75
  *
  * @name phaserdepth
- * @synonyms phd
+ * @synonyms phd, phasdp
  * @param {number | Pattern} depth number between 0 and 1
  * @example
  * n(run(8)).scale("D:pentatonic").s("sawtooth").release(0.5)
@@ -1256,6 +1258,7 @@ export const { dry } = registerControl('dry');
  * Used when using `begin`/`end` or `chop`/`striate` and friends, to change the fade out time of the 'grain' envelope.
  *
  * @name fadeTime
+ * @synonyms fadeOutTime
  * @param {number | Pattern} time between 0 and 1
  * @example
  * s("oh*4").end(.1).fadeTime("<0 .2 .4 .8>").osc()

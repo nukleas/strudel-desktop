@@ -113,6 +113,19 @@ export async function aliasBank(...args) {
   }
 }
 
+/**
+ * Register an alias for a sound.
+ * @param {string} original - The original sound name
+ * @param {string} alias - The alias to use for the sound
+ */
+export function soundAlias(original, alias) {
+  if (getSound(original) == null) {
+    logger('soundAlias: original sound not found');
+    return;
+  }
+  soundMap.setKey(alias, getSound(original));
+}
+
 export function getSound(s) {
   if (typeof s !== 'string') {
     console.warn(`getSound: expected string got "${s}". fall back to triangle`);

@@ -1246,7 +1246,8 @@ export const silence = gap(1);
 /* Like silence, but with a 'steps' (relative duration) of 0 */
 export const nothing = gap(0);
 
-/** A discrete value that repeats once per cycle.
+/**
+ * A discrete value that repeats once per cycle.
  *
  * @returns {Pattern}
  * @example
@@ -1299,7 +1300,8 @@ export function sequenceP(pats) {
   return result;
 }
 
-/** The given items are played at the same time at the same length.
+/**
+ * The given items are played at the same time at the same length.
  *
  * @return {Pattern}
  * @synonyms polyrhythm, pr
@@ -1382,11 +1384,11 @@ export function stackBy(by, ...pats) {
     .setSteps(steps);
 }
 
-/** Concatenation: combines a list of patterns, switching between them successively, one per cycle:
- *
- * synonyms: `cat`
+/**
+ * Concatenation: combines a list of patterns, switching between them successively, one per cycle.
  *
  * @return {Pattern}
+ * @synonyms cat
  * @example
  * slowcat("e5", "b4", ["d5", "c5"])
  *
@@ -2395,6 +2397,57 @@ export const echo = register('echo', function (times, time, feedback, pat) {
  */
 export const stut = register('stut', function (times, feedback, time, pat) {
   return pat._echoWith(times, time, (pat, i) => pat.gain(Math.pow(feedback, i)));
+});
+
+export const applyN = register('applyN', function (n, func, p) {
+  let result = p;
+  for (let i = 0; i < n; i++) {
+    result = func(result);
+  }
+  return result;
+});
+
+/**
+ * The plyWith function repeats each event the given number of times, applying the given function to each event.\n
+ * @name plyWith
+ * @synonyms plywith
+ * @param {number} factor how many times to repeat
+ * @param {function} func function to apply, given the pattern
+ * @example
+ * "<0 [2 4]>"
+ * .plyWith(4, (p) => p.add(2))
+ * .scale("C:minor").note()
+ */
+export const plyWith = register(['plyWith', 'plywith'], function (factor, func, pat) {
+  const result = pat
+    .fmap((x) => cat(...listRange(0, factor - 1).map((i) => applyN(i, func, x)))._fast(factor))
+    .squeezeJoin();
+  if (__steps) {
+    result._steps = Fraction(factor).mulmaybe(pat._steps);
+  }
+  return result;
+});
+
+/**
+ * The plyForEach function repeats each event the given number of times, applying the given function to each event.
+ * This version of ply uses the iteration index as an argument to the function, similar to echoWith.
+ * @name plyForEach
+ * @synonyms plyforeach
+ * @param {number} factor how many times to repeat
+ * @param {function} func function to apply, given the pattern and the iteration index
+ * @example
+ * "<0 [2 4]>"
+ * .plyForEach(4, (p,n) => p.add(n*2))
+ * .scale("C:minor").note()
+ */
+export const plyForEach = register(['plyForEach', 'plyforeach'], function (factor, func, pat) {
+  const result = pat
+    .fmap((x) => cat(cat(pure(x), ...listRange(1, factor - 1).map((i) => func(pure(x), i))))._fast(factor))
+    .squeezeJoin();
+  if (__steps) {
+    result._steps = Fraction(factor).mulmaybe(pat._steps);
+  }
+  return result;
 });
 
 /**
