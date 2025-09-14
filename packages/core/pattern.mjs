@@ -2399,6 +2399,56 @@ export const stut = register('stut', function (times, feedback, time, pat) {
   return pat._echoWith(times, time, (pat, i) => pat.gain(Math.pow(feedback, i)));
 });
 
+export const applyN = register('applyN', function (n, func, p) {
+  let result = p;
+  for (let i = 0; i < n; i++) {
+    result = func(result);
+  }
+  return result;
+});
+
+/**
+ * The plyWithClassic function repeats each event the given number of times, applying the given function to each event.\n
+ * Here the function does not take the iteration index as an argument.
+ * @name plyWithClassic
+ * @param {number} factor how many times to repeat
+ * @param {function} func function to apply, given the pattern
+ * @example
+ * "<0 [2 4]>"
+ * .plyWith(4, (p) => p.add(2))
+ * .scale("C:minor").note()
+ */
+export const plyWithClassic = register('plyWithClassic', function (factor, func, pat) {
+  const result = pat
+    .fmap((x) => cat(...listRange(0, factor - 1).map((i) => applyN(i, func, x)))._fast(factor))
+    .squeezeJoin();
+  if (__steps) {
+    result._steps = Fraction(factor).mulmaybe(pat._steps);
+  }
+  return result;
+});
+
+/**
+ * The plyWith function repeats each event the given number of times, applying the given function to each event.
+ * @name plyWith
+ * @synonyms plywith
+ * @param {number} factor how many times to repeat
+ * @param {function} func function to apply, given the pattern and the iteration index
+ * @example
+ * "<0 [2 4]>"
+ * .plyWith(4, (p,n) => p.add(n*2))
+ * .scale("C:minor").note()
+ */
+export const plyWith = register(['plyWith', 'plywith'], function (factor, func, pat) {
+  const result = pat
+    .fmap((x) => cat(cat(pure(x), ...listRange(1, factor - 1).map((i) => func(pure(x), i))))._fast(factor))
+    .squeezeJoin();
+  if (__steps) {
+    result._steps = Fraction(factor).mulmaybe(pat._steps);
+  }
+  return result;
+});
+
 /**
  * Divides a pattern into a given number of subdivisions, plays the subdivisions in order, but increments the starting subdivision each cycle. The pattern wraps to the first subdivision after the last subdivision is played.
  * @name iter
