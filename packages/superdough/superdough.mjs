@@ -209,7 +209,7 @@ export const resetLoadedSounds = () => soundMap.set({});
 let audioContext;
 
 export const setDefaultAudioContext = () => {
-  audioContext = new AudioContext();
+  audioContext = new AudioContext({ latencyHint: 'playback' });
   return audioContext;
 };
 
@@ -225,11 +225,17 @@ export function getAudioContextCurrentTime() {
   return getAudioContext().currentTime;
 }
 
+let externalWorklets = [];
+export function registerWorklet(url) {
+  externalWorklets.push(url);
+}
+
 let workletsLoading;
 function loadWorklets() {
   if (!workletsLoading) {
     const audioCtx = getAudioContext();
-    workletsLoading = audioCtx.audioWorklet.addModule(workletsUrl);
+    const allWorkletURLs = externalWorklets.concat([workletsUrl]);
+    workletsLoading = Promise.all(allWorkletURLs.map((workletURL) => audioCtx.audioWorklet.addModule(workletURL)));
   }
 
   return workletsLoading;
@@ -426,7 +432,7 @@ function connectToOrbit(node, orbit) {
 function setOrbit(audioContext, orbit, channels) {
   if (orbits[orbit] == null) {
     orbits[orbit] = {
-      gain: new GainNode(audioContext, { gain: 1 }),
+      gain: new GainNode(audioContext, { gain: 1, channelCount: 2, channelCountMode: 'explicit' }),
     };
     connectToDestination(orbits[orbit].gain, channels);
   }

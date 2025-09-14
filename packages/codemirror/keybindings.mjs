@@ -3,8 +3,9 @@ import { keymap, ViewPlugin } from '@codemirror/view';
 // import { searchKeymap } from '@codemirror/search';
 import { emacs } from '@replit/codemirror-emacs';
 import { vim } from '@replit/codemirror-vim';
+// import { vim } from './vim_test.mjs';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
-import { defaultKeymap, historyKeymap } from '@codemirror/commands';
+import { defaultKeymap } from '@codemirror/commands';
 
 const vscodePlugin = ViewPlugin.fromClass(
   class {
@@ -27,5 +28,5 @@ const keymaps = {
 
 export function keybindings(name) {
   const active = keymaps[name];
-  return [active ? active() : [], keymap.of(historyKeymap)];
+  return [active ? Prec.high(active()) : []];
 }

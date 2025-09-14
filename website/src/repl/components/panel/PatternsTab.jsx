@@ -12,8 +12,8 @@ import { useMemo } from 'react';
 import { getMetadata } from '../../../metadata_parser.js';
 import { useExamplePatterns } from '../../useExamplePatterns.jsx';
 import { parseJSON, isUdels } from '../../util.mjs';
-import { ButtonGroup } from './Forms.jsx';
-import { settingsMap, useSettings } from '../../../settings.mjs';
+import { useSettings } from '../../../settings.mjs';
+import { ActionButton } from '../button/action-button.jsx';
 import { Pagination } from '../pagination/Pagination.jsx';
 import { useState } from 'react';
 import { useDebounce } from '../usedebounce.jsx';
@@ -72,15 +72,6 @@ function PatternButtons({ patterns, activePattern, onClick, started }) {
           );
         })}
     </div>
-  );
-}
-
-function ActionButton({ children, onClick, label, labelIsHidden }) {
-  return (
-    <button className="hover:opacity-50 text-nowrap" onClick={onClick} title={label}>
-      {labelIsHidden !== true && label}
-      {children}
-    </button>
   );
 }
 

@@ -91,6 +91,7 @@ export const { s, sound } = registerControl(['s', 'n', 'gain'], 'sound');
  * Define a custom webaudio node to use as a sound source.
  *
  * @name source
+ * @synonyms src
  * @param {function} getSource
  * @synonyms src
  *
@@ -309,6 +310,17 @@ export const { fmvelocity } = registerControl('fmvelocity');
  */
 export const { bank } = registerControl('bank');
 
+/**
+ * mix control for the chorus effect
+ *
+ * @name chorus
+ * @param {string | Pattern} chorus mix amount between 0 and 1
+ * @example
+ * note("d d a# a").s("sawtooth").chorus(.5)
+ *
+ */
+export const { chorus } = registerControl('chorus');
+
 // analyser node send amount 0 - 1 (used by scope)
 export const { analyze } = registerControl('analyze');
 // fftSize of analyser
@@ -525,6 +537,7 @@ export const { tremolophase } = registerControl('tremolophase', 'tremphase');
  * shape of amplitude modulation
  *
  * @name tremoloshape
+ * @synonyms tremshape
  * @param {number | Pattern} shape tri | square | sine | saw | ramp
  * @example
  * note("{f g c d}%16").tremsync(4).tremoloshape("<sine tri square>").s("sawtooth")
@@ -540,11 +553,13 @@ export const { tremoloshape } = registerControl('tremoloshape', 'tremshape');
  * note("{f g g c d a a#}%16".sub(17)).s("supersaw").lpenv(8).lpf(150).lpq(.8).ftype('ladder').drive("<.5 4>")
  *
  */
+export const { drive } = registerControl('drive');
 
 /**
  * modulate the amplitude of an orbit to create a "sidechain" like effect
  *
  * @name duckorbit
+ * @synonyms duck
  * @param {number | Pattern} orbit target orbit
  * @example
  * $: n(run(16)).scale("c:minor:pentatonic").s("sawtooth").delay(.7).orbit(2)
@@ -569,14 +584,13 @@ export const { duckdepth } = registerControl('duckdepth');
  *  the attack time of the duck effect
  *
  * @name duckattack
+ * @synonyms duckatt
  * @param {number | Pattern} time
  * @example
  * stack( n(run(8)).scale("c:minor").s("sawtooth").delay(.7).orbit(2), s("bd:4!4").beat("0,4,8,11,14",16).duckorbit(2).duckattack("<0.2 0 0.4>").duckdepth(1))
  *
  */
 export const { duckattack } = registerControl('duckattack', 'duckatt');
-
-export const { drive } = registerControl('drive');
 
 /**
  * Create byte beats with custom expressions
@@ -700,7 +714,7 @@ export const { phasercenter, phc } = registerControl('phasercenter', 'phc');
  * The amount the signal is affected by the phaser effect. Defaults to 0.75
  *
  * @name phaserdepth
- * @synonyms phd
+ * @synonyms phd, phasdp
  * @param {number | Pattern} depth number between 0 and 1
  * @example
  * n(run(8)).scale("D:pentatonic").s("sawtooth").release(0.5)
@@ -1097,14 +1111,27 @@ export const { delay } = registerControl(['delay', 'delaytime', 'delayfeedback']
  *
  */
 export const { delayfeedback, delayfb, dfb } = registerControl('delayfeedback', 'delayfb', 'dfb');
+
+/**
+ * Sets the level of the signal that is fed back into the delay.
+ * Caution: Values >= 1 will result in a signal that gets louder and louder! Don't do it
+ *
+ * @name delayfeedback
+ * @param {number | Pattern} feedback between 0 and 1
+ * @synonyms delayfb, dfb
+ * @example
+ * s("bd").delay(.25).delayfeedback("<.25 .5 .75 1>")
+ *
+ */
+export const { delayspeed } = registerControl('delayspeed');
 /**
  * Sets the time of the delay effect.
  *
- * @name delaytime
- * @param {number | Pattern} seconds between 0 and Infinity
+ * @name delayspeed
+ * @param {number | Pattern} delayspeed controls the pitch of the delay feedback
  * @synonyms delayt, dt
  * @example
- * s("bd bd").delay(.25).delaytime("<.125 .25 .5 1>")
+ * note("d d a# a".fast(2)).s("sawtooth").delay(.8).delaytime(1/2).delayspeed("<2 .5 -1 -2>")
  *
  */
 export const { delaytime, delayt, dt } = registerControl('delaytime', 'delayt', 'dt');
@@ -1182,6 +1209,7 @@ export const { dry } = registerControl('dry');
  * Used when using `begin`/`end` or `chop`/`striate` and friends, to change the fade out time of the 'grain' envelope.
  *
  * @name fadeTime
+ * @synonyms fadeOutTime
  * @param {number | Pattern} time between 0 and 1
  * @example
  * s("oh*4").end(.1).fadeTime("<0 .2 .4 .8>").osc()
