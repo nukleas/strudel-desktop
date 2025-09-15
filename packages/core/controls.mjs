@@ -114,7 +114,7 @@ export const { n } = registerControl('n');
  *
  * - a letter (a-g or A-G)
  * - optional accidentals (b or #)
- * - optional octave number (0-9). Defaults to 3
+ * - optional (possibly negative) octave number (0-9). Defaults to 3
  *
  * Examples of valid note names: `c`, `bb`, `Bb`, `f#`, `c3`, `A4`, `Eb2`, `c#5`
  *
@@ -127,6 +127,8 @@ export const { n } = registerControl('n');
  * note("c4 a4 f4 e4")
  * @example
  * note("60 69 65 64")
+ * @example
+ * note("fbb1 a#0 cbbb-1 e##-2").sound("saw")
  */
 export const { note } = registerControl(['note', 'n']);
 
