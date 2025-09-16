@@ -877,7 +877,7 @@ describe('Pattern', () => {
           .squeezeJoin()
           .queryArc(3, 4)
           .map((x) => x.value),
-      ).toStrictEqual([Fraction(3)]);
+      ).toStrictEqual([3]);
     });
   });
   describe('ply', () => {
