@@ -16,7 +16,7 @@ export function steady(value) {
 }
 
 export const signal = (func) => {
-  const query = (state) => [new Hap(undefined, state.span, func(state.span.begin.valueOf()))];
+  const query = (state) => [new Hap(undefined, state.span, func(state.span.begin))];
   return new Pattern(query);
 };
 
@@ -152,7 +152,9 @@ export const itri2 = fastcat(isaw2, saw2);
  *
  * @return {Pattern}
  */
-export const time = signal(id);
+export const time = signal(x => {
+  return x.valueOf()
+});
 
 /**
  *  The mouse's x position value ranges from 0 to 1.
