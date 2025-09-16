@@ -5,7 +5,7 @@ This program is free software: you can redistribute it and/or modify it under th
 */
 
 import TimeSpan from './timespan.mjs';
-import Fraction, {isFraction, lcm } from './fraction.mjs';
+import Fraction, { isFraction, lcm } from './fraction.mjs';
 import Hap from './hap.mjs';
 import State from './state.mjs';
 import { unionWithObj } from './value.mjs';
