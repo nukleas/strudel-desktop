@@ -349,18 +349,17 @@ function getDelay(orbit, delaytime, delayfeedback, t) {
     //logger(`delayfeedback was clamped to ${maxfeedback} to save your ears`);
   }
   delayfeedback = clamp(delayfeedback, 0, 0.98);
-  if (!orbits[orbit].delayNode) {
+  let delayNode = orbits[orbit].delayNode;
+  if (delayNode === undefined) {
     const ac = getAudioContext();
-    const dly = ac.createFeedbackDelay(1, delaytime, delayfeedback);
-    dly.start?.(t); // for some reason, this throws when audion extension is installed..
-    connectToOrbit(dly, orbit);
-    orbits[orbit].delayNode = dly;
+    delayNode = ac.createFeedbackDelay(1, delaytime, delayfeedback);
+    delayNode.start?.(t); // for some reason, this throws when audion extension is installed..
+    connectToOrbit(delayNode, orbit);
+    orbits[orbit].delayNode = delayNode;
   }
-  orbits[orbit].delayNode.delayTime.value !== delaytime &&
-    orbits[orbit].delayNode.delayTime.setValueAtTime(delaytime, t);
-  orbits[orbit].delayNode.feedback.value !== delayfeedback &&
-    orbits[orbit].delayNode.feedback.setValueAtTime(delayfeedback, t);
-  return orbits[orbit].delayNode;
+  delayNode.delayTime.value !== delaytime && delayNode.delayTime.setValueAtTime(delaytime, t);
+  delayNode.feedback.value !== delayfeedback && delayNode.feedback.setValueAtTime(delayfeedback, t);
+  return delayNode;
 }
 
 export function getLfo(audioContext, begin, end, properties = {}) {
@@ -416,42 +415,60 @@ function getFilterType(ftype) {
   return typeof ftype === 'number' ? filterTypes[Math.floor(_mod(ftype, filterTypes.length))] : ftype;
 }
 
-//type orbit {
-// gain: number,
-// reverbNode: reverbNode
-// delayNode: delayNode
-//}
+// type orbit {
+//   output: GainNode,
+//   reverbNode: ConvolverNode
+//   delayNode: FeedbackDelayNode
+// }
 let orbits = {};
 function connectToOrbit(node, orbit) {
   if (orbits[orbit] == null) {
     errorLogger(new Error('target orbit does not exist'), 'superdough');
   }
-  node.connect(orbits[orbit].gain);
+  node.connect(orbits[orbit].output);
 }
 
 function setOrbit(audioContext, orbit, channels) {
   if (orbits[orbit] == null) {
     orbits[orbit] = {
-      gain: new GainNode(audioContext, { gain: 1, channelCount: 2, channelCountMode: 'explicit' }),
+      // Setup output node through which all audio filters prior to hitting
+      // the destination (and thus allows for global volume automation)
+      output: new GainNode(audioContext, { gain: 1, channelCount: 2, channelCountMode: 'explicit' }),
     };
-    connectToDestination(orbits[orbit].gain, channels);
+    connectToDestination(orbits[orbit].output, channels);
   }
 }
-function duckOrbit(audioContext, targetOrbit, t, attacktime = 0.1, duckdepth = 1) {
-  const targetArr = [targetOrbit].flat();
 
-  targetArr.forEach((target) => {
+function duckOrbit(audioContext, targetOrbit, t, onsettime = 0, attacktime = 0.1, duckdepth = 1) {
+  const targetArr = [targetOrbit].flat();
+  const onsetArr = [onsettime].flat();
+  const attackArr = [attacktime].flat();
+  const depthArr = [duckdepth].flat();
+
+  targetArr.forEach((target, idx) => {
     if (orbits[target] == null) {
       errorLogger(new Error(`duck target orbit ${target} does not exist`), 'superdough');
       return;
     }
+    const onset = onsetArr[idx] ?? onsetArr[0];
+    const attack = Math.max(attackArr[idx] ?? attackArr[0], 0.002);
+    const depth = depthArr[idx] ?? depthArr[0];
+    const gainParam = orbits[target].output.gain;
     webAudioTimeout(
       audioContext,
       () => {
-        orbits[target].gain.gain.cancelScheduledValues(t);
-        const currVal = orbits[target].gain.gain.value;
-        orbits[target].gain.gain.linearRampToValueAtTime(clamp(1 - Math.pow(duckdepth, 0.5), 0.01, currVal), t);
-        orbits[target].gain.gain.exponentialRampToValueAtTime(1, t + Math.max(0.002, attacktime));
+        const now = audioContext.currentTime;
+
+        // cancelScheduledValues and setValueAtTime together emulate cancelAndHoldAtTime
+        // on browsers which lack that method
+        const currVal = gainParam.value;
+        gainParam.cancelScheduledValues(now);
+        gainParam.setValueAtTime(currVal, now);
+
+        const t0 = Math.max(t, now); // guard against now > t
+        const duckedVal = clamp(1 - Math.sqrt(depth), 0.01, currVal);
+        gainParam.exponentialRampToValueAtTime(duckedVal, t0 + onset);
+        gainParam.exponentialRampToValueAtTime(1, t0 + onset + attack);
       },
       0,
       t - 0.01,
@@ -462,30 +479,31 @@ function duckOrbit(audioContext, targetOrbit, t, attacktime = 0.1, duckdepth = 1
 let hasChanged = (now, before) => now !== undefined && now !== before;
 function getReverb(orbit, duration, fade, lp, dim, ir, irspeed, irbegin) {
   // If no reverb has been created for a given orbit, create one
-  if (!orbits[orbit].reverbNode) {
+  let reverbNode = orbits[orbit].reverbNode;
+  if (reverbNode === undefined) {
     const ac = getAudioContext();
-    const reverb = ac.createReverb(duration, fade, lp, dim, ir, irspeed, irbegin);
-    connectToOrbit(reverb, orbit);
-    orbits[orbit].reverbNode = reverb;
+    reverbNode = ac.createReverb(duration, fade, lp, dim, ir, irspeed, irbegin);
+    connectToOrbit(reverbNode, orbit);
+    orbits[orbit].reverbNode = reverbNode;
   }
 
   if (
-    hasChanged(duration, orbits[orbit].reverbNode.duration) ||
-    hasChanged(fade, orbits[orbit].reverbNode.fade) ||
-    hasChanged(lp, orbits[orbit].reverbNode.lp) ||
-    hasChanged(dim, orbits[orbit].reverbNode.dim) ||
-    hasChanged(irspeed, orbits[orbit].reverbNode.irspeed) ||
-    hasChanged(irbegin, orbits[orbit].reverbNode.irbegin) ||
-    orbits[orbit].reverbNode.ir !== ir
+    hasChanged(duration, reverbNode.duration) ||
+    hasChanged(fade, reverbNode.fade) ||
+    hasChanged(lp, reverbNode.lp) ||
+    hasChanged(dim, reverbNode.dim) ||
+    hasChanged(irspeed, reverbNode.irspeed) ||
+    hasChanged(irbegin, reverbNode.irbegin) ||
+    reverbNode.ir !== ir
   ) {
     // only regenerate when something has changed
     // avoids endless regeneration on things like
     // stack(s("a"), s("b").rsize(8)).room(.5)
     // this only works when args may stay undefined until here
     // setting default values breaks this
-    orbits[orbit].reverbNode.generate(duration, fade, lp, dim, ir, irspeed, irbegin);
+    reverbNode.generate(duration, fade, lp, dim, ir, irspeed, irbegin);
   }
-  return orbits[orbit].reverbNode;
+  return reverbNode;
 }
 
 export let analysers = {},
@@ -582,6 +600,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     postgain = getDefaultValue('postgain'),
     density = getDefaultValue('density'),
     duckorbit,
+    duckonset,
     duckattack,
     duckdepth,
     // filters
@@ -663,7 +682,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   setOrbit(ac, orbit, channels, t, cycle, cps);
 
   if (duckorbit != null) {
-    duckOrbit(ac, duckorbit, t, duckattack, duckdepth);
+    duckOrbit(ac, duckorbit, t, duckonset, duckattack, duckdepth);
   }
 
   gain = applyGainCurve(nanFallback(gain, 1));
