@@ -1,7 +1,6 @@
 let log = (msg) => console.log(msg);
 
 export function errorLogger(e, origin = 'superdough') {
-  //TODO: add some kind of debug flag that enables this  while in dev mode
   if (process.env.NODE_ENV === 'development') {
     console.error(e);
   }
