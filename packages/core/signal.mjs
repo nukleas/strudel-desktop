@@ -152,9 +152,7 @@ export const itri2 = fastcat(isaw2, saw2);
  *
  * @return {Pattern}
  */
-export const time = signal((x) => {
-  return x.valueOf();
-});
+export const time = signal(id);
 
 /**
  *  The mouse's x position value ranges from 0 to 1.
