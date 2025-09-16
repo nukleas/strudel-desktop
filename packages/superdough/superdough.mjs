@@ -465,7 +465,7 @@ function duckOrbit(audioContext, targetOrbit, t, onsettime = 0, attacktime = 0.1
         gainParam.cancelScheduledValues(now);
         gainParam.setValueAtTime(currVal, now);
 
-        const t0 = now; // guard against now > t
+        const t0 = Math.max(t, now); // guard against now > t
         const duckedVal = clamp(1 - Math.sqrt(depth), 0.01, currVal);
         gainParam.exponentialRampToValueAtTime(duckedVal, t0 + onset);
         gainParam.exponentialRampToValueAtTime(1, t0 + onset + attack);
