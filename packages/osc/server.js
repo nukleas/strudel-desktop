@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
 server.js - <short description TODO>
 Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/osc/server.js>

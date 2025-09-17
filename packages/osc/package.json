@@ -1,6 +1,6 @@
 {
   "name": "@strudel/osc",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "OSC messaging for strudel",
   "main": "osc.mjs",
   "bin": "./server.mjs",
