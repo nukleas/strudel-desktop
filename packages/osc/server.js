@@ -19,7 +19,7 @@ function getArgValue(flag) {
 }
 
 let udpClientPort = Number(getArgValue('--port')) || 57120;
-// dirt = 7771
+let debug = Number(getArgValue('--debug')) || 0;
 
 const config = {
   receiver: 'ws', // @param {string} Where messages sent via 'send' method will be delivered to, 'ws' for Websocket clients, 'udp' for udp client
@@ -42,8 +42,34 @@ const config = {
 
 const osc = new OSC({ plugin: new OSC.BridgePlugin(config) });
 
-osc.open(); // start a WebSocket server on port 8080
+if (debug) {
+  osc.on('*', (message) => {
+    const { address, args } = message;
+    let str = '';
+    for (let i = 0; i < args.length; i += 2) {
+      str += `${args[i]}: ${args[i + 1]} `;
+    }
+    console.log(`${address} ${str}`);
+  });
+}
+
+osc.on('error', (message) => {
+  if (message.toString().includes('EADDRINUSE')) {
+    console.log(`------ ERROR -------
+osc server already running! to stop it:
+1. run "lsof -ti :57121 | xargs kill -9" (macos / linux)
+2. re-run the osc server
+`);
+  } else {
+    console.log(message);
+  }
+});
+
+osc.open();
 
 console.log('osc client running on port', config.udpClient.port);
 console.log('osc server running on port', config.udpServer.port);
 console.log('websocket server running on port', config.wsServer.port);
+if (debug) {
+  console.log('debug logs enabled. incoming messages will appear below');
+}
