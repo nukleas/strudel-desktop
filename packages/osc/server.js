@@ -56,7 +56,7 @@ if (debug) {
 osc.on('error', (message) => {
   if (message.toString().includes('EADDRINUSE')) {
     console.log(`------ ERROR -------
-osc server already running! to stop it:
+a server is already running on port 57121! to stop it:
 1. run "lsof -ti :57121 | xargs kill -9" (macos / linux)
 2. re-run the osc server
 `);
