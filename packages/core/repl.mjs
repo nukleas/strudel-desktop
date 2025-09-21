@@ -74,6 +74,14 @@ export function repl({
     return silence;
   };
 
+  // helper to get a patternified pure value out
+  function unpure(pat) {
+    if (pat._Pattern) {
+      return pat.__pure;
+    }
+    return pat;
+  }
+
   const setPattern = async (pattern, autostart = true) => {
     pattern = editPattern?.(pattern) || pattern;
     await scheduler.setPattern(pattern, autostart);
@@ -89,13 +97,6 @@ export function repl({
     scheduler.setCps(unpure(cps));
     return silence;
   };
-
-  function unpure(pat) {
-    if (pat._Pattern) {
-      return pat.__pure;
-    }
-    return pat;
-  }
 
   /**
    * Changes the global tempo to the given cycles per minute
