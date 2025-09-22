@@ -1,5 +1,6 @@
 import { effectSend, webAudioTimeout } from './helpers.mjs';
 import { errorLogger } from './logger.mjs';
+import {clamp} from './util.mjs'
 
 let hasChanged = (now, before) => now !== undefined && now !== before;
 
