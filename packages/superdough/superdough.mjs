@@ -536,7 +536,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   const channels = value.channels != null ? mapChannelNumbers(value.channels) : orbitChannels;
   const orbitBus = audioController.getOrbit(orbit, channels);
   if (duckorbit != null) {
-    orbitBus.duck(duckorbit, t, duckonset, duckattack, duckdepth);
+    audioController.duck(duckorbit, t, duckonset, duckattack, duckdepth);
   }
 
   gain = applyGainCurve(nanFallback(gain, 1));
@@ -727,6 +727,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
 
   // delay
   if (delay > 0 && delaytime > 0 && delayfeedback > 0) {
+    orbitBus.getDelay(delaytime, delayfeedback, t);
     orbitBus.sendDelay(post, delay);
   }
   // reverb

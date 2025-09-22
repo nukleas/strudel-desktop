@@ -179,7 +179,8 @@ export class SuperdoughAudioController {
       const onset = onsetArr[idx] ?? onsetArr[0];
       const attack = Math.max(attackArr[idx] ?? attackArr[0], 0.002);
       const depth = depthArr[idx] ?? depthArr[0];
-      orbit.duck({ t, onsettime: onset, attacktime: attack, depth });
+
+      orbit.duck(t, onset, attack, depth);
     });
   }
 
