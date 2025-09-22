@@ -23,6 +23,9 @@ if (typeof DelayNode !== 'undefined') {
     start(t) {
       this.delayGain.gain.setValueAtTime(this.delayGain.gain.value, t + this.delayTime.value);
     }
+    stop(t) {
+      this.delayGain.gain.setValueAtTime(0, t);
+    }
   }
 
   AudioContext.prototype.createFeedbackDelay = function (wet, time, feedback) {

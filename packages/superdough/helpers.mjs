@@ -10,6 +10,13 @@ export function gainNode(value) {
   return node;
 }
 
+export function effectSend(input, effect, wet) {
+  const send = gainNode(wet);
+  input.connect(send);
+  send.connect(effect);
+  return send;
+}
+
 const getSlope = (y1, y2, x1, x2) => {
   const denom = x2 - x1;
   if (denom === 0) {
