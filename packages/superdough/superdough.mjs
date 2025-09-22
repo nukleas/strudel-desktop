@@ -400,7 +400,7 @@ export function getAnalyzerData(type = 'time', id = 1) {
 }
 
 export function resetGlobalEffects() {
-  controller.reset();
+  controller?.reset();
   analysers = {};
   analysersData = {};
 }
