@@ -5,7 +5,7 @@ This program is free software: you can redistribute it and/or modify it under th
 */
 
 import TimeSpan from './timespan.mjs';
-import Fraction, { lcm } from './fraction.mjs';
+import Fraction, { isFraction, lcm } from './fraction.mjs';
 import Hap from './hap.mjs';
 import State from './state.mjs';
 import { unionWithObj } from './value.mjs';
@@ -999,7 +999,7 @@ addToPrototype('weaveWith', function (t, ...funcs) {
 // compose matrix functions
 
 function _nonArrayObject(x) {
-  return !Array.isArray(x) && typeof x === 'object';
+  return !Array.isArray(x) && typeof x === 'object' && !isFraction(x);
 }
 function _composeOp(a, b, func) {
   if (_nonArrayObject(a) || _nonArrayObject(b)) {
