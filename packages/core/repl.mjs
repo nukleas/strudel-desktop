@@ -74,6 +74,14 @@ export function repl({
     return silence;
   };
 
+  // helper to get a patternified pure value out
+  function unpure(pat) {
+    if (pat._Pattern) {
+      return pat.__pure;
+    }
+    return pat;
+  }
+
   const setPattern = async (pattern, autostart = true) => {
     pattern = editPattern?.(pattern) || pattern;
     await scheduler.setPattern(pattern, autostart);
@@ -85,7 +93,10 @@ export function repl({
   const start = () => scheduler.start();
   const pause = () => scheduler.pause();
   const toggle = () => scheduler.toggle();
-  const setCps = (cps) => scheduler.setCps(cps);
+  const setCps = (cps) => {
+    scheduler.setCps(unpure(cps));
+    return silence;
+  };
 
   /**
    * Changes the global tempo to the given cycles per minute
@@ -97,7 +108,10 @@ export function repl({
    * setcpm(140/4) // =140 bpm in 4/4
    * $: s("bd*4,[- sd]*2").bank('tr707')
    */
-  const setCpm = (cpm) => scheduler.setCps(cpm / 60);
+  const setCpm = (cpm) => {
+    scheduler.setCps(unpure(cpm) / 60);
+    return silence;
+  };
 
   // TODO - not documented as jsdoc examples as the test framework doesn't simulate enough context for `each` and `all`..
 
