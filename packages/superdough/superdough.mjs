@@ -458,6 +458,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     duckonset,
     duckattack,
     duckdepth,
+    djf,
     // filters
     fanchor = getDefaultValue('fanchor'),
     drive = 0.69,
@@ -745,6 +746,10 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     }
     orbitBus.getReverb(roomsize, roomfade, roomlp, roomdim, roomIR, irspeed, irbegin);
     orbitBus.sendReverb(post, room);
+  }
+
+  if (djf != null) {
+    orbitBus.getDjf(djf, t)
   }
 
   // analyser
