@@ -749,7 +749,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   }
 
   if (djf != null) {
-    orbitBus.getDjf(djf, t)
+    orbitBus.getDjf(djf, t);
   }
 
   // analyser
