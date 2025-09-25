@@ -594,7 +594,6 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     tremolophase = 0,
     tremoloshape,
     s = getDefaultValue('s'),
-    wt,
     bank,
     source,
     gain = getDefaultValue('gain'),

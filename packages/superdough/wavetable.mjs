@@ -186,7 +186,7 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
   const ac = getAudioContext();
   let [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
   let sourceDesc, holdEnd, envEnd;
-  let { unison, spread, detune, wtPos, wtWarp, wtWarpMode } = value;
+  let { wtWarpMode } = value;
   if (typeof wtWarpMode === 'string') {
     wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
   }
@@ -202,12 +202,13 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
       begin: t,
       end: envEnd,
       frequency,
-      detune,
-      position: wtPos,
-      warp: wtWarp,
+      detune: value.detune,
+      position: value.wtPos,
+      warp: value.wtWarp,
       warpMode: wtWarpMode,
-      voices: unison,
-      spread,
+      voices: value.unison,
+      spread: value.spread,
+      phaserand: value.wtPhaseRand,
     },
     { outputChannelCount: [2] },
   );

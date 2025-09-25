@@ -121,6 +121,16 @@ export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWar
 export const { wtWarpMode, wavetableWarpMode } = registerControl('wtWarpMode', 'wavetableWarpMode');
 
 /**
+ * Amount of randomness of the initial phase of the wavetable oscillator.
+ *
+ * @name wtPhaseRand
+ * @param {number | Pattern} mode Warp mode: an integer
+ * @synonyms wavetableWarpMode
+ *
+ */
+export const { wtPhaseRand, wavetablePhaseRand } = registerControl('wtPhaseRand', 'wavetablePhaseRand');
+
+/**
  * Define a custom webaudio node to use as a sound source.
  *
  * @name source
