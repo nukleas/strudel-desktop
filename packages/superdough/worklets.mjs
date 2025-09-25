@@ -474,10 +474,10 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
           gainR = gain1;
         }
         // Individual voice detuning
-        const voiceFreq = applySemitoneDetuneToFrequency(freq, getUnisonDetune(voices, freqspread, n));
+        const freqVoice = applySemitoneDetuneToFrequency(freq, getUnisonDetune(voices, freqspread, n));
         // We must wrap this here because it is passed into sawblep below which
         // has domain [0, 1]
-        const dt = mod(voiceFreq / sampleRate, 1);
+        const dt = mod(freqVoice / sampleRate, 1);
         this.phase[n] = this.phase[n] ?? Math.random();
         const v = waveshapes.sawblep(this.phase[n], dt);
 
@@ -1203,14 +1203,14 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
           gainL = gain2;
           gainR = gain1;
         }
-        let fVoice = applySemitoneDetuneToFrequency(f, getUnisonDetune(voices, detune, n)); // voice detune
+        const fVoice = applySemitoneDetuneToFrequency(f, getUnisonDetune(voices, detune, n)); // voice detune
         const dPhase = fVoice / sampleRate;
         const level = this._chooseMip(dPhase);
         const bank = this.tables[level];
 
         // warp phase then sample
         this.phase[n] = this.phase[n] ?? Math.random() * phaseRand;
-        let ph = this._warpPhase(this.phase[n], warpAmount, warpMode);
+        const ph = this._warpPhase(this.phase[n], warpAmount, warpMode);
         const s0 = this._sampleFrame(bank[fIdx], ph);
         const s1 = this._sampleFrame(bank[Math.min(this.numFrames - 1, fIdx + 1)], ph);
         let s = s0 + (s1 - s0) * frac;

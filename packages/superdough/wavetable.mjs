@@ -1,5 +1,5 @@
 import { getAudioContext, registerSound } from './index.mjs';
-import { clamp, getSoundIndex, valueToMidi } from './util.mjs';
+import { getSoundIndex, valueToMidi } from './util.mjs';
 import {
   destroyAudioWorkletNode,
   getADSRValues,
@@ -86,28 +86,27 @@ function humanFileSize(bytes, si) {
   return bytes.toFixed(1) + ' ' + units[u];
 }
 
-export function getTableInfo(hapValue, bank) {
-  const { wt, n = 0 } = hapValue;
+export function getTableInfo(hapValue, tableUrls) {
+  const { s, n = 0 } = hapValue;
   let midi = valueToMidi(hapValue, 36);
   let transpose = midi - 36; // C3 is middle C;
-  const index = getSoundIndex(n, bank.length);
-  const tableUrl = bank[index];
-  const label = `${wt}:${index}`;
+  const index = getSoundIndex(n, tableUrls.length);
+  const tableUrl = tableUrls[index];
+  const label = `${s}:${index}`;
   return { transpose, tableUrl, index, midi, label };
 }
 
-const loadBuffer = (url, ac, wt, n = 0) => {
-  const label = wt ? `table "${wt}:${n}"` : 'table';
+const loadBuffer = (url, ac, label) => {
   url = url.replace('#', '%23');
   if (!loadCache[url]) {
-    logger(`[wavetable] load ${label}..`, 'load-table', { url });
+    logger(`[wavetable] load table ${label}..`, 'load-table', { url });
     const timestamp = Date.now();
     loadCache[url] = fetch(url)
       .then((res) => res.arrayBuffer())
       .then(async (res) => {
         const took = Date.now() - timestamp;
         const size = humanFileSize(res.byteLength);
-        logger(`[wavetable] load ${label}... done! loaded ${size} in ${took}ms`, 'loaded-table', { url });
+        logger(`[wavetable] load table ${label}... done! loaded ${size} in ${took}ms`, 'loaded-table', { url });
         const decoded = await ac.decodeAudioData(res);
         return decoded;
       });
@@ -151,7 +150,7 @@ const _processTables = (json, baseUrl, frameLen) => {
 };
 
 /**
- * Loads a collection of wavetables to use with `wt`
+ * Loads a collection of wavetables to use with `s`
  *
  * @name tables
  */
@@ -167,7 +166,6 @@ export const tables = async (url, frameLen, json) => {
     // not a browser
     return;
   }
-  const base = url.split('/').slice(0, -1).join('/');
   if (typeof fetch === 'undefined') {
     // skip fetch when in node / testing
     return;
