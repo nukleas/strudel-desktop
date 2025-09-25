@@ -114,7 +114,7 @@ export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWar
  * spin, chaos, primes, binary, brownian, reciprocal, wormhole, logistic, sigmoid, fractal, flip
  *
  * @name wtWarpMode
- * @param {number | Pattern} mode Warp mode: an integer
+ * @param {number | Pattern} mode Warp mode
  * @synonyms wavetableWarpMode
  *
  */
@@ -124,8 +124,8 @@ export const { wtWarpMode, wavetableWarpMode } = registerControl('wtWarpMode', '
  * Amount of randomness of the initial phase of the wavetable oscillator.
  *
  * @name wtPhaseRand
- * @param {number | Pattern} mode Warp mode: an integer
- * @synonyms wavetableWarpMode
+ * @param {number | Pattern} amount Randomness of the initial phase. Between 0 (not random) and 1 (fully random)
+ * @synonyms wavetablePhaseRand
  *
  */
 export const { wtPhaseRand, wavetablePhaseRand } = registerControl('wtPhaseRand', 'wavetablePhaseRand');
