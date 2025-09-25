@@ -193,7 +193,7 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
   const { tableUrl, label } = getTableInfo(value, bank);
   const payload = await loadWavetableFrames(tableUrl, label, frameLen);
   const holdEnd = t + duration;
-  const envEnd = holdEnd + release;
+  const envEnd = holdEnd + release + 0.01;
   const source = getWorklet(
     ac,
     'wavetable-oscillator-processor',
