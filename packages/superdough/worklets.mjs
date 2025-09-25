@@ -317,8 +317,6 @@ class DJFProcessor extends AudioWorkletProcessor {
     }
     cutoff = Math.pow(v * 11, 4);
 
-    // let cutoff = parameters.frequency[0];
-
     for (let i = 0; i < input.length; i++) {
       for (let n = 0; n < blockSize; n++) {
         if (filterType == 'none') {
