@@ -398,16 +398,9 @@ export const getDistortionAlgorithm = (algo) => {
     }
   }
   const name = _algoNames[index % _algoNames.length]; // allow for wrapping if algo was a number
-  const algorithm = distortionAlgorithms[name];
-  return { algorithm, index };
+  return distortionAlgorithms[name];
 };
 
 export const getDistortion = (distort, postgain, algorithm) => {
-  const { index } = getDistortionAlgorithm(algorithm);
-  return getWorklet(
-    getAudioContext(),
-    'distort-processor',
-    { distort, postgain },
-    { processorOptions: { algorithm: index } },
-  );
+  return getWorklet(getAudioContext(), 'distort-processor', { distort, postgain }, { processorOptions: { algorithm } });
 };

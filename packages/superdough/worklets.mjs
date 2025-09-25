@@ -354,7 +354,7 @@ class DistortProcessor extends AudioWorkletProcessor {
   constructor({ processorOptions }) {
     super();
     this.started = false;
-    this.algorithm = getDistortionAlgorithm(processorOptions.algorithm).algorithm;
+    this.algorithm = getDistortionAlgorithm(processorOptions.algorithm);
   }
 
   process(inputs, outputs, parameters) {
