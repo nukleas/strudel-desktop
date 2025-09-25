@@ -182,20 +182,19 @@ export const tables = async (url, frameLen, json) => {
 };
 
 async function onTriggerSynth(t, value, onended, bank, frameLen) {
-  let { s, n = 0, duration } = value;
+  const { s, n = 0, duration } = value;
   const ac = getAudioContext();
-  let [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
-  let sourceDesc, holdEnd, envEnd;
+  const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
   let { wtWarpMode } = value;
   if (typeof wtWarpMode === 'string') {
     wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
   }
   const frequency = getFrequencyFromValue(value);
-  let { tableUrl, label } = getTableInfo(value, bank);
+  const { tableUrl, label } = getTableInfo(value, bank);
   const payload = await loadWavetableFrames(tableUrl, label, frameLen);
-  holdEnd = t + duration;
-  envEnd = holdEnd + release + 0.01;
-  const worklet = getWorklet(
+  const holdEnd = t + duration;
+  const envEnd = holdEnd + release;
+  const source = getWorklet(
     ac,
     'wavetable-oscillator-processor',
     {
@@ -212,34 +211,24 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
     },
     { outputChannelCount: [2] },
   );
-  worklet.port.postMessage({ type: 'tables', payload });
-  sourceDesc = { source: worklet };
-  const { source } = sourceDesc;
+  source.port.postMessage({ type: 'tables', payload });
   if (ac.currentTime > t) {
     logger(`[wavetable] still loading sound "${s}:${n}"`, 'highlight');
     return;
   }
-  if (!source) {
-    logger(`[wavetable] could not load "${s}:${n}"`, 'error');
-    return;
-  }
-  let vibratoOscillator = getVibratoOscillator(source.detune, value, t);
+  const vibratoOscillator = getVibratoOscillator(source.detune, value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);
   getParamADSR(node.gain, attack, decay, sustain, release, 0, 1, t, holdEnd, 'linear');
   getPitchEnvelope(source.detune, value, t, holdEnd);
-
-  const out = ac.createGain(); // we need a separate gain for the cutgroups because firefox...
-  node.connect(out);
-  let handle = { node: out, bufferSource: source, oscillator: worklet };
-  let timeoutNode = webAudioTimeout(
+  const handle = { node, source };
+  const timeoutNode = webAudioTimeout(
     ac,
     () => {
       source.disconnect();
       destroyAudioWorkletNode(source);
       vibratoOscillator?.stop();
       node.disconnect();
-      out.disconnect();
       onended();
     },
     t,

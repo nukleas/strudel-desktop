@@ -114,7 +114,7 @@ export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWar
  * spin, chaos, primes, binary, brownian, reciprocal, wormhole, logistic, sigmoid, fractal, flip
  *
  * @name wtWarpMode
- * @param {number | Pattern} mode Warp mode
+ * @param {number | string | Pattern} mode Warp mode
  * @synonyms wavetableWarpMode
  *
  */
