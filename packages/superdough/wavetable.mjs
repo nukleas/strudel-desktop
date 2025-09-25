@@ -186,13 +186,11 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
   const ac = getAudioContext();
   let [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
   let sourceDesc, holdEnd, envEnd;
-  let { unison = 5, spread = 0.6, detune, wtPos, wtWarp, wtWarpMode } = value;
+  let { unison, spread, detune, wtPos, wtWarp, wtWarpMode } = value;
   if (typeof wtWarpMode === 'string') {
     wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
   }
-  detune = detune ?? 0.18;
   const frequency = getFrequencyFromValue(value);
-  const voices = clamp(unison, 1, 100);
   let { tableUrl, label } = getTableInfo(value, bank);
   const payload = await loadWavetableFrames(tableUrl, label, frameLen);
   holdEnd = t + duration;
@@ -208,7 +206,7 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
       position: wtPos,
       warp: wtWarp,
       warpMode: wtWarpMode,
-      voices,
+      voices: unison,
       spread,
     },
     { outputChannelCount: [2] },
