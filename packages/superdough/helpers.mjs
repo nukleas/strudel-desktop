@@ -403,6 +403,11 @@ export const getDistortionAlgorithm = (algo) => {
 };
 
 export const getDistortion = (distort, postgain, algorithm) => {
-  const { _algorithm, index } = getDistortionAlgorithm(algorithm);
-  return getWorklet(getAudioContext(), 'distort-processor', { distort, postgain, algorithm: index });
+  const { index } = getDistortionAlgorithm(algorithm);
+  return getWorklet(
+    getAudioContext(),
+    'distort-processor',
+    { distort, postgain },
+    { processorOptions: { algorithm: index } },
+  );
 };

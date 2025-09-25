@@ -348,13 +348,13 @@ class DistortProcessor extends AudioWorkletProcessor {
     return [
       { name: 'distort', defaultValue: 0 },
       { name: 'postgain', defaultValue: 1 },
-      { name: 'algorithm', defaultValue: 0, min: 0 },
     ];
   }
 
-  constructor() {
+  constructor({ processorOptions }) {
     super();
     this.started = false;
+    this.algorithm = getDistortionAlgorithm(processorOptions.algorithm).algorithm;
   }
 
   process(inputs, outputs, parameters) {
@@ -366,13 +366,12 @@ class DistortProcessor extends AudioWorkletProcessor {
       return false;
     }
     this.started = hasInput;
-    const { algorithm } = getDistortionAlgorithm(pv(parameters.algorithm, 0)); // do not allow audio rate algo changes
     for (let n = 0; n < blockSize; n++) {
       const postgain = clamp(pv(parameters.postgain, n), 0.001, 1);
       const shape = Math.expm1(pv(parameters.distort, n));
       for (let ch = 0; ch < input.length; ch++) {
         const x = input[ch][n];
-        output[ch][n] = postgain * algorithm(x, shape);
+        output[ch][n] = postgain * this.algorithm(x, shape);
       }
     }
     return true;
