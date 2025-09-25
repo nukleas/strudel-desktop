@@ -308,10 +308,10 @@ class DJFProcessor extends AudioWorkletProcessor {
     let filterType = 'none';
     let cutoff;
     let v = 1;
-    if (value > 0.5) {
+    if (value > 0.52) {
       filterType = 'hipass';
       v = (value - 0.5) * 2;
-    } else if (value < 0.5) {
+    } else if (value < 0.48) {
       filterType = 'lopass';
       v = value * 2;
     }
