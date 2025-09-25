@@ -1,6 +1,6 @@
 {
   "name": "@strudel/codemirror",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "Codemirror Extensions for Strudel",
   "main": "index.mjs",
   "publishConfig": {
@@ -42,7 +42,7 @@
     "@lezer/highlight": "^1.2.1",
     "@nanostores/persistent": "^0.10.2",
     "@replit/codemirror-emacs": "^6.1.0",
-    "@replit/codemirror-vim": "^6.2.1",
+    "@replit/codemirror-vim": "^6.3.0",
     "@replit/codemirror-vscode-keymap": "^6.0.2",
     "@strudel/core": "workspace:*",
     "@strudel/draw": "workspace:*",

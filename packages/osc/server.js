@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
 server.js - <short description TODO>
 Copyright (C) 2022 Strudel contributors - see <https://codeberg.org/uzu/strudel/src/branch/main/packages/osc/server.js>
@@ -5,6 +7,19 @@ This program is free software: you can redistribute it and/or modify it under th
 */
 
 import OSC from 'osc-js';
+
+const args = process.argv.slice(2);
+function getArgValue(flag) {
+  const i = args.indexOf(flag);
+  if (i !== -1) {
+    const nextIsFlag = args[i + 1]?.startsWith('--') ?? true;
+    if (nextIsFlag) return true;
+    return args[i + 1];
+  }
+}
+
+let udpClientPort = Number(getArgValue('--port')) || 57120;
+let debug = Number(getArgValue('--debug')) || 0;
 
 const config = {
   receiver: 'ws', // @param {string} Where messages sent via 'send' method will be delivered to, 'ws' for Websocket clients, 'udp' for udp client
@@ -17,7 +32,7 @@ const config = {
   },
   udpClient: {
     host: 'localhost', // @param {string} Hostname of udp client for messaging
-    port: 57120, // @param {number} Port of udp client for messaging
+    port: udpClientPort, // @param {number} Port of udp client for messaging
   },
   wsServer: {
     host: 'localhost', // @param {string} Hostname of WebSocket server
@@ -27,8 +42,34 @@ const config = {
 
 const osc = new OSC({ plugin: new OSC.BridgePlugin(config) });
 
-osc.open(); // start a WebSocket server on port 8080
+if (debug) {
+  osc.on('*', (message) => {
+    const { address, args } = message;
+    let str = '';
+    for (let i = 0; i < args.length; i += 2) {
+      str += `${args[i]}: ${args[i + 1]} `;
+    }
+    console.log(`${address} ${str}`);
+  });
+}
+
+osc.on('error', (message) => {
+  if (message.toString().includes('EADDRINUSE')) {
+    console.log(`------ ERROR -------
+a server is already running on port 57121! to stop it:
+1. run "lsof -ti :57121 | xargs kill -9" (macos / linux)
+2. re-run the osc server
+`);
+  } else {
+    console.log(message);
+  }
+});
+
+osc.open();
 
 console.log('osc client running on port', config.udpClient.port);
 console.log('osc server running on port', config.udpServer.port);
 console.log('websocket server running on port', config.wsServer.port);
+if (debug) {
+  console.log('debug logs enabled. incoming messages will appear below');
+}

@@ -1,6 +1,7 @@
-const parser = typeof DOMParser !== 'undefined' ? new DOMParser() : null;
 export let html = (string) => {
-  return parser?.parseFromString(string, 'text/html').querySelectorAll('*');
+  const template = document.createElement('template');
+  template.innerHTML = string.trim();
+  return template.content.childNodes;
 };
 let parseChunk = (chunk) => {
   if (Array.isArray(chunk)) return chunk.flat().join('');
