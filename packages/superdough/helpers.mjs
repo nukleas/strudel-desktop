@@ -1,5 +1,5 @@
 import { getAudioContext } from './superdough.mjs';
-import { clamp, nanFallback } from './util.mjs';
+import { clamp, nanFallback, midiToFreq, noteToMidi } from './util.mjs';
 import { getNoiseBuffer } from './noise.mjs';
 
 export const noises = ['pink', 'white', 'brown', 'crackle'];
@@ -28,7 +28,9 @@ const getSlope = (y1, y2, x1, x2) => {
 export function getWorklet(ac, processor, params, config) {
   const node = new AudioWorkletNode(ac, processor, config);
   Object.entries(params).forEach(([key, value]) => {
-    node.parameters.get(key).value = value;
+    if (value !== undefined) {
+      node.parameters.get(key).value = value;
+    }
   });
   return node;
 }
@@ -314,3 +316,25 @@ export function applyFM(param, value, begin) {
   }
   return { stop };
 }
+
+export const getFrequencyFromValue = (value, defaultNote = 36) => {
+  let { note, freq } = value;
+  note = note || defaultNote;
+  if (typeof note === 'string') {
+    note = noteToMidi(note); // e.g. c3 => 48
+  }
+  // get frequency
+  if (!freq && typeof note === 'number') {
+    freq = midiToFreq(note); // + 48);
+  }
+
+  return Number(freq);
+};
+
+export const destroyAudioWorkletNode = (node) => {
+  if (node == null) {
+    return;
+  }
+  node.disconnect();
+  node.parameters.get('end')?.setValueAtTime(0, 0);
+};

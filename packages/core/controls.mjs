@@ -88,6 +88,49 @@ export function registerControl(names, ...aliases) {
 export const { s, sound } = registerControl(['s', 'n', 'gain'], 'sound');
 
 /**
+ * Position in the wavetable of the wavetable oscillator
+ *
+ * @name wtPos
+ * @param {number | Pattern} position Position in the wavetable from 0 to 1
+ * @synonyms wavetablePosition
+ *
+ */
+export const { wtPos, wavetablePosition } = registerControl('wtPos', 'wavetablePosition');
+
+/**
+ * Amount of warp (alteration of the waveform) to apply to the wavetable oscillator
+ *
+ * @name wtWarp
+ * @param {number | Pattern} amount Warp of the wavetable from 0 to 1
+ * @synonyms wavetableWarp
+ *
+ */
+export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWarp');
+
+/**
+ * Amount of warp (alteration of the waveform) to apply to the wavetable oscillator.
+ *
+ * The current options are: none, asym, bendp, bendm, bendmp, sync, quant, fold, pwm, orbit,
+ * spin, chaos, primes, binary, brownian, reciprocal, wormhole, logistic, sigmoid, fractal, flip
+ *
+ * @name wtWarpMode
+ * @param {number | string | Pattern} mode Warp mode
+ * @synonyms wavetableWarpMode
+ *
+ */
+export const { wtWarpMode, wavetableWarpMode } = registerControl('wtWarpMode', 'wavetableWarpMode');
+
+/**
+ * Amount of randomness of the initial phase of the wavetable oscillator.
+ *
+ * @name wtPhaseRand
+ * @param {number | Pattern} amount Randomness of the initial phase. Between 0 (not random) and 1 (fully random)
+ * @synonyms wavetablePhaseRand
+ *
+ */
+export const { wtPhaseRand, wavetablePhaseRand } = registerControl('wtPhaseRand', 'wavetablePhaseRand');
+
+/**
  * Define a custom webaudio node to use as a sound source.
  *
  * @name source
