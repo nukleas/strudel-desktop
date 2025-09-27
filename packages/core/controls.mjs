@@ -94,7 +94,7 @@ export const { s, sound } = registerControl(['s', 'n', 'gain'], 'sound');
  * @param {number | Pattern} position Position in the wavetable from 0 to 1
  * @synonyms wavetablePosition
  * @example
- * s("squelch").seg(8).note("F1").wtPos("0 0.25 0.5 0.75 1")
+ * s("squelch").bank("wt_digital").seg(8).note("F1").wtPos("0 0.25 0.5 0.75 1")
  */
 export const { wtPos, wavetablePosition } = registerControl('wtPos', 'wavetablePosition');
 
@@ -105,7 +105,7 @@ export const { wtPos, wavetablePosition } = registerControl('wtPos', 'wavetableP
  * @param {number | Pattern} amount Warp of the wavetable from 0 to 1
  * @synonyms wavetableWarp
  * @example
- * s("basique").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
+ * s("basique").bank("wt_digital").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
  *   .wtWarpMode("spin")
  */
 export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWarp');
@@ -120,7 +120,7 @@ export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWar
  * @param {number | string | Pattern} mode Warp mode
  * @synonyms wavetableWarpMode
  * @example
- * s("morgana").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
+ * s("morgana").bank("wt_digital").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
  *   .wtWarpMode("<asym bendp spin logistic sync wormhole brownian>*2")
  *
  */
@@ -132,6 +132,8 @@ export const { wtWarpMode, wavetableWarpMode } = registerControl('wtWarpMode', '
  * @name wtPhaseRand
  * @param {number | Pattern} amount Randomness of the initial phase. Between 0 (not random) and 1 (fully random)
  * @synonyms wavetablePhaseRand
+ * @example
+ * s("basique").bank("wt_digital").seg(16).wtPhaseRand("<0 1>")
  *
  */
 export const { wtPhaseRand, wavetablePhaseRand } = registerControl('wtPhaseRand', 'wavetablePhaseRand');
