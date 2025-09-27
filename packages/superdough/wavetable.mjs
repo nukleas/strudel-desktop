@@ -43,7 +43,7 @@ async function loadWavetableFrames(url, label, frameLen = 2048) {
   const buf = await loadBuffer(url, ac, label);
   const ch0 = buf.getChannelData(0);
   const total = ch0.length;
-  const numFrames = Math.max(1,Math.floor(total / frameLen));
+  const numFrames = Math.max(1, Math.floor(total / frameLen));
   const frames = new Array(numFrames);
   for (let i = 0; i < numFrames; i++) {
     const start = i * frameLen;
@@ -87,7 +87,7 @@ function humanFileSize(bytes, si) {
 }
 
 export function getTableInfo(hapValue, urls) {
-  return getCommonSampleInfo(hapValue,urls)
+  return getCommonSampleInfo(hapValue, urls);
 }
 
 const loadBuffer = (url, ac, label) => {
@@ -134,15 +134,15 @@ const _processTables = (json, baseUrl, frameLen) => {
       baseUrl = githubPath(baseUrl, '');
     }
     value = value.map((v) => baseUrl + v);
-    registerWaveTable(key,value, {baseUrl, frameLen})
+    registerWaveTable(key, value, { baseUrl, frameLen });
   });
 };
 
-export function registerWaveTable(key,  bank, params) {
+export function registerWaveTable(key, bank, params) {
   registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, bank, params?.frameLen ?? 2048), {
     type: 'wavetable',
     tables: bank,
-    ...params
+    ...params,
   });
 }
 

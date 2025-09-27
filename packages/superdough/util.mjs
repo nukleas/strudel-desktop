@@ -100,7 +100,7 @@ export function getCommonSampleInfo(hapValue, bank) {
     transpose = -midiDiff(closest); // semitones to repitch
     index = getSoundIndex(n, bank[closest].length);
     url = bank[closest][index];
-  } 
+  }
   const label = `${s}:${index}`;
   return { transpose, url, index, midi, label };
 }

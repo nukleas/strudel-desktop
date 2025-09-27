@@ -23,8 +23,8 @@ function humanFileSize(bytes, si) {
 }
 
 export function getSampleInfo(hapValue, bank) {
-  const {  speed = 1.0 } = hapValue;
-  const {transpose, url, index, midi, label} = getCommonSampleInfo(hapValue, bank)
+  const { speed = 1.0 } = hapValue;
+  const { transpose, url, index, midi, label } = getCommonSampleInfo(hapValue, bank);
   let playbackRate = Math.abs(speed) * Math.pow(2, transpose / 12);
   return { transpose, url, index, midi, label, playbackRate };
 }
@@ -245,11 +245,10 @@ export const samples = async (sampleMap, baseUrl = sampleMap._base || '', option
   }
   const { prebake, tag } = options;
 
-
   processSampleMap(
     sampleMap,
     (key, bank) => {
-      registerSampleSource(key, bank, { baseUrl, prebake, tag })
+      registerSampleSource(key, bank, { baseUrl, prebake, tag });
     },
     baseUrl,
   );
@@ -341,21 +340,19 @@ export async function onTriggerSample(t, value, onended, bank, resolveUrl) {
   return handle;
 }
 
-
 function registerSample(key, bank, params) {
   registerSound(key, (t, hapValue, onended) => onTriggerSample(t, hapValue, onended, bank), {
     type: 'sample',
     samples: bank,
-    ...params
-  })
+    ...params,
+  });
 }
 
 export function registerSampleSource(key, bank, params) {
   const isWavetable = key.startsWith('wt_');
   if (isWavetable) {
-    registerWaveTable(key,bank, params)
+    registerWaveTable(key, bank, params);
   } else {
-    registerSample(key, bank, params)
+    registerSample(key, bank, params);
   }
- 
 }
