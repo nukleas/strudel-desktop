@@ -1261,7 +1261,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       const gain2 = Math.sqrt(0.5 + 0.5 * spread);
       let f = pv(parameters.frequency, i);
       f = applySemitoneDetuneToFrequency(f, detune / 100); // overall detune
-      const normalizer = 0.3 / Math.sqrt(voices);
+      const normalizer = 0.3 / voices;
       for (let n = 0; n < voices; n++) {
         const isOdd = (n & 1) == 1;
         let gainL = gain1;
