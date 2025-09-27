@@ -93,7 +93,8 @@ export const { s, sound } = registerControl(['s', 'n', 'gain'], 'sound');
  * @name wtPos
  * @param {number | Pattern} position Position in the wavetable from 0 to 1
  * @synonyms wavetablePosition
- *
+ * @example
+ * s("squelch").seg(8).note("F1").wtPos("0 0.25 0.5 0.75 1")
  */
 export const { wtPos, wavetablePosition } = registerControl('wtPos', 'wavetablePosition');
 
@@ -103,7 +104,9 @@ export const { wtPos, wavetablePosition } = registerControl('wtPos', 'wavetableP
  * @name wtWarp
  * @param {number | Pattern} amount Warp of the wavetable from 0 to 1
  * @synonyms wavetableWarp
- *
+ * @example
+ * s("basique").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
+ *   .wtWarpMode("spin")
  */
 export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWarp');
 
@@ -116,6 +119,9 @@ export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWar
  * @name wtWarpMode
  * @param {number | string | Pattern} mode Warp mode
  * @synonyms wavetableWarpMode
+ * @example
+ * s("morgana").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
+ *   .wtWarpMode("<asym bendp spin logistic sync wormhole brownian>*2")
  *
  */
 export const { wtWarpMode, wavetableWarpMode } = registerControl('wtWarpMode', 'wavetableWarpMode');

@@ -1,5 +1,5 @@
 import { Pattern, noteToMidi, valueToMidi } from '@strudel/core';
-import { aliasBank, registerSynthSounds, registerZZFXSounds, samples } from '@strudel/webaudio';
+import { aliasBank, registerSynthSounds, registerZZFXSounds, samples, tables } from '@strudel/webaudio';
 import { registerSamplesFromDB } from './idbutils.mjs';
 import './piano.mjs';
 import './files.mjs';
@@ -31,6 +31,10 @@ export async function prebake() {
     samples(`${baseNoTrailing}/uzu-drumkit.json`, undefined, {
       prebake: true,
       tag: 'drum-machines',
+    }),
+    tables(`${baseNoTrailing}/uzu-wavetables.json`, 2048, undefined, {
+      prebake: true,
+      tag: 'wavetables',
     }),
     samples(`${baseNoTrailing}/mridangam.json`, undefined, { prebake: true, tag: 'drum-machines' }),
     samples(

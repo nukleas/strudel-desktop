@@ -39,8 +39,7 @@ export const WarpMode = Object.freeze({
 });
 
 async function loadWavetableFrames(url, label, frameLen = 256) {
-  const ac = getAudioContext();
-  const buf = await loadBuffer(url, ac, label);
+  const buf = await loadBuffer(url, label);
   const ch0 = buf.getChannelData(0);
   const total = ch0.length;
   const numFrames = Math.floor(total / frameLen);
@@ -96,7 +95,37 @@ export function getTableInfo(hapValue, tableUrls) {
   return { transpose, tableUrl, index, midi, label };
 }
 
-const loadBuffer = (url, ac, label) => {
+// Extract the sample rate of a .wav file
+function parseWavSampleRate(arrBuf) {
+  const dv = new DataView(arrBuf);
+  // Header is "RIFF<chunk size (4 bytes)>WAVE", so 12 bytes
+  let p = 12;
+  // Look through chunks for the format header
+  // (they will always have an 8 byte header (id and size) followed by a payload)
+  while (p + 8 <= dv.byteLength) {
+    // Parse id
+    const id = String.fromCharCode(dv.getUint8(p), dv.getUint8(p + 1), dv.getUint8(p + 2), dv.getUint8(p + 3));
+    // Parse chunk size
+    const size = dv.getUint32(p + 4, true);
+    if (id === 'fmt ') {
+      // The format chunk contains the sample rate after
+      // 8 bytes of header, 2 bytes of format tag, 2 bytes of num channels
+      // (for a total of 12)
+      return dv.getUint32(p + 12, true);
+    }
+    // Advance to next chunk
+    p += 8 + size + (size & 1);
+  }
+  return null;
+}
+
+async function decodeAtNativeRate(arr) {
+  const sr = parseWavSampleRate(arr) || 44100;
+  const tempAC = new OfflineAudioContext(1, 1, sr);
+  return await tempAC.decodeAudioData(arr);
+}
+
+const loadBuffer = (url, label) => {
   url = url.replace('#', '%23');
   if (!loadCache[url]) {
     logger(`[wavetable] load table ${label}..`, 'load-table', { url });
@@ -107,7 +136,7 @@ const loadBuffer = (url, ac, label) => {
         const took = Date.now() - timestamp;
         const size = humanFileSize(res.byteLength);
         logger(`[wavetable] load table ${label}... done! loaded ${size} in ${took}ms`, 'loaded-table', { url });
-        const decoded = await ac.decodeAudioData(res);
+        const decoded = await decodeAtNativeRate(res);
         return decoded;
       });
   }
@@ -127,25 +156,40 @@ function githubPath(base, subpath = '') {
   return `https://raw.githubusercontent.com/${path}/${subpath}`;
 }
 
-const _processTables = (json, baseUrl, frameLen) => {
-  return Object.entries(json).forEach(([key, value]) => {
-    if (typeof value === 'string') {
-      value = [value];
+const _processTables = (json, baseUrl, frameLen, options = {}) => {
+  baseUrl = json._base || baseUrl;
+  return Object.entries(json).forEach(([key, tables]) => {
+    if (key === '_base') return false;
+    if (typeof tables === 'string') {
+      tables = [tables];
     }
-    if (typeof value !== 'object') {
+    if (typeof tables !== 'object') {
       throw new Error('wrong json format for ' + key);
     }
-    baseUrl = value._base || baseUrl;
-    if (baseUrl.startsWith('github:')) {
-      baseUrl = githubPath(baseUrl, '');
+    let resolvedUrl = baseUrl;
+    if (resolvedUrl.startsWith('github:')) {
+      resolvedUrl = githubPath(resolvedUrl, '');
     }
-    value = value.map((v) => baseUrl + v);
-    registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, value, frameLen), {
-      type: 'wavetable',
-      tables: value,
-      baseUrl,
-      frameLen,
-    });
+    tables = tables
+      .map((t) => resolvedUrl + t)
+      .filter((t) => {
+        if (!t.toLowerCase().endsWith('.wav')) {
+          logger(`[wavetable] skipping ${t} -- wavetables must be ".wav" format`);
+          return false;
+        }
+        return true;
+      });
+    if (tables.length) {
+      const { prebake, tag } = options;
+      registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, tables, frameLen), {
+        type: 'wavetable',
+        tables,
+        baseUrl,
+        frameLen,
+        prebake,
+        tag,
+      });
+    }
   });
 };
 
@@ -154,7 +198,7 @@ const _processTables = (json, baseUrl, frameLen) => {
  *
  * @name tables
  */
-export const tables = async (url, frameLen, json) => {
+export const tables = async (url, frameLen, json, options = {}) => {
   if (json !== undefined) return _processTables(json, url, frameLen);
   if (url.startsWith('github:')) {
     url = githubPath(url, 'strudel.json');
@@ -172,14 +216,14 @@ export const tables = async (url, frameLen, json) => {
   }
   return fetch(url)
     .then((res) => res.json())
-    .then((json) => _processTables(json, url, frameLen))
+    .then((json) => _processTables(json, url, frameLen, options))
     .catch((error) => {
       console.error(error);
       throw new Error(`error loading "${url}"`);
     });
 };
 
-async function onTriggerSynth(t, value, onended, bank, frameLen) {
+async function onTriggerSynth(t, value, onended, tables, frameLen) {
   const { s, n = 0, duration } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
@@ -188,7 +232,7 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
     wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
   }
   const frequency = getFrequencyFromValue(value);
-  const { tableUrl, label } = getTableInfo(value, bank);
+  const { tableUrl, label } = getTableInfo(value, tables);
   const payload = await loadWavetableFrames(tableUrl, label, frameLen);
   const holdEnd = t + duration;
   const envEnd = holdEnd + release + 0.01;

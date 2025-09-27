@@ -44,6 +44,9 @@ export function SoundsTab() {
     if (soundsFilter === soundFilterType.SYNTHS) {
       return filtered.filter(([_, { data }]) => ['synth', 'soundfont'].includes(data.type));
     }
+    if (soundsFilter === soundFilterType.WAVETABLES) {
+      return filtered.filter(([_, { data }]) => data.type === 'wavetable');
+    }
     //TODO: tidy this up, it does not need to be saved in settings
     if (soundsFilter === 'importSounds') {
       return [];
@@ -74,6 +77,7 @@ export function SoundsTab() {
             samples: 'samples',
             drums: 'drum-machines',
             synths: 'Synths',
+            wavetables: 'Wavetables',
             user: 'User',
             importSounds: 'import-sounds',
           }}
@@ -125,7 +129,7 @@ export function SoundsTab() {
             >
               {' '}
               {name}
-              {data?.type === 'sample' ? `(${getSamples(data.samples)})` : ''}
+              {data?.type === 'sample' || data?.type === 'wavetable' ? `(${getSamples(data.samples)})` : ''}
               {data?.type === 'soundfont' ? `(${data.fonts.length})` : ''}
             </span>
           );
