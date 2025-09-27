@@ -1,5 +1,5 @@
 import { getAudioContext } from './audioContext.mjs';
-import { clamp, nanFallback } from './util.mjs';
+import { clamp, nanFallback, midiToFreq, noteToMidi } from './util.mjs';
 import { getNoiseBuffer } from './noise.mjs';
 import { logger } from './logger.mjs';
 
@@ -9,6 +9,13 @@ export function gainNode(value) {
   const node = getAudioContext().createGain();
   node.gain.value = value;
   return node;
+}
+
+export function effectSend(input, effect, wet) {
+  const send = gainNode(wet);
+  input.connect(send);
+  send.connect(effect);
+  return send;
 }
 
 const getSlope = (y1, y2, x1, x2) => {
@@ -22,7 +29,9 @@ const getSlope = (y1, y2, x1, x2) => {
 export function getWorklet(ac, processor, params, config) {
   const node = new AudioWorkletNode(ac, processor, config);
   Object.entries(params).forEach(([key, value]) => {
-    node.parameters.get(key).value = value;
+    if (value !== undefined) {
+      node.parameters.get(key).value = value;
+    }
   });
   return node;
 }
@@ -175,7 +184,7 @@ let curves = ['linear', 'exponential'];
 export function getPitchEnvelope(param, value, t, holdEnd) {
   // envelope is active when any of these values is set
   const hasEnvelope = value.pattack ?? value.pdecay ?? value.psustain ?? value.prelease ?? value.penv;
-  if (!hasEnvelope) {
+  if (hasEnvelope === undefined) {
     return;
   }
   const penv = nanFallback(value.penv, 1, true);
@@ -403,4 +412,26 @@ export const getDistortionAlgorithm = (algo) => {
 
 export const getDistortion = (distort, postgain, algorithm) => {
   return getWorklet(getAudioContext(), 'distort-processor', { distort, postgain }, { processorOptions: { algorithm } });
+};
+
+export const getFrequencyFromValue = (value, defaultNote = 36) => {
+  let { note, freq } = value;
+  note = note || defaultNote;
+  if (typeof note === 'string') {
+    note = noteToMidi(note); // e.g. c3 => 48
+  }
+  // get frequency
+  if (!freq && typeof note === 'number') {
+    freq = midiToFreq(note); // + 48);
+  }
+
+  return Number(freq);
+};
+
+export const destroyAudioWorkletNode = (node) => {
+  if (node == null) {
+    return;
+  }
+  node.disconnect();
+  node.parameters.get('end')?.setValueAtTime(0, 0);
 };

@@ -85,7 +85,7 @@ function evaluator(node, scope) {
   let pat;
   if (type === 'plain' && typeof variable !== 'undefined') {
     // some function names are not patternable, so we skip reification here
-    if (['!', 'extend', '@', 'expand', 'square', 'angle'].includes(value)) {
+    if (['!', 'extend', '@', 'expand', 'square', 'angle', 'all', 'setcpm', 'setcps'].includes(value)) {
       return variable;
     }
     pat = reify(variable);

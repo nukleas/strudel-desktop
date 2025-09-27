@@ -7,8 +7,21 @@ import FFT from './fft.js';
 import { getDistortionAlgorithm } from './helpers.mjs';
 
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
-const _mod = (n, m) => ((n % m) + m) % m;
+const mod = (n, m) => ((n % m) + m) % m;
+const lerp = (a, b, n) => n * (b - a) + a;
 const pv = (arr, n) => arr[n] ?? arr[0];
+const frac = (x) => x - Math.floor(x);
+const ffloor = (x) => x | 0; // fast floor for non-negative
+
+const getUnisonDetune = (unison, detune, voiceIndex) => {
+  if (unison < 2) {
+    return 0;
+  }
+  return lerp(-detune * 0.5, detune * 0.5, voiceIndex / (unison - 1));
+};
+const applySemitoneDetuneToFrequency = (frequency, detune) => {
+  return frequency * Math.pow(2, detune / 12);
+};
 
 // Restrict phase to the range [0, maxPhase) via wrapping
 function wrapPhase(phase, maxPhase = 1) {
@@ -152,7 +165,7 @@ class LFOProcessor extends AudioWorkletProcessor {
     const blockSize = output[0].length ?? 0;
 
     if (this.phase == null) {
-      this.phase = _mod(time * frequency + phaseoffset, 1);
+      this.phase = mod(time * frequency + phaseoffset, 1);
     }
     const dt = frequency / sampleRate;
     for (let n = 0; n < blockSize; n++) {
@@ -273,6 +286,73 @@ class ShapeProcessor extends AudioWorkletProcessor {
 }
 registerProcessor('shape-processor', ShapeProcessor);
 
+class TwoPoleFilter {
+  s0 = 0;
+  s1 = 0;
+  update(s, cutoff, resonance = 0) {
+    // Out of bound values can produce NaNs
+    resonance = clamp(resonance, 0, 1);
+    cutoff = clamp(cutoff, 0, sampleRate / 2 - 1);
+    const c = clamp(2 * Math.sin(cutoff * (_PI / sampleRate)), 0, 1.14);
+    const r = Math.pow(0.5, (resonance + 0.125) / 0.125);
+    const mrc = 1 - r * c;
+    this.s0 = mrc * this.s0 - c * this.s1 + c * s; // bpf
+    this.s1 = mrc * this.s1 + c * this.s0; // lpf
+    return this.s1; // return lpf by default
+  }
+}
+
+class DJFProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [{ name: 'value', defaultValue: 0.5 }];
+  }
+
+  constructor() {
+    super();
+    this.filters = [new TwoPoleFilter(), new TwoPoleFilter()];
+  }
+
+  process(inputs, outputs, parameters) {
+    const input = inputs[0];
+    const output = outputs[0];
+
+    const hasInput = !(input[0] === undefined);
+    this.started = hasInput;
+
+    const value = clamp(parameters.value[0], 0, 1);
+    let filterType = 'none';
+    let cutoff;
+    let v = 1;
+    if (value > 0.51) {
+      filterType = 'hipass';
+      v = (value - 0.5) * 2;
+    } else if (value < 0.49) {
+      filterType = 'lopass';
+      v = value * 2;
+    }
+    cutoff = Math.pow(v * 11, 4);
+
+    for (let i = 0; i < input.length; i++) {
+      for (let n = 0; n < blockSize; n++) {
+        if (filterType == 'none') {
+          output[i][n] = input[i][n];
+        } else {
+          this.filters[i].update(input[i][n], cutoff, 0.1);
+          if (filterType === 'lopass') {
+            output[i][n] = this.filters[i].s1;
+          } else if (filterType === 'hipass') {
+            output[i][n] = input[i][n] - this.filters[i].s1;
+          } else {
+            output[i][n] = input[i][n];
+          }
+        }
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('djf-processor', DJFProcessor);
+
 function fast_tanh(x) {
   const x2 = x * x;
   return (x * (27.0 + x2)) / (27.0 + 9.0 * x2);
@@ -380,21 +460,6 @@ class DistortProcessor extends AudioWorkletProcessor {
 registerProcessor('distort-processor', DistortProcessor);
 
 // SUPERSAW
-function lerp(a, b, n) {
-  return n * (b - a) + a;
-}
-
-function getUnisonDetune(unison, detune, voiceIndex) {
-  if (unison < 2) {
-    return 0;
-  }
-  return lerp(-detune * 0.5, detune * 0.5, voiceIndex / (unison - 1));
-}
-
-function applySemitoneDetuneToFrequency(frequency, detune) {
-  return frequency * Math.pow(2, detune / 12);
-}
-
 class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -456,29 +521,31 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
     }
 
     const output = outputs[0];
-    const voices = params.voices[0];
-    const freqspread = params.freqspread[0];
-    const panspread = params.panspread[0] * 0.5 + 0.5;
-    const gain1 = Math.sqrt(1 - panspread);
-    const gain2 = Math.sqrt(panspread);
 
-    for (let n = 0; n < voices; n++) {
-      const isOdd = (n & 1) == 1;
-      let gainL = gain1;
-      let gainR = gain2;
-      // invert right and left gain
-      if (isOdd) {
-        gainL = gain2;
-        gainR = gain1;
-      }
-      for (let i = 0; i < output[0].length; i++) {
-        // Main detuning
-        let freq = applySemitoneDetuneToFrequency(params.frequency[i] ?? params.frequency[0], params.detune[0] / 100);
+    for (let i = 0; i < output[0].length; i++) {
+      const detune = pv(params.detune, i);
+      const voices = pv(params.voices, i);
+      const freqspread = pv(params.freqspread, i);
+      const panspread = pv(params.panspread, i) * 0.5 + 0.5;
+      const gain1 = Math.sqrt(1 - panspread);
+      const gain2 = Math.sqrt(panspread);
+      let freq = pv(params.frequency, i);
+      // Main detuning
+      freq = applySemitoneDetuneToFrequency(freq, detune / 100);
+      for (let n = 0; n < voices; n++) {
+        const isOdd = (n & 1) == 1;
+        let gainL = gain1;
+        let gainR = gain2;
+        // invert right and left gain
+        if (isOdd) {
+          gainL = gain2;
+          gainR = gain1;
+        }
         // Individual voice detuning
-        freq = applySemitoneDetuneToFrequency(freq, getUnisonDetune(voices, freqspread, n));
+        const freqVoice = applySemitoneDetuneToFrequency(freq, getUnisonDetune(voices, freqspread, n));
         // We must wrap this here because it is passed into sawblep below which
         // has domain [0, 1]
-        const dt = _mod(freq / sampleRate, 1);
+        const dt = mod(freqVoice / sampleRate, 1);
         this.phase[n] = this.phase[n] ?? Math.random();
         const v = waveshapes.sawblep(this.phase[n], dt);
 
@@ -909,3 +976,322 @@ class ByteBeatProcessor extends AudioWorkletProcessor {
 }
 
 registerProcessor('byte-beat-processor', ByteBeatProcessor);
+
+export const WarpMode = Object.freeze({
+  NONE: 0,
+  ASYM: 1,
+  MIRROR: 2,
+  BENDP: 3,
+  BENDM: 4,
+  BENDMP: 5,
+  SYNC: 6,
+  QUANT: 7,
+  FOLD: 8,
+  PWM: 9,
+  ORBIT: 10,
+  SPIN: 11,
+  CHAOS: 12,
+  PRIMES: 13,
+  BINARY: 14,
+  BROWNIAN: 15,
+  RECIPROCAL: 16,
+  WORMHOLE: 17,
+  LOGISTIC: 18,
+  SIGMOID: 19,
+  FRACTAL: 20,
+  FLIP: 21,
+});
+
+function hash32(u) {
+  u = u + 0x7ed55d16 + (u << 12);
+  u = u ^ 0xc761c23c ^ (u >>> 19);
+  u = u + 0x165667b1 + (u << 5);
+  u = (u + 0xd3a2646c) ^ (u << 9);
+  u = u + 0xfd7046c5 + (u << 3);
+  u = u ^ 0xb55a4f09 ^ (u >>> 16);
+  return u >>> 0;
+}
+const hash01 = (i) => (hash32(i) >>> 8) / 0x01000000;
+
+function bitReverse(i, n) {
+  let r = 0;
+  for (let b = 0; b < n; b++) {
+    r = (r << 1) | (i & 1);
+    i >>>= 1;
+  }
+  return r;
+}
+
+function noise(x) {
+  const i = Math.floor(x),
+    f = x - i;
+  const a = hash01(i),
+    b = hash01(i + 1);
+  return a + (b - a) * f;
+}
+
+function brownian(x, oct = 4) {
+  let amp = 0.5,
+    sum = 0,
+    norm = 0,
+    freq = 1;
+  for (let o = 0; o < oct; o++) {
+    sum += amp * noise(x * freq);
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2;
+  }
+  return (sum / norm) * 2 - 1;
+}
+
+class WavetableOscillatorProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [
+      { name: 'begin', defaultValue: 0, min: 0, max: Number.POSITIVE_INFINITY },
+      { name: 'end', defaultValue: 0, min: 0, max: Number.POSITIVE_INFINITY },
+      { name: 'frequency', defaultValue: 220, minValue: 0.01, maxValue: 20000 },
+      { name: 'detune', defaultValue: 0 },
+      { name: 'position', defaultValue: 0, minValue: 0, maxValue: 1 },
+      { name: 'warp', defaultValue: 0, minValue: 0, maxValue: 1 },
+      { name: 'warpMode', defaultValue: 0 },
+      { name: 'voices', defaultValue: 1, minValue: 1, maxValue: 32 },
+      { name: 'spread', defaultValue: 0, minValue: 0, maxValue: 1 },
+      { name: 'phaserand', defaultValue: 1, minValue: 0, maxValue: 1 },
+    ];
+  }
+
+  constructor(options) {
+    super(options);
+    this.tables = null;
+    this.frameLen = 0;
+    this.numFrames = 0;
+    this.phase = [];
+    this.syncRatio = 1;
+
+    this.port.onmessage = (e) => {
+      const { type, payload } = e.data || {};
+      if (type === 'tables') {
+        this.tables = payload.mipmaps;
+        this.frameLen = payload.frameLen;
+        this.numFrames = this.tables[0].length;
+      }
+    };
+  }
+
+  _chooseMip(dphi) {
+    const approxHarm = Math.min(64, 1 / Math.max(1e-6, dphi));
+    let level = 0;
+    while (level + 1 < (this.tables?.length || 1) && approxHarm < this.tables[level][0].length / 8) {
+      level++;
+    }
+    return level;
+  }
+
+  _mirror(x) {
+    return 1 - Math.abs(2 * x - 1);
+  }
+
+  _toBits(amt, min = 2, max = 12) {
+    const b = max + (min - max) * amt;
+    return { b, n: Math.round(Math.pow(2, b)) };
+  }
+
+  _warpPhase(phase, amt, mode) {
+    switch (mode) {
+      case WarpMode.NONE: {
+        return phase;
+      }
+      case WarpMode.ASYM: {
+        const a = 0.01 + 0.99 * amt;
+        return phase < a ? (0.5 * phase) / a : 0.5 + (0.5 * (phase - a)) / (1 - a);
+      }
+      case WarpMode.MIRROR: {
+        // Asym, then mirror
+        return this._mirror(this._warpPhase(phase, amt, WarpMode.ASYM));
+      }
+      case WarpMode.BENDP: {
+        return Math.pow(phase, 1 + 3 * amt);
+      }
+      case WarpMode.BENDM: {
+        return Math.pow(phase, 1 / (1 + 3 * amt));
+      }
+      case WarpMode.BENDMP: {
+        return amt < 0.5 ? this._warpPhase(phase, 1 - 2 * amt, 3) : this._warpPhase(phase, 2 * amt - 1, 2);
+      }
+      case WarpMode.SYNC: {
+        const syncRatio = Math.pow(16, amt * amt);
+        return (phase * syncRatio) % 1;
+      }
+      case WarpMode.QUANT: {
+        const { n } = this._toBits(amt);
+        return ffloor(phase * n) / n;
+      }
+      case WarpMode.FOLD: {
+        const K = 7;
+        const k = 1 + Math.max(1, Math.round(K * amt));
+        return Math.abs(frac(k * phase) - 0.5) * 2;
+      }
+      case WarpMode.PWM: {
+        const w = clamp(0.5 + 0.49 * (2 * amt - 1), 0, 1);
+        if (phase < w) return (phase / w) * 0.5;
+        return 0.5 + ((phase - w) / (1 - w)) * 0.5;
+      }
+      case WarpMode.ORBIT: {
+        const depth = 0.5 * amt;
+        const n = 3;
+        return frac(phase + depth * Math.sin(2 * Math.PI * n * phase));
+      }
+      case WarpMode.SPIN: {
+        const depth = 0.5 * amt;
+        const { n } = this._toBits(amt, 1, 6);
+        return frac(phase + depth * Math.sin(2 * Math.PI * n * phase));
+      }
+      case WarpMode.CHAOS: {
+        const r = 3.7 + 0.3 * amt;
+        const logistic = r * phase * (1 - phase);
+        return clamp((1 - amt) * phase + amt * logistic, 0, 1);
+      }
+      case WarpMode.PRIMES: {
+        const isPrime = (n) => {
+          if (n < 2) return false;
+          if (n % 2 === 0) return n === 2;
+          for (let d = 3; d * d <= n; d += 2) if (n % d === 0) return false;
+          return true;
+        };
+        let { n } = this._toBits(amt, 3);
+        while (!isPrime(n)) n++;
+        return ffloor(phase * n) / n;
+      }
+      case WarpMode.BINARY: {
+        let { b } = this._toBits(amt, 3);
+        b = Math.round(b);
+        const n = 1 << b;
+        const idx = ffloor(phase * n);
+        const ridx = bitReverse(idx, b);
+        return ridx / n;
+      }
+      case WarpMode.MODULAR: {
+        const { n } = this._toBits(amt);
+        const depth = 0.5 * amt;
+        const jump = frac(phase * n) / n;
+        return frac(phase + depth * jump);
+      }
+      case WarpMode.BROWNIAN: {
+        const disp = 0.25 * amt * brownian(64 * phase, 4);
+        return frac(phase + disp);
+      }
+      case WarpMode.RECIPROCAL: {
+        const g = 2 + 4 * amt;
+        const num = phase * g;
+        const den = phase + (1 - phase) * g;
+        const y = den > 1e-12 ? num / den : 0;
+        return clamp(y, 0, 1);
+      }
+      case WarpMode.WORMHOLE: {
+        const gap = clamp(0.8 * amt, 0, 1);
+        const a = 0.5 * (1 - gap);
+        const b = 0.5 * (1 + gap);
+        if (phase < a) return (phase / a) * 0.5;
+        if (phase > b) return 0.5 * (1 + (phase - b) / (1 - b));
+        return 0.5;
+      }
+      case WarpMode.LOGISTIC: {
+        let x = phase;
+        const r = 3.6 + 0.4 * amt;
+        const iters = 1 + Math.round(2 * amt);
+        for (let i = 0; i < iters; i++) x = r * x * (1 - x);
+        return clamp(x, 0, 1);
+      }
+      case WarpMode.SIGMOID: {
+        const k = 1 + 10 * amt;
+        const x = phase - 0.5;
+        const y = 1 / (1 + Math.exp(-k * x));
+        const y0 = 1 / (1 + Math.exp(0.5 * k));
+        const y1 = 1 / (1 + Math.exp(-0.5 * k));
+        return (y - y0) / (y1 - y0);
+      }
+      case WarpMode.FRACTAL: {
+        const d = 0.5 * Math.sin(2 * Math.PI * phase) * amt;
+        return frac(phase + d);
+      }
+      case WarpMode.FLIP: {
+        return phase;
+      }
+      default:
+        return phase;
+    }
+  }
+
+  _sampleFrame(frame, phase) {
+    const pos = phase * (frame.length - 1);
+    const i = pos | 0;
+    const frac = pos - i;
+    const a = frame[i];
+    const b = frame[(i + 1) % frame.length];
+    return a + (b - a) * frac;
+  }
+
+  process(_inputs, outputs, parameters) {
+    if (currentTime >= parameters.end[0]) {
+      return false;
+    }
+    if (currentTime <= parameters.begin[0]) {
+      return true;
+    }
+    const outL = outputs[0][0];
+    const outR = outputs[0][1] || outputs[0][0];
+
+    if (!this.tables) {
+      outL.fill(0);
+      if (outR !== outL) outR.set(outL);
+      return true;
+    }
+
+    for (let i = 0; i < outL.length; i++) {
+      const detune = pv(parameters.detune, i);
+      const spread = pv(parameters.spread, i) * 0.5 + 0.5;
+      const tablePos = pv(parameters.position, i);
+      const idx = tablePos * (this.numFrames - 1);
+      const fIdx = idx | 0;
+      const frac = idx - fIdx;
+      const warpAmount = pv(parameters.warp, i);
+      const warpMode = pv(parameters.warpMode, i);
+      const voices = pv(parameters.voices, i);
+      const phaseRand = pv(parameters.phaserand, i);
+      const gain1 = Math.sqrt(1 - spread);
+      const gain2 = Math.sqrt(spread);
+      let f = pv(parameters.frequency, i);
+      f = applySemitoneDetuneToFrequency(f, detune / 100); // overall detune
+      for (let n = 0; n < voices; n++) {
+        const isOdd = (n & 1) == 1;
+        let gainL = gain1;
+        let gainR = gain2;
+        // invert right and left gain
+        if (isOdd) {
+          gainL = gain2;
+          gainR = gain1;
+        }
+        const fVoice = applySemitoneDetuneToFrequency(f, getUnisonDetune(voices, detune, n)); // voice detune
+        const dPhase = fVoice / sampleRate;
+        const level = this._chooseMip(dPhase);
+        const bank = this.tables[level];
+
+        // warp phase then sample
+        this.phase[n] = this.phase[n] ?? Math.random() * phaseRand;
+        const ph = this._warpPhase(this.phase[n], warpAmount, warpMode);
+        const s0 = this._sampleFrame(bank[fIdx], ph);
+        const s1 = this._sampleFrame(bank[Math.min(this.numFrames - 1, fIdx + 1)], ph);
+        let s = s0 + (s1 - s0) * frac;
+        if (warpMode === WarpMode.FLIP && this.phase[n] < warpAmount) {
+          s = -s;
+        }
+        outL[i] += (s * gainL) / Math.sqrt(voices);
+        outR[i] += (s * gainR) / Math.sqrt(voices);
+        this.phase[n] = wrapPhase(this.phase[n] + dPhase);
+      }
+    }
+    return true;
+  }
+}
+
+registerProcessor('wavetable-oscillator-processor', WavetableOscillatorProcessor);
