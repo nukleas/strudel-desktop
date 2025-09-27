@@ -1,5 +1,5 @@
 import { Pattern, noteToMidi, valueToMidi } from '@strudel/core';
-import { aliasBank, registerSynthSounds, registerZZFXSounds, samples, tables } from '@strudel/webaudio';
+import { aliasBank, registerSynthSounds, registerZZFXSounds, samples } from '@strudel/webaudio';
 import { registerSamplesFromDB } from './idbutils.mjs';
 import './piano.mjs';
 import './files.mjs';
