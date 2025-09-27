@@ -76,6 +76,7 @@ export function cycleToSeconds(cycle, cps) {
 export function secondsToCycle(t, cps) {
   return t * cps;
 }
+
 // deduces relevant info for sample loading from hap.value and sample definition
 // it encapsulates the core sampler logic into a pure and synchronous function
 // hapValue: Hap.value, bank: sample bank definition for sound "s" (values in strudel.json format)

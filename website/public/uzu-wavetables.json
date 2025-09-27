@@ -18,5 +18,22 @@
         "wt_digital/wt_squelch.wav",
         "wt_digital/wt_summer.wav",
         "wt_digital/wt_wasp.wav"
-    ]
+    ],
+    "wt_digital_bad_day": ["wt_digital/wt_bad_day.wav"],
+    "wt_digital_basique": ["wt_digital/wt_basique.wav"],
+    "wt_digital_crickets": ["wt_digital/wt_crickets.wav"],
+    "wt_digital_curses": ["wt_digital/wt_curses.wav"],
+    "wt_digital_earl_grey": ["wt_digital/wt_earl_grey.wav"],
+    "wt_digital_echoes": ["wt_digital/wt_echoes.wav"],
+    "wt_digital_glimmer": ["wt_digital/wt_glimmer.wav"],
+    "wt_digital_majick": ["wt_digital/wt_majick.wav"],
+    "wt_digital_meditation": ["wt_digital/wt_meditation.wav"],
+    "wt_digital_morgana": ["wt_digital/wt_morgana.wav"],
+    "wt_digital_red_alert": ["wt_digital/wt_red_alert.wav"],
+    "wt_digital_sad_piano": ["wt_digital/wt_sad_piano.wav"],
+    "wt_digital_shook": ["wt_digital/wt_shook.wav"],
+    "wt_digital_sludge": ["wt_digital/wt_sludge.wav"],
+    "wt_digital_squelch": ["wt_digital/wt_squelch.wav"],
+    "wt_digital_summer": ["wt_digital/wt_summer.wav"],
+    "wt_digital_wasp": ["wt_digital/wt_wasp.wav"]
 }
