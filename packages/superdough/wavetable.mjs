@@ -4,6 +4,7 @@ import {
   destroyAudioWorkletNode,
   getADSRValues,
   getFrequencyFromValue,
+  getLfo,
   getParamADSR,
   getPitchEnvelope,
   getVibratoOscillator,
@@ -235,7 +236,8 @@ async function onTriggerSynth(t, value, onended, tables, frameLen) {
   const { tableUrl, label } = getTableInfo(value, tables);
   const payload = await loadWavetableFrames(tableUrl, label, frameLen);
   const holdEnd = t + duration;
-  const envEnd = holdEnd + release + 0.01;
+  const endWithRelease = holdEnd + release;
+  const envEnd = endWithRelease + 0.01;
   const source = getWorklet(
     ac,
     'wavetable-oscillator-processor',
@@ -258,6 +260,37 @@ async function onTriggerSynth(t, value, onended, tables, frameLen) {
     logger(`[wavetable] still loading sound "${s}:${n}"`, 'highlight');
     return;
   }
+  const posADSRParams = [value.wtPosAttack, value.wtPosDecay, value.wtPosSustain, value.wtPosRelease];
+  const warpADSRParams = [value.wtPosAttack, value.wtPosDecay, value.wtPosSustain, value.wtPosRelease];
+  const wtParams = source.parameters;
+  const positionParam = wtParams.get('position');
+  const warpParam = wtParams.get('warp');
+  if (posADSRParams.some((p) => p !== undefined)) {
+    const [pAttack, pDecay, pSustain, pRelease] = getADSRValues(posADSRParams);
+    getParamADSR(positionParam, pAttack, pDecay, pSustain, pRelease, 0, 1, t, holdEnd, 'linear');
+  } else {
+    const posLFO = getLfo(ac, t, endWithRelease, {
+      frequency: value.wtPosRate,
+      depth: value.wtPosDepth,
+      shape: value.wtPosShape,
+      skew: value.wtPosSkew,
+      dcoffset: value.wtPosDCOffset ?? 0,
+    });
+    posLFO.connect(positionParam);
+  }
+  if (posADSRParams.some((p) => p !== undefined)) {
+    const [wAttack, wDecay, wSustain, wRelease] = getADSRValues(warpADSRParams);
+    getParamADSR(warpParam, wAttack, wDecay, wSustain, wRelease, 0, 1, t, holdEnd, 'linear');
+  } else {
+    const warpLFO = getLfo(ac, t, endWithRelease, {
+      frequency: value.wtWarpRate,
+      depth: value.wtWarpDepth,
+      shape: value.wtWarpShape,
+      skew: value.wtWarpSkew,
+      dcoffset: value.wtWarpDCOffset ?? 0,
+    });
+    warpLFO.connect(warpParam);
+  }
   const vibratoOscillator = getVibratoOscillator(source.detune, value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);
@@ -271,6 +304,8 @@ async function onTriggerSynth(t, value, onended, tables, frameLen) {
       destroyAudioWorkletNode(source);
       vibratoOscillator?.stop();
       node.disconnect();
+      warpLFO.disconnect();
+      posLFO.disconnect();
       onended();
     },
     t,
