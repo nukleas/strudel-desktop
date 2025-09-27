@@ -272,7 +272,7 @@ export const samples = async (sampleMap, baseUrl = sampleMap._base || '', option
   processSampleMap(
     sampleMap,
     (key, bank) => {
-      registerSample(key, bank, { baseUrl, prebake, tag })
+      registerSampleSource(key, bank, { baseUrl, prebake, tag })
     },
     baseUrl,
   );
