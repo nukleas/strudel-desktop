@@ -285,6 +285,73 @@ class ShapeProcessor extends AudioWorkletProcessor {
 }
 registerProcessor('shape-processor', ShapeProcessor);
 
+class TwoPoleFilter {
+  s0 = 0;
+  s1 = 0;
+  update(s, cutoff, resonance = 0) {
+    // Out of bound values can produce NaNs
+    resonance = clamp(resonance, 0, 1);
+    cutoff = clamp(cutoff, 0, sampleRate / 2 - 1);
+    const c = clamp(2 * Math.sin(cutoff * (_PI / sampleRate)), 0, 1.14);
+    const r = Math.pow(0.5, (resonance + 0.125) / 0.125);
+    const mrc = 1 - r * c;
+    this.s0 = mrc * this.s0 - c * this.s1 + c * s; // bpf
+    this.s1 = mrc * this.s1 + c * this.s0; // lpf
+    return this.s1; // return lpf by default
+  }
+}
+
+class DJFProcessor extends AudioWorkletProcessor {
+  static get parameterDescriptors() {
+    return [{ name: 'value', defaultValue: 0.5 }];
+  }
+
+  constructor() {
+    super();
+    this.filters = [new TwoPoleFilter(), new TwoPoleFilter()];
+  }
+
+  process(inputs, outputs, parameters) {
+    const input = inputs[0];
+    const output = outputs[0];
+
+    const hasInput = !(input[0] === undefined);
+    this.started = hasInput;
+
+    const value = clamp(parameters.value[0], 0, 1);
+    let filterType = 'none';
+    let cutoff;
+    let v = 1;
+    if (value > 0.51) {
+      filterType = 'hipass';
+      v = (value - 0.5) * 2;
+    } else if (value < 0.49) {
+      filterType = 'lopass';
+      v = value * 2;
+    }
+    cutoff = Math.pow(v * 11, 4);
+
+    for (let i = 0; i < input.length; i++) {
+      for (let n = 0; n < blockSize; n++) {
+        if (filterType == 'none') {
+          output[i][n] = input[i][n];
+        } else {
+          this.filters[i].update(input[i][n], cutoff, 0.1);
+          if (filterType === 'lopass') {
+            output[i][n] = this.filters[i].s1;
+          } else if (filterType === 'hipass') {
+            output[i][n] = input[i][n] - this.filters[i].s1;
+          } else {
+            output[i][n] = input[i][n];
+          }
+        }
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('djf-processor', DJFProcessor);
+
 function fast_tanh(x) {
   const x2 = x * x;
   return (x * (27.0 + x2)) / (27.0 + 9.0 * x2);

@@ -1177,7 +1177,7 @@ export const { resonance, lpq } = registerControl('resonance', 'lpq');
  * @name djf
  * @param {number | Pattern} cutoff below 0.5 is low pass filter, above is high pass filter
  * @example
- * n("0 3 7 [10,24]").s('superzow').octave(3).djf("<.5 .25 .5 .75>").osc()
+ * n(irand(16).seg(8)).scale("d:phrygian").s("supersaw").djf("<.5 .3 .2 .75>")
  *
  */
 export const { djf } = registerControl('djf');
