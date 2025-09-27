@@ -1,5 +1,5 @@
 import { noteToMidi, valueToMidi, getSoundIndex } from './util.mjs';
-import { getAudioContext, registerSound } from './index.mjs';
+import { getAudioContext, registerSound, registerWaveTable } from './index.mjs';
 import { getADSRValues, getParamADSR, getPitchEnvelope, getVibratoOscillator } from './helpers.mjs';
 import { logger } from './logger.mjs';
 
@@ -79,14 +79,14 @@ export const getSampleBufferSource = async (hapValue, bank, resolveUrl) => {
   bufferSource.buffer = buffer;
   bufferSource.playbackRate.value = playbackRate;
 
-  const { s, loopBegin = 0, loopEnd = 1, begin = 0, end = 1 } = hapValue;
+  const { loopBegin = 0, loopEnd = 1, begin = 0, end = 1 } = hapValue;
 
   // "The computation of the offset into the sound is performed using the sound buffer's natural sample rate,
   // rather than the current playback rate, so even if the sound is playing at twice its normal speed,
   // the midway point through a 10-second audio buffer is still 5."
   const offset = begin * bufferSource.buffer.duration;
 
-  const loop = s.startsWith('wt_') ? 1 : hapValue.loop;
+  const loop = hapValue.loop;
   if (loop) {
     bufferSource.loop = true;
     bufferSource.loopStart = loopBegin * bufferSource.buffer.duration - offset;
@@ -267,16 +267,13 @@ export const samples = async (sampleMap, baseUrl = sampleMap._base || '', option
     return samples(json, baseUrl || base, options);
   }
   const { prebake, tag } = options;
+
+
   processSampleMap(
     sampleMap,
-    (key, bank) =>
-      registerSound(key, (t, hapValue, onended) => onTriggerSample(t, hapValue, onended, bank), {
-        type: 'sample',
-        samples: bank,
-        baseUrl,
-        prebake,
-        tag,
-      }),
+    (key, bank) => {
+      registerSample(key, bank, { baseUrl, prebake, tag })
+    },
     baseUrl,
   );
 };
@@ -365,4 +362,23 @@ export async function onTriggerSample(t, value, onended, bank, resolveUrl) {
   }
 
   return handle;
+}
+
+
+function registerSample(key, bank, params) {
+  registerSound(key, (t, hapValue, onended) => onTriggerSample(t, hapValue, onended, bank), {
+    type: 'sample',
+    samples: bank,
+    ...params
+  })
+}
+
+export function registerSampleSource(key, bank, params) {
+  const isWavetable = key.startsWith('wt_');
+  if (isWavetable) {
+    registerWaveTable(key,bank, params)
+  } else {
+    registerSample(key, bank, params)
+  }
+ 
 }

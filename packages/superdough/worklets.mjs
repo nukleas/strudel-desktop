@@ -1239,6 +1239,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     }
     const outL = outputs[0][0];
     const outR = outputs[0][1] || outputs[0][0];
+    const gainAdjustment = .15;
 
     if (!this.tables) {
       outL.fill(0);
@@ -1284,8 +1285,8 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
         if (warpMode === WarpMode.FLIP && this.phase[n] < warpAmount) {
           s = -s;
         }
-        outL[i] += (s * gainL) / Math.sqrt(voices);
-        outR[i] += (s * gainR) / Math.sqrt(voices);
+        outL[i] += ((s * gainL) / Math.sqrt(voices)) * gainAdjustment;
+        outR[i] += ((s * gainR) / Math.sqrt(voices)) * gainAdjustment;
         this.phase[n] = wrapPhase(this.phase[n] + dPhase);
       }
     }

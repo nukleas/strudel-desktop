@@ -76,3 +76,4 @@ export function cycleToSeconds(cycle, cps) {
 export function secondsToCycle(t, cps) {
   return t * cps;
 }
+

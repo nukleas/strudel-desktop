@@ -140,14 +140,17 @@ const _processTables = (json, baseUrl, frameLen) => {
       baseUrl = githubPath(baseUrl, '');
     }
     value = value.map((v) => baseUrl + v);
-    registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, value, frameLen), {
-      type: 'wavetable',
-      tables: value,
-      baseUrl,
-      frameLen,
-    });
+    registerWaveTable(key,value, {baseUrl, frameLen})
   });
 };
+
+export function registerWaveTable(key,  bank, params) {
+  registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, bank, params?.frameLen ?? 2048), {
+    type: 'wavetable',
+    tables: bank,
+    ...params
+  });
+}
 
 /**
  * Loads a collection of wavetables to use with `s`
@@ -179,7 +182,7 @@ export const tables = async (url, frameLen, json) => {
     });
 };
 
-async function onTriggerSynth(t, value, onended, bank, frameLen) {
+export async function onTriggerSynth(t, value, onended, bank, frameLen) {
   const { s, n = 0, duration } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
