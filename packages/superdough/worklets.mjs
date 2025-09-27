@@ -1049,7 +1049,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       { name: 'begin', defaultValue: 0, min: 0, max: Number.POSITIVE_INFINITY },
       { name: 'end', defaultValue: 0, min: 0, max: Number.POSITIVE_INFINITY },
       { name: 'frequency', defaultValue: 220, minValue: 0.01, maxValue: 20000 },
-      { name: 'detune', defaultValue: 0 },
+      { name: 'detune', defaultValue: 0.18 },
       { name: 'position', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'warp', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'warpMode', defaultValue: 0 },
@@ -1239,6 +1239,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     }
     const outL = outputs[0][0];
     const outR = outputs[0][1] || outputs[0][0];
+    const gainAdjustment = 0.3;
 
     if (!this.tables) {
       outL.fill(0);
@@ -1284,8 +1285,8 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
         if (warpMode === WarpMode.FLIP && this.phase[n] < warpAmount) {
           s = -s;
         }
-        outL[i] += (s * gainL) / Math.sqrt(voices);
-        outR[i] += (s * gainR) / Math.sqrt(voices);
+        outL[i] += ((s * gainL) / Math.sqrt(voices)) * gainAdjustment;
+        outR[i] += ((s * gainR) / Math.sqrt(voices)) * gainAdjustment;
         this.phase[n] = wrapPhase(this.phase[n] + dPhase);
       }
     }

@@ -1,5 +1,5 @@
 import { getAudioContext, registerSound } from './index.mjs';
-import { getSoundIndex, valueToMidi } from './util.mjs';
+import { getCommonSampleInfo, getSoundIndex, valueToMidi } from './util.mjs';
 import {
   destroyAudioWorkletNode,
   getADSRValues,
@@ -38,12 +38,12 @@ export const WarpMode = Object.freeze({
   FLIP: 21,
 });
 
-async function loadWavetableFrames(url, label, frameLen = 256) {
+async function loadWavetableFrames(url, label, frameLen = 2048) {
   const ac = getAudioContext();
   const buf = await loadBuffer(url, ac, label);
   const ch0 = buf.getChannelData(0);
   const total = ch0.length;
-  const numFrames = Math.floor(total / frameLen);
+  const numFrames = Math.max(1, Math.floor(total / frameLen));
   const frames = new Array(numFrames);
   for (let i = 0; i < numFrames; i++) {
     const start = i * frameLen;
@@ -86,14 +86,8 @@ function humanFileSize(bytes, si) {
   return bytes.toFixed(1) + ' ' + units[u];
 }
 
-export function getTableInfo(hapValue, tableUrls) {
-  const { s, n = 0 } = hapValue;
-  let midi = valueToMidi(hapValue, 36);
-  let transpose = midi - 36; // C3 is middle C;
-  const index = getSoundIndex(n, tableUrls.length);
-  const tableUrl = tableUrls[index];
-  const label = `${s}:${index}`;
-  return { transpose, tableUrl, index, midi, label };
+export function getTableInfo(hapValue, urls) {
+  return getCommonSampleInfo(hapValue, urls);
 }
 
 const loadBuffer = (url, ac, label) => {
@@ -140,14 +134,17 @@ const _processTables = (json, baseUrl, frameLen) => {
       baseUrl = githubPath(baseUrl, '');
     }
     value = value.map((v) => baseUrl + v);
-    registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, value, frameLen), {
-      type: 'wavetable',
-      tables: value,
-      baseUrl,
-      frameLen,
-    });
+    registerWaveTable(key, value, { baseUrl, frameLen });
   });
 };
+
+export function registerWaveTable(key, bank, params) {
+  registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, bank, params?.frameLen ?? 2048), {
+    type: 'wavetable',
+    tables: bank,
+    ...params,
+  });
+}
 
 /**
  * Loads a collection of wavetables to use with `s`
@@ -179,7 +176,7 @@ export const tables = async (url, frameLen, json) => {
     });
 };
 
-async function onTriggerSynth(t, value, onended, bank, frameLen) {
+export async function onTriggerSynth(t, value, onended, bank, frameLen) {
   const { s, n = 0, duration } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
@@ -188,8 +185,8 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
     wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
   }
   const frequency = getFrequencyFromValue(value);
-  const { tableUrl, label } = getTableInfo(value, bank);
-  const payload = await loadWavetableFrames(tableUrl, label, frameLen);
+  const { url, label } = getTableInfo(value, bank);
+  const payload = await loadWavetableFrames(url, label, frameLen);
   const holdEnd = t + duration;
   const envEnd = holdEnd + release + 0.01;
   const source = getWorklet(
