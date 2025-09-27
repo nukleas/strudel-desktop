@@ -1,5 +1,5 @@
-import { noteToMidi, valueToMidi, getSoundIndex } from './util.mjs';
-import { getAudioContext, registerSound } from './index.mjs';
+import { noteToMidi, valueToMidi, getSoundIndex, getCommonSampleInfo } from './util.mjs';
+import { getAudioContext, registerSound, registerWaveTable } from './index.mjs';
 import { getADSRValues, getParamADSR, getPitchEnvelope, getVibratoOscillator } from './helpers.mjs';
 import { logger } from './logger.mjs';
 
@@ -22,39 +22,16 @@ function humanFileSize(bytes, si) {
   return bytes.toFixed(1) + ' ' + units[u];
 }
 
-// deduces relevant info for sample loading from hap.value and sample definition
-// it encapsulates the core sampler logic into a pure and synchronous function
-// hapValue: Hap.value, bank: sample bank definition for sound "s" (values in strudel.json format)
 export function getSampleInfo(hapValue, bank) {
-  const { s, n = 0, speed = 1.0 } = hapValue;
-  let midi = valueToMidi(hapValue, 36);
-  let transpose = midi - 36; // C3 is middle C;
-  let sampleUrl;
-  let index = 0;
-  if (Array.isArray(bank)) {
-    index = getSoundIndex(n, bank.length);
-    sampleUrl = bank[index];
-  } else {
-    const midiDiff = (noteA) => noteToMidi(noteA) - midi;
-    // object format will expect keys as notes
-    const closest = Object.keys(bank)
-      .filter((k) => !k.startsWith('_'))
-      .reduce(
-        (closest, key, j) => (!closest || Math.abs(midiDiff(key)) < Math.abs(midiDiff(closest)) ? key : closest),
-        null,
-      );
-    transpose = -midiDiff(closest); // semitones to repitch
-    index = getSoundIndex(n, bank[closest].length);
-    sampleUrl = bank[closest][index];
-  }
-  const label = `${s}:${index}`;
+  const { speed = 1.0 } = hapValue;
+  const { transpose, url, index, midi, label } = getCommonSampleInfo(hapValue, bank);
   let playbackRate = Math.abs(speed) * Math.pow(2, transpose / 12);
-  return { transpose, sampleUrl, index, midi, label, playbackRate };
+  return { transpose, url, index, midi, label, playbackRate };
 }
 
 // takes hapValue and returns buffer + playbackRate.
 export const getSampleBuffer = async (hapValue, bank, resolveUrl) => {
-  let { sampleUrl, label, playbackRate } = getSampleInfo(hapValue, bank);
+  let { url: sampleUrl, label, playbackRate } = getSampleInfo(hapValue, bank);
   if (resolveUrl) {
     sampleUrl = await resolveUrl(sampleUrl);
   }
@@ -79,14 +56,14 @@ export const getSampleBufferSource = async (hapValue, bank, resolveUrl) => {
   bufferSource.buffer = buffer;
   bufferSource.playbackRate.value = playbackRate;
 
-  const { s, loopBegin = 0, loopEnd = 1, begin = 0, end = 1 } = hapValue;
+  const { loopBegin = 0, loopEnd = 1, begin = 0, end = 1 } = hapValue;
 
   // "The computation of the offset into the sound is performed using the sound buffer's natural sample rate,
   // rather than the current playback rate, so even if the sound is playing at twice its normal speed,
   // the midway point through a 10-second audio buffer is still 5."
   const offset = begin * bufferSource.buffer.duration;
 
-  const loop = s.startsWith('wt_') ? 1 : hapValue.loop;
+  const loop = hapValue.loop;
   if (loop) {
     bufferSource.loop = true;
     bufferSource.loopStart = loopBegin * bufferSource.buffer.duration - offset;
@@ -267,16 +244,12 @@ export const samples = async (sampleMap, baseUrl = sampleMap._base || '', option
     return samples(json, baseUrl || base, options);
   }
   const { prebake, tag } = options;
+
   processSampleMap(
     sampleMap,
-    (key, bank) =>
-      registerSound(key, (t, hapValue, onended) => onTriggerSample(t, hapValue, onended, bank), {
-        type: 'sample',
-        samples: bank,
-        baseUrl,
-        prebake,
-        tag,
-      }),
+    (key, bank) => {
+      registerSampleSource(key, bank, { baseUrl, prebake, tag });
+    },
     baseUrl,
   );
 };
@@ -365,4 +338,21 @@ export async function onTriggerSample(t, value, onended, bank, resolveUrl) {
   }
 
   return handle;
+}
+
+function registerSample(key, bank, params) {
+  registerSound(key, (t, hapValue, onended) => onTriggerSample(t, hapValue, onended, bank), {
+    type: 'sample',
+    samples: bank,
+    ...params,
+  });
+}
+
+export function registerSampleSource(key, bank, params) {
+  const isWavetable = key.startsWith('wt_');
+  if (isWavetable) {
+    registerWaveTable(key, bank, params);
+  } else {
+    registerSample(key, bank, params);
+  }
 }

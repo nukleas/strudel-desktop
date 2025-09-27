@@ -57,6 +57,9 @@ export function SoundsTab() {
   // holds mutable ref to current triggered sound
   const trigRef = useRef();
 
+  // Used to cycle through sound previews on banks with multiple sounds
+  let soundPreviewIdx = 0;
+
   // stop current sound on mouseup
   useEvent('mouseup', () => {
     const t = trigRef.current;
@@ -114,11 +117,13 @@ export function SoundsTab() {
                 const params = {
                   note: ['synth', 'soundfont'].includes(data.type) ? 'a3' : undefined,
                   s: name,
+                  n: soundPreviewIdx,
                   clip: 1,
                   release: 0.5,
                   sustain: 1,
                   duration: 0.5,
                 };
+                soundPreviewIdx++;
                 const time = ctx.currentTime + 0.05;
                 const onended = () => trigRef.current?.node?.disconnect();
                 trigRef.current = Promise.resolve(onTrigger(time, params, onended));
@@ -129,7 +134,8 @@ export function SoundsTab() {
             >
               {' '}
               {name}
-              {data?.type === 'sample' || data?.type === 'wavetable' ? `(${getSamples(data.samples)})` : ''}
+              {data?.type === 'sample' ? `(${getSamples(data.samples)})` : ''}
+              {data?.type === 'wavetable' ? `(${getSamples(data.tables)})` : ''}
               {data?.type === 'soundfont' ? `(${data.fonts.length})` : ''}
             </span>
           );

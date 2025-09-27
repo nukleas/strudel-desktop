@@ -107,7 +107,6 @@ function getModulationShapeInput(val) {
 export function getLfo(audioContext, begin, end, properties = {}) {
   const { shape = 0, ...props } = properties;
   const { dcoffset = -0.5, depth = 1 } = properties;
-  debugger;
   const lfoprops = {
     frequency: 1,
     depth,

@@ -1,5 +1,5 @@
 import { getAudioContext, registerSound } from './index.mjs';
-import { getSoundIndex, valueToMidi } from './util.mjs';
+import { getCommonSampleInfo } from './util.mjs';
 import {
   destroyAudioWorkletNode,
   getADSRValues,
@@ -39,11 +39,11 @@ export const WarpMode = Object.freeze({
   FLIP: 21,
 });
 
-async function loadWavetableFrames(url, label, frameLen = 256) {
+async function loadWavetableFrames(url, label, frameLen = 2048) {
   const buf = await loadBuffer(url, label);
   const ch0 = buf.getChannelData(0);
   const total = ch0.length;
-  const numFrames = Math.floor(total / frameLen);
+  const numFrames = Math.max(1, Math.floor(total / frameLen));
   const frames = new Array(numFrames);
   for (let i = 0; i < numFrames; i++) {
     const start = i * frameLen;
@@ -84,16 +84,6 @@ function humanFileSize(bytes, si) {
     ++u;
   } while (bytes >= thresh);
   return bytes.toFixed(1) + ' ' + units[u];
-}
-
-export function getTableInfo(hapValue, tableUrls) {
-  const { s, n = 0 } = hapValue;
-  let midi = valueToMidi(hapValue, 36);
-  let transpose = midi - 36; // C3 is middle C;
-  const index = getSoundIndex(n, tableUrls.length);
-  const tableUrl = tableUrls[index];
-  const label = `${s}:${index}`;
-  return { transpose, tableUrl, index, midi, label };
 }
 
 // Extract the sample rate of a .wav file
@@ -181,18 +171,18 @@ const _processTables = (json, baseUrl, frameLen, options = {}) => {
         return true;
       });
     if (tables.length) {
-      const { prebake, tag } = options;
-      registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, tables, frameLen), {
-        type: 'wavetable',
-        tables,
-        baseUrl,
-        frameLen,
-        prebake,
-        tag,
-      });
+      registerWaveTable(key, tables, { baseUrl, frameLen });
     }
   });
 };
+
+export function registerWaveTable(key, tables, params) {
+  registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, tables, params?.frameLen ?? 2048), {
+    type: 'wavetable',
+    tables,
+    ...params,
+  });
+}
 
 /**
  * Loads a collection of wavetables to use with `s`
@@ -224,7 +214,7 @@ export const tables = async (url, frameLen, json, options = {}) => {
     });
 };
 
-async function onTriggerSynth(t, value, onended, tables, frameLen) {
+export async function onTriggerSynth(t, value, onended, tables, frameLen) {
   const { s, n = 0, duration } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
@@ -233,8 +223,8 @@ async function onTriggerSynth(t, value, onended, tables, frameLen) {
     wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
   }
   const frequency = getFrequencyFromValue(value);
-  const { tableUrl, label } = getTableInfo(value, tables);
-  const payload = await loadWavetableFrames(tableUrl, label, frameLen);
+  const { url, label } = getCommonSampleInfo(value, tables);
+  const payload = await loadWavetableFrames(url, label, frameLen);
   const holdEnd = t + duration;
   const endWithRelease = holdEnd + release;
   const envEnd = endWithRelease + 0.01;
@@ -265,6 +255,7 @@ async function onTriggerSynth(t, value, onended, tables, frameLen) {
   const wtParams = source.parameters;
   const positionParam = wtParams.get('position');
   const warpParam = wtParams.get('warp');
+  let posLFO;
   if (posADSRParams.some((p) => p !== undefined)) {
     const [pAttack, pDecay, pSustain, pRelease] = getADSRValues(posADSRParams);
     getParamADSR(positionParam, pAttack, pDecay, pSustain, pRelease, 0, 1, t, holdEnd, 'linear');
@@ -278,6 +269,7 @@ async function onTriggerSynth(t, value, onended, tables, frameLen) {
     });
     posLFO.connect(positionParam);
   }
+  let warpLFO;
   if (posADSRParams.some((p) => p !== undefined)) {
     const [wAttack, wDecay, wSustain, wRelease] = getADSRValues(warpADSRParams);
     getParamADSR(warpParam, wAttack, wDecay, wSustain, wRelease, 0, 1, t, holdEnd, 'linear');
@@ -304,8 +296,8 @@ async function onTriggerSynth(t, value, onended, tables, frameLen) {
       destroyAudioWorkletNode(source);
       vibratoOscillator?.stop();
       node.disconnect();
-      warpLFO.disconnect();
-      posLFO.disconnect();
+      posLFO?.disconnect();
+      warpLFO?.disconnect();
       onended();
     },
     t,

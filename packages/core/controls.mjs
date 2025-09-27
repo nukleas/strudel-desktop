@@ -192,7 +192,7 @@ export const { wtPosSkew } = registerControl('wtPosSkew');
  * s("basique").bank("wt_digital").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
  *   .wtWarpMode("spin")
  */
-export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWarp')
+export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWarp');
 
 /**
  * Attack time of the wavetable oscillator's warp envelope
