@@ -1049,7 +1049,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       { name: 'begin', defaultValue: 0, min: 0, max: Number.POSITIVE_INFINITY },
       { name: 'end', defaultValue: 0, min: 0, max: Number.POSITIVE_INFINITY },
       { name: 'frequency', defaultValue: 220, minValue: 0.01, maxValue: 20000 },
-      { name: 'detune', defaultValue: 0 },
+      { name: 'detune', defaultValue: .18 },
       { name: 'position', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'warp', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'warpMode', defaultValue: 0 },
