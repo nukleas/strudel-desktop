@@ -14,7 +14,7 @@ import {
 import { logger } from './logger.mjs';
 
 const WT_MAX_MIP_LEVELS = 6;
-export const WarpMode = Object.freeze({
+export const Warpmode = Object.freeze({
   NONE: 0,
   ASYM: 1,
   MIRROR: 2,
@@ -177,11 +177,17 @@ const _processTables = (json, baseUrl, frameLen, options = {}) => {
 };
 
 export function registerWaveTable(key, tables, params) {
-  registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, tables, params?.frameLen ?? 2048), {
-    type: 'wavetable',
-    tables,
-    ...params,
-  });
+  registerSound(
+    key,
+    (t, hapValue, onended, cps) => {
+      return onTriggerSynth(t, hapValue, onended, tables, cps, params?.frameLen ?? 2048);
+    },
+    {
+      type: 'wavetable',
+      tables,
+      ...params,
+    },
+  );
 }
 
 /**
@@ -214,13 +220,13 @@ export const tables = async (url, frameLen, json, options = {}) => {
     });
 };
 
-export async function onTriggerSynth(t, value, onended, tables, frameLen) {
-  const { s, n = 0, duration } = value;
+export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
+  const { s, n = 0, duration, wtenv } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
-  let { wtWarpMode } = value;
-  if (typeof wtWarpMode === 'string') {
-    wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
+  let { warpmode } = value;
+  if (typeof warpmode === 'string') {
+    warpmode = Warpmode[warpmode.toUpperCase()] ?? Warpmode.NONE;
   }
   const frequency = getFrequencyFromValue(value);
   const { url, label } = getCommonSampleInfo(value, tables);
@@ -236,12 +242,12 @@ export async function onTriggerSynth(t, value, onended, tables, frameLen) {
       end: envEnd,
       frequency,
       detune: value.detune,
-      position: value.wtPos,
-      warp: value.wtWarp,
-      warpMode: wtWarpMode,
+      position: value.wt,
+      warp: value.warp,
+      warpMode: warpmode,
       voices: value.unison,
       spread: value.spread,
-      phaserand: value.wtPhaseRand,
+      phaserand: (value.wtphaserand ?? value.unison > 1) ? 1 : 0,
     },
     { outputChannelCount: [2] },
   );
@@ -250,36 +256,52 @@ export async function onTriggerSynth(t, value, onended, tables, frameLen) {
     logger(`[wavetable] still loading sound "${s}:${n}"`, 'highlight');
     return;
   }
-  const posADSRParams = [value.wtPosAttack, value.wtPosDecay, value.wtPosSustain, value.wtPosRelease];
-  const warpADSRParams = [value.wtPosAttack, value.wtPosDecay, value.wtPosSustain, value.wtPosRelease];
+  const posADSRParams = [value.wtattack, value.wtdecay, value.wtsustain, value.wtrelease];
+  const warpADSRParams = [value.warpattack, value.warpdecay, value.warpsustain, value.warprelease];
   const wtParams = source.parameters;
   const positionParam = wtParams.get('position');
   const warpParam = wtParams.get('warp');
   let posLFO;
-  if (posADSRParams.some((p) => p !== undefined)) {
-    const [pAttack, pDecay, pSustain, pRelease] = getADSRValues(posADSRParams);
-    getParamADSR(positionParam, pAttack, pDecay, pSustain, pRelease, 0, 1, t, holdEnd, 'linear');
-  } else {
+  if ([wtenv, ...posADSRParams].some((p) => p !== undefined)) {
+    const [pAttack, pDecay, pSustain, pRelease] = getADSRValues(posADSRParams, 'linear', [0, 0.5, 0, 0.1]);
+    const min = value.wt ?? 0;
+    const max = (wtenv ?? 0.5) + min;
+    getParamADSR(positionParam, pAttack, pDecay, pSustain, pRelease, min, max, t, holdEnd, 'linear');
+  }
+  let wtrate = value.wtrate;
+  if (value.wtsync != null) {
+    wtrate = wtrate = cps * value.wtsync;
+  }
+  if ([wtrate, value.wtdepth, value.wtshape, value.wtskew, value.wtdc].some((p) => p != null)) {
     const posLFO = getLfo(ac, t, endWithRelease, {
-      frequency: value.wtPosRate,
-      depth: value.wtPosDepth,
-      shape: value.wtPosShape,
-      skew: value.wtPosSkew,
-      dcoffset: value.wtPosDCOffset ?? 0,
+      frequency: wtrate,
+      depth: value.wtdepth ?? 0.5,
+      shape: value.wtshape,
+      skew: value.wtskew,
+      dcoffset: value.wtdc ?? 0,
     });
     posLFO.connect(positionParam);
   }
   let warpLFO;
+
   if (posADSRParams.some((p) => p !== undefined)) {
     const [wAttack, wDecay, wSustain, wRelease] = getADSRValues(warpADSRParams);
-    getParamADSR(warpParam, wAttack, wDecay, wSustain, wRelease, 0, 1, t, holdEnd, 'linear');
-  } else {
+    const min = value.warp ?? 0;
+    const max = (value.warpenv ?? 0.5) + min;
+    getParamADSR(warpParam, wAttack, wDecay, wSustain, wRelease, min, max, t, holdEnd, 'linear', [0, 0.5, 0, 0.1]);
+  }
+  let warprate = value.warprate;
+  if (value.warpsync != null) {
+    console.info(value.warpsync);
+    warprate = warprate = cps * value.warpsync;
+  }
+  if ([warprate, value.warpdepth, value.warpshape, value.warpskew, value.warpdc].some((p) => p != null)) {
     const warpLFO = getLfo(ac, t, endWithRelease, {
-      frequency: value.wtWarpRate,
-      depth: value.wtWarpDepth,
-      shape: value.wtWarpShape,
-      skew: value.wtWarpSkew,
-      dcoffset: value.wtWarpDCOffset ?? 0,
+      frequency: warprate,
+      depth: value.warpdepth ?? 0.5,
+      shape: value.warpshape,
+      skew: value.warpskew,
+      dcoffset: value.warpdc ?? 0,
     });
     warpLFO.connect(warpParam);
   }

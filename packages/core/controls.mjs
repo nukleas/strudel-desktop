@@ -90,193 +90,191 @@ export const { s, sound } = registerControl(['s', 'n', 'gain'], 'sound');
 /**
  * Position in the wavetable of the wavetable oscillator
  *
- * @name wtPos
+ * @name wt
  * @param {number | Pattern} position Position in the wavetable from 0 to 1
  * @synonyms wavetablePosition
  * @example
- * s("squelch").bank("wt_digital").seg(8).note("F1").wtPos("0 0.25 0.5 0.75 1")
+ * s("squelch").bank("wt_digital").seg(8).note("F1").wt("0 0.25 0.5 0.75 1")
  */
-export const { wtPos, wavetablePosition } = registerControl('wtPos', 'wavetablePosition');
+export const { wt, wavetablePosition } = registerControl('wt', 'wavetablePosition');
 
+/**
+ * Amount of envelope applied wavetable oscillator's position envelope
+ *
+ * @name wtenv
+ * @param {number | Pattern} amount between 0 and 1
+ */
+export const { wtenv } = registerControl('wtenv');
 /**
  * Attack time of the wavetable oscillator's position envelope
  *
- * @name wtPosAttack
- * @synonyms wtPosAtt
+ * @name wtattack
+ * @synonyms wtatt
  * @param {number | Pattern} time attack time in seconds
  */
-export const { wtPosAttack, wtPosAtt } = registerControl('wtPosAttack', 'wtPosAtt');
+export const { wtattack, wtatt } = registerControl('wtattack', 'wtatt');
 
 /**
  * Decay time of the wavetable oscillator's position envelope
  *
- * @name wtPosDecay
- * @synonyms wtPosDec
+ * @name wtdecay
+ * @synonyms wtdec
  * @param {number | Pattern} time decay time in seconds
  */
-export const { wtPosDecay, wtPosDec } = registerControl('wtPosDecay', 'wtPosDec');
+export const { wtdecay, wtdec } = registerControl('wtdecay', 'wtdec');
 
 /**
  * Sustain time of the wavetable oscillator's position envelope
  *
- * @name wtPosAttack
- * @synonyms wtPosSus
+ * @name wtsustain
+ * @synonyms wtsus
  * @param {number | Pattern} gain sustain level (0 to 1)
  */
-export const { wtPosSustain, wtPosSus } = registerControl('wtPosSustain', 'wtPosSus');
+export const { wtsustain, wtsus } = registerControl('wtsustain', 'wtsus');
 
 /**
  * Release time of the wavetable oscillator's position envelope
  *
- * @name wtPosRelease
- * @synonyms wtPosRel
+ * @name wtrelease
+ * @synonyms wtrel
  * @param {number | Pattern} time release time in seconds
  */
-export const { wtPosRelease, wtPosRel } = registerControl('wtPosRelease', 'wtPosRel');
+export const { wtrelease, wtrel } = registerControl('wtrelease', 'wtrel');
 
 /**
  * Rate of the LFO for the wavetable oscillator's position
  *
- * @name wtPosRate
+ * @name wtrate
  * @param {number | Pattern} rate rate in hertz
  */
-export const { wtPosRate } = registerControl('wtPosRate');
+export const { wtrate } = registerControl('wtrate');
+/**
+ * cycle synced rate of the LFO for the wavetable oscillator's position
+ *
+ * @name wtsync
+ * @param {number | Pattern} rate rate in cycles
+ */
+export const { wtsync } = registerControl('wtsync');
 
 /**
  * Depth of the LFO for the wavetable oscillator's position
  *
- * @name wtPosDepth
+ * @name wtdepth
  * @param {number | Pattern} depth depth of modulation
  */
-export const { wtPosDepth } = registerControl('wtPosDepth');
-
-/**
- * Whether to sync the LFO for the wavetable oscillator's position
- *
- * @name wtPosSynced
- * @param {number | Pattern} synced Whether to sync the lfo to CPM. > 0.5 will be synced
- */
-export const { wtPosSynced } = registerControl('wtPosSynced');
+export const { wtdepth } = registerControl('wtdepth');
 
 /**
  * Shape of the LFO for the wavetable oscillator's position
  *
- * @name wtPosShape
+ * @name wtshape
  * @param {number | Pattern} shape Shape of the lfo (0, 1, 2, ..)
  */
-export const { wtPosShape } = registerControl('wtPosShape');
+export const { wtshape } = registerControl('wtshape');
 
 /**
  * DC offset of the LFO for the wavetable oscillator's position
  *
- * @name wtPosDCOffset
+ * @name wtdc
  * @param {number | Pattern} dcoffset dc offset. set to 0 for unipolar
  */
-export const { wtPosDCOffset } = registerControl('wtPosDCOffset');
+export const { wtdc } = registerControl('wtdc');
 
 /**
  * Skew of the LFO for the wavetable oscillator's position
  *
- * @name wtPosSkew
+ * @name wtskew
  * @param {number | Pattern} skew How much to bend the LFO shape
  */
-export const { wtPosSkew } = registerControl('wtPosSkew');
+export const { wtskew } = registerControl('wtskew');
 
 /**
  * Amount of warp (alteration of the waveform) to apply to the wavetable oscillator
  *
- * @name wtWarp
+ * @name warp
  * @param {number | Pattern} amount Warp of the wavetable from 0 to 1
  * @synonyms wavetableWarp
  * @example
- * s("basique").bank("wt_digital").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
- *   .wtWarpMode("spin")
+ * s("basique").bank("wt_digital").seg(8).note("F1").warp("0 0.25 0.5 0.75 1")
+ *   .warpmode("spin")
  */
-export const { wtWarp, wavetableWarp } = registerControl('wtWarp', 'wavetableWarp');
+export const { warp, wavetableWarp } = registerControl('warp', 'wavetableWarp');
 
 /**
  * Attack time of the wavetable oscillator's warp envelope
  *
- * @name wtWarpAttack
- * @synonyms wtWarpAtt
+ * @name warpattack
+ * @synonyms warpatt
  * @param {number | Pattern} time attack time in seconds
  */
-export const { wtWarpAttack, wtWarpAtt } = registerControl('wtWarpAttack', 'wtWarpAtt');
+export const { warpattack, warpatt } = registerControl('warpattack', 'warpatt');
 
 /**
  * Decay time of the wavetable oscillator's warp envelope
  *
- * @name wtWarpDecay
- * @synonyms wtWarpDec
+ * @name warpdecay
+ * @synonyms warpdec
  * @param {number | Pattern} time decay time in seconds
  */
-export const { wtWarpDecay, wtWarpDec } = registerControl('wtWarpDecay', 'wtWarpDec');
+export const { warpdecay, warpdec } = registerControl('warpdecay', 'warpdec');
 
 /**
  * Sustain time of the wavetable oscillator's warp envelope
  *
- * @name wtWarpAttack
- * @synonyms wtWarpSus
+ * @name warpsustain
+ * @synonyms warpsus
  * @param {number | Pattern} gain sustain level (0 to 1)
  */
-export const { wtWarpSustain, wtWarpSus } = registerControl('wtWarpSustain', 'wtWarpSus');
+export const { warpsustain, warpsus } = registerControl('warpsustain', 'warpsus');
 
 /**
  * Release time of the wavetable oscillator's warp envelope
  *
- * @name wtWarpRelease
- * @synonyms wtWarpRel
+ * @name warprelease
+ * @synonyms warprel
  * @param {number | Pattern} time release time in seconds
  */
-export const { wtWarpRelease, wtWarpRel } = registerControl('wtWarpRelease', 'wtWarpRel');
+export const { warprelease, warprel } = registerControl('warprelease', 'warprel');
 
 /**
  * Rate of the LFO for the wavetable oscillator's warp
  *
- * @name wtWarpRate
+ * @name warprate
  * @param {number | Pattern} rate rate in hertz
  */
-export const { wtWarpRate } = registerControl('wtWarpRate');
+export const { warprate } = registerControl('warprate');
 
 /**
  * Depth of the LFO for the wavetable oscillator's warp
  *
- * @name wtWarpDepth
+ * @name warpdepth
  * @param {number | Pattern} depth depth of modulation
  */
-export const { wtWarpDepth } = registerControl('wtWarpDepth');
-
-/**
- * Whether to sync the LFO for the wavetable oscillator's warp
- *
- * @name wtWarpSynced
- * @param {number | Pattern} synced Whether to sync the lfo to CPM. > 0.5 will be synced
- */
-export const { wtWarpSynced } = registerControl('wtWarpSynced');
+export const { warpdepth } = registerControl('warpdepth');
 
 /**
  * Shape of the LFO for the wavetable oscillator's warp
  *
- * @name wtWarpShape
+ * @name warpshape
  * @param {number | Pattern} shape Shape of the lfo (0, 1, 2, ..)
  */
-export const { wtWarpShape } = registerControl('wtWarpShape');
+export const { warpshape } = registerControl('warpshape');
 
 /**
  * DC offset of the LFO for the wavetable oscillator's warp
  *
- * @name wtWarpDCOffset
+ * @name warpdc
  * @param {number | Pattern} dcoffset dc offset. set to 0 for unipolar
  */
-export const { wtWarpDCOffset } = registerControl('wtWarpDCOffset');
+export const { warpdc } = registerControl('warpdc');
 
 /**
  * Skew of the LFO for the wavetable oscillator's warp
  *
- * @name wtWarpSkew
+ * @name warpskew
  * @param {number | Pattern} skew How much to bend the LFO shape
  */
-export const { wtWarpSkew } = registerControl('wtWarpSkew');
+export const { warpskew } = registerControl('warpskew');
 
 /**
  * Type of warp (alteration of the waveform) to apply to the wavetable oscillator.
@@ -284,27 +282,43 @@ export const { wtWarpSkew } = registerControl('wtWarpSkew');
  * The current options are: none, asym, bendp, bendm, bendmp, sync, quant, fold, pwm, orbit,
  * spin, chaos, primes, binary, brownian, reciprocal, wormhole, logistic, sigmoid, fractal, flip
  *
- * @name wtWarpMode
+ * @name warpmode
  * @param {number | string | Pattern} mode Warp mode
  * @synonyms wavetableWarpMode
  * @example
- * s("morgana").bank("wt_digital").seg(8).note("F1").wtWarp("0 0.25 0.5 0.75 1")
- *   .wtWarpMode("<asym bendp spin logistic sync wormhole brownian>*2")
+ * s("morgana").bank("wt_digital").seg(8).note("F1").warp("0 0.25 0.5 0.75 1")
+ *   .warpmode("<asym bendp spin logistic sync wormhole brownian>*2")
  *
  */
-export const { wtWarpMode, wavetableWarpMode } = registerControl('wtWarpMode', 'wavetableWarpMode');
+export const { warpmode, wavetableWarpMode } = registerControl('warpmode', 'wavetableWarpMode');
 
 /**
  * Amount of randomness of the initial phase of the wavetable oscillator.
  *
- * @name wtPhaseRand
+ * @name wtphaserand
  * @param {number | Pattern} amount Randomness of the initial phase. Between 0 (not random) and 1 (fully random)
  * @synonyms wavetablePhaseRand
  * @example
- * s("basique").bank("wt_digital").seg(16).wtPhaseRand("<0 1>")
+ * s("basique").bank("wt_digital").seg(16).wtphaserand("<0 1>")
  *
  */
-export const { wtPhaseRand, wavetablePhaseRand } = registerControl('wtPhaseRand', 'wavetablePhaseRand');
+export const { wtphaserand, wavetablePhaseRand } = registerControl('wtphaserand', 'wavetablePhaseRand');
+
+/**
+ * Amount of envelope applied wavetable oscillator's position envelope
+ *
+ * @name warpenv
+ * @param {number | Pattern} amount between 0 and 1
+ */
+export const { warpenv } = registerControl('warpenv');
+
+/**
+ * cycle synced rate of the LFO for the wavetable warp position
+ *
+ * @name warpsync
+ * @param {number | Pattern} rate rate in cycles
+ */
+export const { warpsync } = registerControl('warpsync');
 
 /**
  * Define a custom webaudio node to use as a sound source.
