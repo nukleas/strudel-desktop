@@ -1054,7 +1054,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       { name: 'warp', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'warpMode', defaultValue: 0 },
       { name: 'voices', defaultValue: 1, minValue: 1, maxValue: 32 },
-      { name: 'spread', defaultValue: 0.18, minValue: 0, maxValue: 1 },
+      { name: 'spread', defaultValue: 0.4, minValue: 0, maxValue: 1 },
       { name: 'phaserand', defaultValue: 0, minValue: 0, maxValue: 1 },
     ];
   }

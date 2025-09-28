@@ -221,8 +221,6 @@ export const tables = async (url, frameLen, json, options = {}) => {
     });
 };
 
-
-
 export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   const { s, n = 0, duration } = value;
   const ac = getAudioContext();
@@ -270,43 +268,57 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
     wtrate = cps * value.wtsync;
   }
 
-  const wtPosModulators = applyParameterModulators(ac, positionParam, t, endWithRelease, {
-    offset: value.wt,
-    amount: value.wtenv,
-    defaultAmount: 0.5,  
-    shape: 'linear',
-    values: posADSRParams,
-    holdEnd,
-    defaultValues: [0, 0.5, 0, 0.1],
-  }, {
-    frequency: wtrate,
-    depth: value.wtdepth,
-    defaultDepth: 0.5,
-    shape: value.wtshape,
-    skew: value.wtskew,
-    dcoffset: value.wtdc ?? 0,
-  });
+  const wtPosModulators = applyParameterModulators(
+    ac,
+    positionParam,
+    t,
+    endWithRelease,
+    {
+      offset: value.wt,
+      amount: value.wtenv,
+      defaultAmount: 0.5,
+      shape: 'linear',
+      values: posADSRParams,
+      holdEnd,
+      defaultValues: [0, 0.5, 0, 0.1],
+    },
+    {
+      frequency: wtrate,
+      depth: value.wtdepth,
+      defaultDepth: 0.5,
+      shape: value.wtshape,
+      skew: value.wtskew,
+      dcoffset: value.wtdc ?? 0,
+    },
+  );
 
   let warprate = value.warprate;
   if (value.warpsync != null) {
     warprate = warprate = cps * value.warpsync;
   }
-  const wtWarpModulators = applyParameterModulators(ac, warpParam, t, endWithRelease, {
-    offset: value.warp,
-    amount: value.warpenv,
-    defaultAmount: 0.5,  
-    shape: 'linear',
-    values: warpADSRParams,
-    holdEnd,
-    defaultValues: [0, 0.5, 0, 0.1],
-  }, {
-    frequency: warprate,
-    depth: value.warpdepth,
-    defaultDepth: 0.5,
-    shape: value.warpshape,
-    skew: value.warpskew,
-    dcoffset: value.warpdc ?? 0,
-  });
+  const wtWarpModulators = applyParameterModulators(
+    ac,
+    warpParam,
+    t,
+    endWithRelease,
+    {
+      offset: value.warp,
+      amount: value.warpenv,
+      defaultAmount: 0.5,
+      shape: 'linear',
+      values: warpADSRParams,
+      holdEnd,
+      defaultValues: [0, 0.5, 0, 0.1],
+    },
+    {
+      frequency: warprate,
+      depth: value.warpdepth,
+      defaultDepth: 0.5,
+      shape: value.warpshape,
+      skew: value.warpskew,
+      dcoffset: value.warpdc ?? 0,
+    },
+  );
   const vibratoOscillator = getVibratoOscillator(source.detune, value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);

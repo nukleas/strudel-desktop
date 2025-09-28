@@ -155,37 +155,37 @@ export const getADSRValues = (params, curve = 'linear', defaultValues) => {
 
 // helper utility for applying standard modulators to a parameter
 export function applyParameterModulators(audioContext, param, start, end, envelopeValues, lfoValues) {
-  let { amount,offset,defaultAmount = 1, curve = 'linear', values, holdEnd, defaultValues } = envelopeValues;
-  
+  let { amount, offset, defaultAmount = 1, curve = 'linear', values, holdEnd, defaultValues } = envelopeValues;
+
   if (amount == null) {
-    const hasADSRParams = values.some(p => p != null);
+    const hasADSRParams = values.some((p) => p != null);
     amount = hasADSRParams ? defaultAmount : 0;
   }
 
   const min = offset ?? 0;
-  const max = amount + min
-  const diff = Math.abs(max - min)
+  const max = amount + min;
+  const diff = Math.abs(max - min);
   if (diff) {
     const [attack, decay, sustain, release] = getADSRValues(values, curve, defaultValues);
     getParamADSR(param, attack, decay, sustain, release, min, max, start, holdEnd, curve);
   }
-  let lfo
-  let {defaultDepth = 1,depth, dcoffset, ...getLfoInputs} = lfoValues
-  
+  let lfo;
+  let { defaultDepth = 1, depth, dcoffset, ...getLfoInputs } = lfoValues;
+
   if (depth == null) {
-    const hasLFOParams = Object.values(getLfoInputs).some(v => v != null)
+    const hasLFOParams = Object.values(getLfoInputs).some((v) => v != null);
     depth = hasLFOParams ? defaultDepth : 0;
   }
   if (depth) {
     lfo = getLfo(audioContext, start, end, {
       depth,
       dcoffset,
-      ...getLfoInputs
+      ...getLfoInputs,
     });
     lfo.connect(param);
   }
 
-  return { lfo, disconnect: () => lfo?.disconnect() }
+  return { lfo, disconnect: () => lfo?.disconnect() };
 }
 
 export function createFilter(context, type, frequency, Q, att, dec, sus, rel, fenv, start, end, fanchor, model, drive) {
