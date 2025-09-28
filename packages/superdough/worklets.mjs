@@ -1054,7 +1054,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       { name: 'warp', defaultValue: 0, minValue: 0, maxValue: 1 },
       { name: 'warpMode', defaultValue: 0 },
       { name: 'voices', defaultValue: 1, minValue: 1, maxValue: 32 },
-      { name: 'spread', defaultValue: 0.18, minValue: 0, maxValue: 1 },
+      { name: 'spread', defaultValue: 0.7, minValue: 0, maxValue: 1 },
       { name: 'phaserand', defaultValue: 0, minValue: 0, maxValue: 1 },
     ];
   }
@@ -1239,7 +1239,6 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     }
     const outL = outputs[0][0];
     const outR = outputs[0][1] || outputs[0][0];
-    const gainAdjustment = 0.3;
 
     if (!this.tables) {
       outL.fill(0);
@@ -1256,13 +1255,13 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       const warpAmount = pv(parameters.warp, i);
       const warpMode = pv(parameters.warpMode, i);
       const voices = pv(parameters.voices, i);
-      const spread = voices > 1 ? pv(parameters.spread, i) : 0;
       const phaseRand = pv(parameters.phaserand, i);
+      const spread = voices > 1 ? pv(parameters.spread, i) : 0;
       const gain1 = Math.sqrt(0.5 - 0.5 * spread);
       const gain2 = Math.sqrt(0.5 + 0.5 * spread);
       let f = pv(parameters.frequency, i);
       f = applySemitoneDetuneToFrequency(f, detune / 100); // overall detune
-      const normalizer = 0.3 / voices;
+      const normalizer = 0.3 / Math.sqrt(voices);
       for (let n = 0; n < voices; n++) {
         const isOdd = (n & 1) == 1;
         let gainL = gain1;

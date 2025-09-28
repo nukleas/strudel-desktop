@@ -555,7 +555,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
       audioNodes.forEach((n) => n?.disconnect());
       activeSoundSources.delete(chainID);
     };
-    const soundHandle = await onTrigger(t, value, onEnded);
+    const soundHandle = await onTrigger(t, value, onEnded, cps);
 
     if (soundHandle) {
       sourceNode = soundHandle.node;
