@@ -319,7 +319,7 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
       dcoffset: value.warpdc ?? 0,
     },
   );
-  const vibratoOscillator = getVibratoOscillator(source.detune, value, t);
+  const vibratoOscillator = getVibratoOscillator(source.parameters.get('detune'), value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);
   getParamADSR(node.gain, attack, decay, sustain, release, 0, 1, t, holdEnd, 'linear');
