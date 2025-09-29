@@ -5,7 +5,6 @@ import {
   destroyAudioWorkletNode,
   getADSRValues,
   getFrequencyFromValue,
-  getLfo,
   getParamADSR,
   getPitchEnvelope,
   getVibratoOscillator,
@@ -14,7 +13,6 @@ import {
 } from './helpers.mjs';
 import { logger } from './logger.mjs';
 
-const WT_MAX_MIP_LEVELS = 6;
 export const Warpmode = Object.freeze({
   NONE: 0,
   ASYM: 1,
@@ -50,25 +48,7 @@ async function loadWavetableFrames(url, label, frameLen = 2048) {
     const start = i * frameLen;
     frames[i] = ch0.subarray(start, start + frameLen);
   }
-
-  // build mipmaps
-  const mipmaps = [frames];
-  let levelFrames = frames;
-  for (let level = 1; level < WT_MAX_MIP_LEVELS; level++) {
-    const prevLen = levelFrames[0].length;
-    if (prevLen <= 32) break;
-    const nextLen = prevLen >> 1;
-    const next = levelFrames.map((src) => {
-      const out = new Float32Array(nextLen);
-      for (let j = 0; j < nextLen; j++) {
-        out[j] = (src[2 * j] + src[2 * j + 1]) / 2;
-      }
-      return out;
-    });
-    mipmaps.push(next);
-    levelFrames = next;
-  }
-  return { frames, mipmaps, frameLen, numFrames };
+  return { frames, frameLen, numFrames };
 }
 
 const loadCache = {};
@@ -222,7 +202,7 @@ export const tables = async (url, frameLen, json, options = {}) => {
 };
 
 export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
-  const { s, n = 0, duration } = value;
+  const { s, n = 0, duration, clip } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
   let { warpmode } = value;
@@ -232,7 +212,10 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   const frequency = getFrequencyFromValue(value);
   const { url, label } = getCommonSampleInfo(value, tables);
   const payload = await loadWavetableFrames(url, label, frameLen);
-  const holdEnd = t + duration;
+  let holdEnd = t + duration;
+  if (clip !== undefined) {
+    holdEnd = Math.min(t + clip * duration, holdEnd);
+  }
   const endWithRelease = holdEnd + release;
   const envEnd = endWithRelease + 0.01;
   const source = getWorklet(
@@ -252,7 +235,7 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
     },
     { outputChannelCount: [2] },
   );
-  source.port.postMessage({ type: 'tables', payload });
+  source.port.postMessage({ type: 'table', payload });
   if (ac.currentTime > t) {
     logger(`[wavetable] still loading sound "${s}:${n}"`, 'highlight');
     return;
@@ -328,7 +311,6 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   const timeoutNode = webAudioTimeout(
     ac,
     () => {
-      source.disconnect();
       destroyAudioWorkletNode(source);
       vibratoOscillator?.stop();
       node.disconnect();

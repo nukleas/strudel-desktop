@@ -137,7 +137,7 @@ class LFOProcessor extends AudioWorkletProcessor {
     }
   }
 
-  process(inputs, outputs, parameters) {
+  process(_inputs, outputs, parameters) {
     const begin = parameters['begin'][0];
     if (currentTime >= parameters.end[0]) {
       return false;
@@ -510,7 +510,7 @@ class SuperSawOscillatorProcessor extends AudioWorkletProcessor {
       },
     ];
   }
-  process(input, outputs, params) {
+  process(_input, outputs, params) {
     if (currentTime <= params.begin[0]) {
       return true;
     }
@@ -1061,7 +1061,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
 
   constructor(options) {
     super(options);
-    this.tables = null;
+    this.frames = null;
     this.frameLen = 0;
     this.numFrames = 0;
     this.phase = [];
@@ -1069,21 +1069,12 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
 
     this.port.onmessage = (e) => {
       const { type, payload } = e.data || {};
-      if (type === 'tables') {
-        this.tables = payload.mipmaps;
+      if (type === 'table') {
+        this.frames = payload.frames;
         this.frameLen = payload.frameLen;
-        this.numFrames = this.tables[0].length;
+        this.numFrames = this.frames.length;
       }
     };
-  }
-
-  _chooseMip(dphi) {
-    const approxHarm = Math.min(64, 1 / Math.max(1e-6, dphi));
-    let level = 0;
-    while (level + 1 < (this.tables?.length || 1) && approxHarm < this.tables[level][0].length / 8) {
-      level++;
-    }
-    return level;
   }
 
   _mirror(x) {
@@ -1222,11 +1213,13 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
   }
 
   _sampleFrame(frame, phase) {
-    const pos = phase * frame.length;
+    const len = frame.length;
+    const pos = phase * len;
     const i = pos | 0;
     const frac = pos - i;
-    const a = frame[i % frame.length];
-    const b = frame[(i + 1) % frame.length];
+    const a = frame[i];
+    const i1 = i + 1 < len ? i + 1 : 0; // fast wrap
+    const b = frame[i1];
     return a + (b - a) * frac;
   }
 
@@ -1240,23 +1233,23 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     const outL = outputs[0][0];
     const outR = outputs[0][1] || outputs[0][0];
 
-    if (!this.tables) {
+    if (!this.frames) {
       outL.fill(0);
       if (outR !== outL) outR.set(outL);
       return true;
     }
-
+    const invSR = 1 / sampleRate;
     for (let i = 0; i < outL.length; i++) {
       const detune = pv(parameters.detune, i);
-      const tablePos = pv(parameters.position, i);
+      const tablePos = clamp(pv(parameters.position, i), 0, 1);
       const idx = tablePos * (this.numFrames - 1);
       const fIdx = idx | 0;
       const frac = idx - fIdx;
-      const warpAmount = pv(parameters.warp, i);
+      const warpAmount = clamp(pv(parameters.warp, i), 0, 1);
       const warpMode = pv(parameters.warpMode, i);
       const voices = pv(parameters.voices, i);
-      const phaseRand = pv(parameters.phaserand, i);
-      const spread = voices > 1 ? pv(parameters.spread, i) : 0;
+      const phaseRand = clamp(pv(parameters.phaserand, i), 0, 1);
+      const spread = voices > 1 ? clamp(pv(parameters.spread, i), 0, 1) : 0;
       const gain1 = Math.sqrt(0.5 - 0.5 * spread);
       const gain2 = Math.sqrt(0.5 + 0.5 * spread);
       let f = pv(parameters.frequency, i);
@@ -1272,15 +1265,13 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
           gainR = gain1;
         }
         const fVoice = applySemitoneDetuneToFrequency(f, getUnisonDetune(voices, detune, n)); // voice detune
-        const dPhase = fVoice / sampleRate;
-        const level = this._chooseMip(dPhase);
-        const table = this.tables[level];
+        const dPhase = fVoice * invSR;
 
         // warp phase then sample
         this.phase[n] = this.phase[n] ?? Math.random() * phaseRand;
         const ph = this._warpPhase(this.phase[n], warpAmount, warpMode);
-        const s0 = this._sampleFrame(table[fIdx], ph);
-        const s1 = this._sampleFrame(table[Math.min(this.numFrames - 1, fIdx + 1)], ph);
+        const s0 = this._sampleFrame(this.frames[fIdx], ph);
+        const s1 = this._sampleFrame(this.frames[Math.min(this.numFrames - 1, fIdx + 1)], ph);
         let s = s0 + (s1 - s0) * frac;
         if (warpMode === WarpMode.FLIP && this.phase[n] < warpAmount) {
           s = -s;
