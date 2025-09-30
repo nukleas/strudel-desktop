@@ -135,7 +135,7 @@ export class SuperdoughOutput {
   }
 
   reset() {
-    this.disconnect()
+    this.disconnect();
     this.initializeAudio();
   }
   disconnect() {
@@ -174,7 +174,7 @@ export class SuperdoughAudioController {
     Array.from(this.nodes).forEach((node) => {
       node.disconnect();
     });
-    this.nodes = {}
+    this.nodes = {};
     this.output.reset();
   }
 
