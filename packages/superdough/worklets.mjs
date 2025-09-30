@@ -1065,7 +1065,6 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     this.frameLen = 0;
     this.numFrames = 0;
     this.phase = [];
-    this.syncRatio = 1;
 
     this.port.onmessage = (e) => {
       const { type, payload } = e.data || {};
