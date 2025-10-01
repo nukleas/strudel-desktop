@@ -3594,8 +3594,9 @@ export const morph = (frompat, topat, bypat) => {
  *
  */
 
-const algoNames = ['scurve', 'soft', 'hard', 'cubic', 'diode', 'asym', 'fold', 'sinefold', 'chebyshev'];
-for (const name of algoNames) {
+const distAlgoNames = ['scurve', 'soft', 'hard', 'cubic', 'diode', 'asym', 'fold', 'sinefold', 'chebyshev'];
+for (const name of distAlgoNames) {
+  // Add aliases for distortion algorithms
   Pattern.prototype[name] = function (args) {
     const argsPat = reify(args).fmap((v) => (Array.isArray(v) ? [...v, name] : [v, 1, name]));
     return this.distort(argsPat);
