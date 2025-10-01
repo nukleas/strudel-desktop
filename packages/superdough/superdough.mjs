@@ -9,7 +9,7 @@ import './reverb.mjs';
 import './vowel.mjs';
 import { nanFallback, _mod, cycleToSeconds } from './util.mjs';
 import workletsUrl from './worklets.mjs?audioworklet';
-import { createFilter, gainNode, getCompressor, getDistortion, getWorklet, effectSend } from './helpers.mjs';
+import { createFilter, gainNode, getCompressor, getDistortion, getLfo, getWorklet, effectSend } from './helpers.mjs';
 import { map } from 'nanostores';
 import { logger } from './logger.mjs';
 import { loadBuffer } from './sampler.mjs';
@@ -28,13 +28,6 @@ export function setMaxPolyphony(polyphony) {
 let multiChannelOrbits = false;
 export function setMultiChannelOrbits(bool) {
   multiChannelOrbits = bool == true;
-}
-
-function getModulationShapeInput(val) {
-  if (typeof val === 'number') {
-    return val % 5;
-  }
-  return { tri: 0, triangle: 0, sine: 1, ramp: 2, saw: 3, square: 4 }[val] ?? 0;
 }
 
 export const soundMap = map();
@@ -296,28 +289,6 @@ export function connectToDestination(input, channels) {
   controller.output.connectToDestination(input, channels);
 }
 
-export function getLfo(audioContext, begin, end, properties = {}) {
-  const { shape = 0, ...props } = properties;
-  const { dcoffset = -0.5, depth = 1 } = properties;
-  const lfoprops = {
-    frequency: 1,
-    depth,
-    skew: 0.5,
-    phaseoffset: 0,
-    time: begin,
-    begin,
-    end,
-    shape: getModulationShapeInput(shape),
-    dcoffset,
-    min: dcoffset * depth,
-    max: dcoffset * depth + depth,
-    curve: 1,
-    ...props,
-  };
-
-  return getWorklet(audioContext, 'lfo-processor', lfoprops);
-}
-
 function getPhaser(time, end, frequency = 1, depth = 0.5, centerFrequency = 1000, sweep = 2000) {
   const ac = getAudioContext();
   const lfoGain = getLfo(ac, time, end, { frequency, depth: sweep * 2 });
@@ -567,7 +538,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
       audioNodes.forEach((n) => n?.disconnect());
       activeSoundSources.delete(chainID);
     };
-    const soundHandle = await onTrigger(t, value, onEnded);
+    const soundHandle = await onTrigger(t, value, onEnded, cps);
 
     if (soundHandle) {
       sourceNode = soundHandle.node;
@@ -662,6 +633,14 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
 
   if (tremolosync != null) {
     tremolo = cps * tremolosync;
+  }
+
+  if (value.wtPosSynced != null) {
+    value.wtPosRate /= cps;
+  }
+
+  if (value.wtWarpSynced != null) {
+    value.wtWarpRate /= cps;
   }
 
   if (tremolo !== undefined) {

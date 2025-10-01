@@ -1,9 +1,11 @@
 import { getAudioContext, registerSound } from './index.mjs';
-import { getSoundIndex, valueToMidi } from './util.mjs';
+import { getCommonSampleInfo } from './util.mjs';
 import {
+  applyParameterModulators,
   destroyAudioWorkletNode,
   getADSRValues,
   getFrequencyFromValue,
+  getLfo,
   getParamADSR,
   getPitchEnvelope,
   getVibratoOscillator,
@@ -13,7 +15,7 @@ import {
 import { logger } from './logger.mjs';
 
 const WT_MAX_MIP_LEVELS = 6;
-export const WarpMode = Object.freeze({
+export const Warpmode = Object.freeze({
   NONE: 0,
   ASYM: 1,
   MIRROR: 2,
@@ -38,12 +40,11 @@ export const WarpMode = Object.freeze({
   FLIP: 21,
 });
 
-async function loadWavetableFrames(url, label, frameLen = 256) {
-  const ac = getAudioContext();
-  const buf = await loadBuffer(url, ac, label);
+async function loadWavetableFrames(url, label, frameLen = 2048) {
+  const buf = await loadBuffer(url, label);
   const ch0 = buf.getChannelData(0);
   const total = ch0.length;
-  const numFrames = Math.floor(total / frameLen);
+  const numFrames = Math.max(1, Math.floor(total / frameLen));
   const frames = new Array(numFrames);
   for (let i = 0; i < numFrames; i++) {
     const start = i * frameLen;
@@ -86,17 +87,37 @@ function humanFileSize(bytes, si) {
   return bytes.toFixed(1) + ' ' + units[u];
 }
 
-export function getTableInfo(hapValue, tableUrls) {
-  const { s, n = 0 } = hapValue;
-  let midi = valueToMidi(hapValue, 36);
-  let transpose = midi - 36; // C3 is middle C;
-  const index = getSoundIndex(n, tableUrls.length);
-  const tableUrl = tableUrls[index];
-  const label = `${s}:${index}`;
-  return { transpose, tableUrl, index, midi, label };
+// Extract the sample rate of a .wav file
+function parseWavSampleRate(arrBuf) {
+  const dv = new DataView(arrBuf);
+  // Header is "RIFF<chunk size (4 bytes)>WAVE", so 12 bytes
+  let p = 12;
+  // Look through chunks for the format header
+  // (they will always have an 8 byte header (id and size) followed by a payload)
+  while (p + 8 <= dv.byteLength) {
+    // Parse id
+    const id = String.fromCharCode(dv.getUint8(p), dv.getUint8(p + 1), dv.getUint8(p + 2), dv.getUint8(p + 3));
+    // Parse chunk size
+    const size = dv.getUint32(p + 4, true);
+    if (id === 'fmt ') {
+      // The format chunk contains the sample rate after
+      // 8 bytes of header, 2 bytes of format tag, 2 bytes of num channels
+      // (for a total of 12)
+      return dv.getUint32(p + 12, true);
+    }
+    // Advance to next chunk
+    p += 8 + size + (size & 1);
+  }
+  return null;
 }
 
-const loadBuffer = (url, ac, label) => {
+async function decodeAtNativeRate(arr) {
+  const sr = parseWavSampleRate(arr) || 44100;
+  const tempAC = new OfflineAudioContext(1, 1, sr);
+  return await tempAC.decodeAudioData(arr);
+}
+
+const loadBuffer = (url, label) => {
   url = url.replace('#', '%23');
   if (!loadCache[url]) {
     logger(`[wavetable] load table ${label}..`, 'load-table', { url });
@@ -107,7 +128,7 @@ const loadBuffer = (url, ac, label) => {
         const took = Date.now() - timestamp;
         const size = humanFileSize(res.byteLength);
         logger(`[wavetable] load table ${label}... done! loaded ${size} in ${took}ms`, 'loaded-table', { url });
-        const decoded = await ac.decodeAudioData(res);
+        const decoded = await decodeAtNativeRate(res);
         return decoded;
       });
   }
@@ -127,34 +148,55 @@ function githubPath(base, subpath = '') {
   return `https://raw.githubusercontent.com/${path}/${subpath}`;
 }
 
-const _processTables = (json, baseUrl, frameLen) => {
-  return Object.entries(json).forEach(([key, value]) => {
-    if (typeof value === 'string') {
-      value = [value];
+const _processTables = (json, baseUrl, frameLen, options = {}) => {
+  baseUrl = json._base || baseUrl;
+  return Object.entries(json).forEach(([key, tables]) => {
+    if (key === '_base') return false;
+    if (typeof tables === 'string') {
+      tables = [tables];
     }
-    if (typeof value !== 'object') {
+    if (typeof tables !== 'object') {
       throw new Error('wrong json format for ' + key);
     }
-    baseUrl = value._base || baseUrl;
-    if (baseUrl.startsWith('github:')) {
-      baseUrl = githubPath(baseUrl, '');
+    let resolvedUrl = baseUrl;
+    if (resolvedUrl.startsWith('github:')) {
+      resolvedUrl = githubPath(resolvedUrl, '');
     }
-    value = value.map((v) => baseUrl + v);
-    registerSound(key, (t, hapValue, onended) => onTriggerSynth(t, hapValue, onended, value, frameLen), {
-      type: 'wavetable',
-      tables: value,
-      baseUrl,
-      frameLen,
-    });
+    tables = tables
+      .map((t) => resolvedUrl + t)
+      .filter((t) => {
+        if (!t.toLowerCase().endsWith('.wav')) {
+          logger(`[wavetable] skipping ${t} -- wavetables must be ".wav" format`);
+          return false;
+        }
+        return true;
+      });
+    if (tables.length) {
+      registerWaveTable(key, tables, { baseUrl, frameLen });
+    }
   });
 };
+
+export function registerWaveTable(key, tables, params) {
+  registerSound(
+    key,
+    (t, hapValue, onended, cps) => {
+      return onTriggerSynth(t, hapValue, onended, tables, cps, params?.frameLen ?? 2048);
+    },
+    {
+      type: 'wavetable',
+      tables,
+      ...params,
+    },
+  );
+}
 
 /**
  * Loads a collection of wavetables to use with `s`
  *
  * @name tables
  */
-export const tables = async (url, frameLen, json) => {
+export const tables = async (url, frameLen, json, options = {}) => {
   if (json !== undefined) return _processTables(json, url, frameLen);
   if (url.startsWith('github:')) {
     url = githubPath(url, 'strudel.json');
@@ -172,26 +214,27 @@ export const tables = async (url, frameLen, json) => {
   }
   return fetch(url)
     .then((res) => res.json())
-    .then((json) => _processTables(json, url, frameLen))
+    .then((json) => _processTables(json, url, frameLen, options))
     .catch((error) => {
       console.error(error);
       throw new Error(`error loading "${url}"`);
     });
 };
 
-async function onTriggerSynth(t, value, onended, bank, frameLen) {
+export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   const { s, n = 0, duration } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
-  let { wtWarpMode } = value;
-  if (typeof wtWarpMode === 'string') {
-    wtWarpMode = WarpMode[wtWarpMode.toUpperCase()] ?? WarpMode.NONE;
+  let { warpmode } = value;
+  if (typeof warpmode === 'string') {
+    warpmode = Warpmode[warpmode.toUpperCase()] ?? Warpmode.NONE;
   }
   const frequency = getFrequencyFromValue(value);
-  const { tableUrl, label } = getTableInfo(value, bank);
-  const payload = await loadWavetableFrames(tableUrl, label, frameLen);
+  const { url, label } = getCommonSampleInfo(value, tables);
+  const payload = await loadWavetableFrames(url, label, frameLen);
   const holdEnd = t + duration;
-  const envEnd = holdEnd + release + 0.01;
+  const endWithRelease = holdEnd + release;
+  const envEnd = endWithRelease + 0.01;
   const source = getWorklet(
     ac,
     'wavetable-oscillator-processor',
@@ -200,12 +243,12 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
       end: envEnd,
       frequency,
       detune: value.detune,
-      position: value.wtPos,
-      warp: value.wtWarp,
-      warpMode: wtWarpMode,
-      voices: value.unison,
+      position: value.wt,
+      warp: value.warp,
+      warpMode: warpmode,
+      voices: Math.max(value.unison ?? 1, 1),
       spread: value.spread,
-      phaserand: value.wtPhaseRand,
+      phaserand: (value.wtphaserand ?? value.unison > 1) ? 1 : 0,
     },
     { outputChannelCount: [2] },
   );
@@ -214,11 +257,73 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
     logger(`[wavetable] still loading sound "${s}:${n}"`, 'highlight');
     return;
   }
-  const vibratoOscillator = getVibratoOscillator(source.detune, value, t);
+  const posADSRParams = [value.wtattack, value.wtdecay, value.wtsustain, value.wtrelease];
+  const warpADSRParams = [value.warpattack, value.warpdecay, value.warpsustain, value.warprelease];
+  const wtParams = source.parameters;
+  const positionParam = wtParams.get('position');
+  const warpParam = wtParams.get('warp');
+
+  let wtrate = value.wtrate;
+  if (value.wtsync != null) {
+    wtrate = cps * value.wtsync;
+  }
+
+  const wtPosModulators = applyParameterModulators(
+    ac,
+    positionParam,
+    t,
+    endWithRelease,
+    {
+      offset: value.wt,
+      amount: value.wtenv,
+      defaultAmount: 0.5,
+      shape: 'linear',
+      values: posADSRParams,
+      holdEnd,
+      defaultValues: [0, 0.5, 0, 0.1],
+    },
+    {
+      frequency: wtrate,
+      depth: value.wtdepth,
+      defaultDepth: 0.5,
+      shape: value.wtshape,
+      skew: value.wtskew,
+      dcoffset: value.wtdc ?? 0,
+    },
+  );
+
+  let warprate = value.warprate;
+  if (value.warpsync != null) {
+    warprate = warprate = cps * value.warpsync;
+  }
+  const wtWarpModulators = applyParameterModulators(
+    ac,
+    warpParam,
+    t,
+    endWithRelease,
+    {
+      offset: value.warp,
+      amount: value.warpenv,
+      defaultAmount: 0.5,
+      shape: 'linear',
+      values: warpADSRParams,
+      holdEnd,
+      defaultValues: [0, 0.5, 0, 0.1],
+    },
+    {
+      frequency: warprate,
+      depth: value.warpdepth,
+      defaultDepth: 0.5,
+      shape: value.warpshape,
+      skew: value.warpskew,
+      dcoffset: value.warpdc ?? 0,
+    },
+  );
+  const vibratoOscillator = getVibratoOscillator(source.parameters.get('detune'), value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);
   getParamADSR(node.gain, attack, decay, sustain, release, 0, 1, t, holdEnd, 'linear');
-  getPitchEnvelope(source.detune, value, t, holdEnd);
+  getPitchEnvelope(source.parameters.get('detune'), value, t, holdEnd);
   const handle = { node, source };
   const timeoutNode = webAudioTimeout(
     ac,
@@ -227,6 +332,8 @@ async function onTriggerSynth(t, value, onended, bank, frameLen) {
       destroyAudioWorkletNode(source);
       vibratoOscillator?.stop();
       node.disconnect();
+      wtPosModulators?.disconnect();
+      wtWarpModulators?.disconnect();
       onended();
     },
     t,

@@ -1,5 +1,5 @@
 import { clamp } from './util.mjs';
-import { registerSound, soundMap, getLfo } from './superdough.mjs';
+import { registerSound, soundMap } from './superdough.mjs';
 import { getAudioContext } from './audioContext.mjs';
 import {
   applyFM,
@@ -7,6 +7,7 @@ import {
   gainNode,
   getADSRValues,
   getFrequencyFromValue,
+  getLfo,
   getParamADSR,
   getPitchEnvelope,
   getVibratoOscillator,
