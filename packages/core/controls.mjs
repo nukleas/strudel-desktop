@@ -1892,7 +1892,9 @@ export const { shape } = registerControl(['shape', 'shapevol']);
  *
  * @name distort
  * @synonyms dist
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ * @param {number | string | Pattern} type type of distortion to apply
  * @example
  * s("bd sd [~ bd] sd,hh*8").distort("<0 2 3 10:.5>")
  * @example
@@ -1908,7 +1910,7 @@ export const { distort, dist } = registerControl(['distort', 'distortvol', 'dist
  *
  * @name distortvol
  * @synonyms distvol
- * @param {number | Pattern} type
+ * @param {number | Pattern} volume linear postgain of the distortion
  * @example
  * s("bd*4").bank("tr909").distort(2).distortvol(0.8)
  */
@@ -1919,7 +1921,7 @@ export const { distortvol } = registerControl('distortvol', 'distvol');
  *
  * @name distorttype
  * @synonyms disttype
- * @param {number | string | Pattern} type
+ * @param {number | string | Pattern} type type of distortion to apply
  * @example
  * s("bd*4").bank("tr909").distort(2).distorttype("<0 1 2>")
  *

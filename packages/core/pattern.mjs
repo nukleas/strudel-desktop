@@ -3541,59 +3541,66 @@ export const morph = (frompat, topat, bypat) => {
  * Soft-clipping distortion
  *
  * @name soft
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
 /**
  * Hard-clipping distortion
  *
  * @name hard
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
 /**
  * Cubic polynomial distortion
  *
  * @name cubic
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
 /**
  * Diode-emulating distortion
  *
  * @name diode
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
 /**
  * Asymmetrical diode distortion
  *
  * @name asym
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
 /**
  * Wavefolding distortion
  *
  * @name fold
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
 /**
  * Wavefolding distortion composed with sinusoid
  *
  * @name sinefold
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
 /**
  * Distortion via Chebyshev polynomials
  *
  * @name chebyshev
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
  *
  */
-
 const distAlgoNames = ['scurve', 'soft', 'hard', 'cubic', 'diode', 'asym', 'fold', 'sinefold', 'chebyshev'];
 for (const name of distAlgoNames) {
   // Add aliases for distortion algorithms
