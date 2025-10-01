@@ -3536,3 +3536,21 @@ export const morph = (frompat, topat, bypat) => {
   bypat = reify(bypat);
   return frompat.innerBind((from) => topat.innerBind((to) => bypat.innerBind((by) => _morph(from, to, by))));
 };
+
+/**
+ * Wavefolding distortion
+ *
+ * @name fold
+ * @param {number | Pattern} distortion
+ *
+ */
+export const fold = register('fold', function (amt, vol = 1, pat) {
+  return pat.withvValue((v) => {
+    return {
+      ...v,
+      distortion: amt,
+      distortvol: vol,
+      distorttype: 'fold',
+    };
+  }).innerJoin();
+});

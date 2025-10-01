@@ -1,5 +1,5 @@
-import { noteToMidi, valueToMidi, getSoundIndex, getCommonSampleInfo } from './util.mjs';
-import { registerSound, registerWavetable } from './index.mjs';
+import { getCommonSampleInfo } from './util.mjs';
+import { registerSound, registerWaveTable } from './index.mjs';
 import { getAudioContext } from './audioContext.mjs';
 import { getADSRValues, getParamADSR, getPitchEnvelope, getVibratoOscillator } from './helpers.mjs';
 import { logger } from './logger.mjs';

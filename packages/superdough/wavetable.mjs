@@ -5,7 +5,6 @@ import {
   destroyAudioWorkletNode,
   getADSRValues,
   getFrequencyFromValue,
-  getLfo,
   getParamADSR,
   getPitchEnvelope,
   getVibratoOscillator,

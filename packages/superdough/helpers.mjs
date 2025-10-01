@@ -475,6 +475,7 @@ export const getDistortionAlgorithm = (algo) => {
 };
 
 export const getDistortion = (distort, postgain, algorithm) => {
+  debugger;
   return getWorklet(getAudioContext(), 'distort-processor', { distort, postgain }, { processorOptions: { algorithm } });
 };
 
