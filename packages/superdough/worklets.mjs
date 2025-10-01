@@ -1043,6 +1043,7 @@ function brownian(x, oct = 4) {
   return (sum / norm) * 2 - 1;
 }
 
+const tablesCache = {};
 class WavetableOscillatorProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [
@@ -1061,7 +1062,6 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
 
   constructor(options) {
     super(options);
-    this.frames = null;
     this.frameLen = 0;
     this.numFrames = 0;
     this.phase = [];
@@ -1069,9 +1069,28 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (e) => {
       const { type, payload } = e.data || {};
       if (type === 'table') {
-        this.frames = payload.frames;
+        const key = payload.key;
         this.frameLen = payload.frameLen;
-        this.numFrames = this.frames.length;
+        if (!tablesCache[key]) {
+          const tables = [payload.frames];
+          let table = tables[0];
+          for (let level = 1; level < 1; level++) {
+            const nextLen = table.length >> 1;
+            const nextTable = table.map((frame) => {
+              const avg = new Float32Array(nextLen);
+              for (let i = 0; i < nextLen; i++) {
+                avg[i] = (frame[2 * i] + frame[2 * i + 1]) / 2;
+              }
+              return avg;
+            });
+            tables.push(nextTable);
+            table = nextTable;
+            if (nextLen <= 32) break;
+          }
+          tablesCache[key] = tables;
+        }
+        this.tables = tablesCache[key];
+        this.numFrames = this.tables[0].length;
       }
     };
   }
@@ -1222,6 +1241,15 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     return a + (b - a) * frac;
   }
 
+  _chooseMip(dphi) {
+    const approxHarm = clamp(dphi, 1e-6, 64);
+    let level = 0;
+    while (level + 1 < (this.tables?.length || 1) && approxHarm < this.tables[level][0].length / 8) {
+      level++;
+    }
+    return level;
+  }
+
   process(_inputs, outputs, parameters) {
     if (currentTime >= parameters.end[0]) {
       return false;
@@ -1231,8 +1259,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     }
     const outL = outputs[0][0];
     const outR = outputs[0][1] || outputs[0][0];
-
-    if (!this.frames) {
+    if (!this.tables) {
       outL.fill(0);
       if (outR !== outL) outR.set(outL);
       return true;
@@ -1253,7 +1280,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       const gain2 = Math.sqrt(0.5 + 0.5 * spread);
       let f = pv(parameters.frequency, i);
       f = applySemitoneDetuneToFrequency(f, detune / 100); // overall detune
-      const normalizer = 0.3 / Math.sqrt(voices);
+      const normalizer = 1 / Math.sqrt(voices);
       for (let n = 0; n < voices; n++) {
         const isOdd = (n & 1) == 1;
         let gainL = gain1;
@@ -1265,12 +1292,14 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
         }
         const fVoice = applySemitoneDetuneToFrequency(f, getUnisonDetune(voices, detune, n)); // voice detune
         const dPhase = fVoice * invSR;
+        const level = this._chooseMip(dPhase);
+        const table = this.tables[level];
 
         // warp phase then sample
         this.phase[n] = this.phase[n] ?? Math.random() * phaseRand;
         const ph = this._warpPhase(this.phase[n], warpAmount, warpMode);
-        const s0 = this._sampleFrame(this.frames[fIdx], ph);
-        const s1 = this._sampleFrame(this.frames[Math.min(this.numFrames - 1, fIdx + 1)], ph);
+        const s0 = this._sampleFrame(table[fIdx], ph);
+        const s1 = this._sampleFrame(table[Math.min(this.numFrames - 1, fIdx + 1)], ph);
         let s = s0 + (s1 - s0) * frac;
         if (warpMode === WarpMode.FLIP && this.phase[n] < warpAmount) {
           s = -s;

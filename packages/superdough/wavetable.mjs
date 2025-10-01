@@ -38,20 +38,24 @@ export const Warpmode = Object.freeze({
   FLIP: 21,
 });
 
-async function loadWavetableFrames(url, label, frameLen = 2048) {
-  const buf = await loadBuffer(url, label);
-  const ch0 = buf.getChannelData(0);
-  const total = ch0.length;
-  const numFrames = Math.max(1, Math.floor(total / frameLen));
-  const frames = new Array(numFrames);
-  for (let i = 0; i < numFrames; i++) {
-    const start = i * frameLen;
-    frames[i] = ch0.subarray(start, start + frameLen);
+const seenKeys = new Set();
+async function getPayload(url, label, frameLen = 2048) {
+  const key = `${url},${frameLen}`;
+  if (!seenKeys.has(key)) {
+    const buf = await loadBuffer(url, label);
+    const ch0 = buf.getChannelData(0);
+    const total = ch0.length;
+    const numFrames = Math.max(1, Math.floor(total / frameLen));
+    const frames = new Array(numFrames);
+    for (let i = 0; i < numFrames; i++) {
+      const start = i * frameLen;
+      frames[i] = ch0.subarray(start, start + frameLen);
+    }
+    seenKeys.add(key);
+    return { frames, frameLen, numFrames, key };
   }
-  return { frames, frameLen, numFrames };
+  return { frameLen, key }; // worklet will use the cached version
 }
-
-const loadCache = {};
 
 function humanFileSize(bytes, si) {
   var thresh = si ? 1000 : 1024;
@@ -97,6 +101,7 @@ async function decodeAtNativeRate(arr) {
   return await tempAC.decodeAudioData(arr);
 }
 
+const loadCache = {};
 const loadBuffer = (url, label) => {
   url = url.replace('#', '%23');
   if (!loadCache[url]) {
@@ -211,7 +216,7 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   }
   const frequency = getFrequencyFromValue(value);
   const { url, label } = getCommonSampleInfo(value, tables);
-  const payload = await loadWavetableFrames(url, label, frameLen);
+  const payload = await getPayload(url, label, frameLen);
   let holdEnd = t + duration;
   if (clip !== undefined) {
     holdEnd = Math.min(t + clip * duration, holdEnd);
@@ -305,7 +310,7 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   const vibratoOscillator = getVibratoOscillator(source.parameters.get('detune'), value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);
-  getParamADSR(node.gain, attack, decay, sustain, release, 0, 1, t, holdEnd, 'linear');
+  getParamADSR(node.gain, attack, decay, sustain, release, 0, 0.3, t, holdEnd, 'linear');
   getPitchEnvelope(source.parameters.get('detune'), value, t, holdEnd);
   const handle = { node, source };
   const timeoutNode = webAudioTimeout(
