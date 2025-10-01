@@ -5,7 +5,6 @@ import {
   destroyAudioWorkletNode,
   getADSRValues,
   getFrequencyFromValue,
-  getLfo,
   getParamADSR,
   getPitchEnvelope,
   getVibratoOscillator,
@@ -14,7 +13,6 @@ import {
 } from './helpers.mjs';
 import { logger } from './logger.mjs';
 
-const WT_MAX_MIP_LEVELS = 6;
 export const Warpmode = Object.freeze({
   NONE: 0,
   ASYM: 1,
@@ -40,38 +38,24 @@ export const Warpmode = Object.freeze({
   FLIP: 21,
 });
 
-async function loadWavetableFrames(url, label, frameLen = 2048) {
-  const buf = await loadBuffer(url, label);
-  const ch0 = buf.getChannelData(0);
-  const total = ch0.length;
-  const numFrames = Math.max(1, Math.floor(total / frameLen));
-  const frames = new Array(numFrames);
-  for (let i = 0; i < numFrames; i++) {
-    const start = i * frameLen;
-    frames[i] = ch0.subarray(start, start + frameLen);
+const seenKeys = new Set();
+async function getPayload(url, label, frameLen = 2048) {
+  const key = `${url},${frameLen}`;
+  if (!seenKeys.has(key)) {
+    const buf = await loadBuffer(url, label);
+    const ch0 = buf.getChannelData(0);
+    const total = ch0.length;
+    const numFrames = Math.max(1, Math.floor(total / frameLen));
+    const frames = new Array(numFrames);
+    for (let i = 0; i < numFrames; i++) {
+      const start = i * frameLen;
+      frames[i] = ch0.subarray(start, start + frameLen);
+    }
+    seenKeys.add(key);
+    return { frames, frameLen, numFrames, key };
   }
-
-  // build mipmaps
-  const mipmaps = [frames];
-  let levelFrames = frames;
-  for (let level = 1; level < WT_MAX_MIP_LEVELS; level++) {
-    const prevLen = levelFrames[0].length;
-    if (prevLen <= 32) break;
-    const nextLen = prevLen >> 1;
-    const next = levelFrames.map((src) => {
-      const out = new Float32Array(nextLen);
-      for (let j = 0; j < nextLen; j++) {
-        out[j] = (src[2 * j] + src[2 * j + 1]) / 2;
-      }
-      return out;
-    });
-    mipmaps.push(next);
-    levelFrames = next;
-  }
-  return { frames, mipmaps, frameLen, numFrames };
+  return { frameLen, key }; // worklet will use the cached version
 }
-
-const loadCache = {};
 
 function humanFileSize(bytes, si) {
   var thresh = si ? 1000 : 1024;
@@ -117,6 +101,7 @@ async function decodeAtNativeRate(arr) {
   return await tempAC.decodeAudioData(arr);
 }
 
+const loadCache = {};
 const loadBuffer = (url, label) => {
   url = url.replace('#', '%23');
   if (!loadCache[url]) {
@@ -222,7 +207,7 @@ export const tables = async (url, frameLen, json, options = {}) => {
 };
 
 export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
-  const { s, n = 0, duration } = value;
+  const { s, n = 0, duration, clip } = value;
   const ac = getAudioContext();
   const [attack, decay, sustain, release] = getADSRValues([value.attack, value.decay, value.sustain, value.release]);
   let { warpmode } = value;
@@ -231,8 +216,11 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   }
   const frequency = getFrequencyFromValue(value);
   const { url, label } = getCommonSampleInfo(value, tables);
-  const payload = await loadWavetableFrames(url, label, frameLen);
-  const holdEnd = t + duration;
+  const payload = await getPayload(url, label, frameLen);
+  let holdEnd = t + duration;
+  if (clip !== undefined) {
+    holdEnd = Math.min(t + clip * duration, holdEnd);
+  }
   const endWithRelease = holdEnd + release;
   const envEnd = endWithRelease + 0.01;
   const source = getWorklet(
@@ -252,7 +240,7 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
     },
     { outputChannelCount: [2] },
   );
-  source.port.postMessage({ type: 'tables', payload });
+  source.port.postMessage({ type: 'table', payload });
   if (ac.currentTime > t) {
     logger(`[wavetable] still loading sound "${s}:${n}"`, 'highlight');
     return;
@@ -322,13 +310,12 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
   const vibratoOscillator = getVibratoOscillator(source.parameters.get('detune'), value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);
-  getParamADSR(node.gain, attack, decay, sustain, release, 0, 1, t, holdEnd, 'linear');
+  getParamADSR(node.gain, attack, decay, sustain, release, 0, 0.3, t, holdEnd, 'linear');
   getPitchEnvelope(source.parameters.get('detune'), value, t, holdEnd);
   const handle = { node, source };
   const timeoutNode = webAudioTimeout(
     ac,
     () => {
-      source.disconnect();
       destroyAudioWorkletNode(source);
       vibratoOscillator?.stop();
       node.disconnect();
