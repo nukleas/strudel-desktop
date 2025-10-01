@@ -3538,19 +3538,66 @@ export const morph = (frompat, topat, bypat) => {
 };
 
 /**
+ * Soft-clipping distortion
+ *
+ * @name soft
+ * @param {number | Pattern} distortion
+ *
+ */
+/**
+ * Hard-clipping distortion
+ *
+ * @name hard
+ * @param {number | Pattern} distortion
+ *
+ */
+/**
+ * Cubic polynomial distortion
+ *
+ * @name cubic
+ * @param {number | Pattern} distortion
+ *
+ */
+/**
+ * Diode-emulating distortion
+ *
+ * @name diode
+ * @param {number | Pattern} distortion
+ *
+ */
+/**
+ * Asymmetrical diode distortion
+ *
+ * @name asym
+ * @param {number | Pattern} distortion
+ *
+ */
+/**
  * Wavefolding distortion
  *
  * @name fold
  * @param {number | Pattern} distortion
  *
  */
-export const fold = register('fold', function (amt, vol = 1, pat) {
-  return pat.withvValue((v) => {
-    return {
-      ...v,
-      distortion: amt,
-      distortvol: vol,
-      distorttype: 'fold',
-    };
-  }).innerJoin();
-});
+/**
+ * Wavefolding distortion composed with sinusoid
+ *
+ * @name sinefold
+ * @param {number | Pattern} distortion
+ *
+ */
+/**
+ * Distortion via Chebyshev polynomials
+ *
+ * @name chebyshev
+ * @param {number | Pattern} distortion
+ *
+ */
+
+const algoNames = ['scurve', 'soft', 'hard', 'cubic', 'diode', 'asym', 'fold', 'sinefold', 'chebyshev'];
+for (const name of algoNames) {
+  Pattern.prototype[name] = function (args) {
+    const argsPat = reify(args).fmap((v) => (Array.isArray(v) ? [...v, name] : [v, 1, name]));
+    return this.distort(argsPat);
+  };
+}
