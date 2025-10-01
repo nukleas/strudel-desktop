@@ -1065,6 +1065,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
     this.frameLen = 0;
     this.numFrames = 0;
     this.phase = [];
+    this.invSR = 1 / sampleRate;
 
     this.port.onmessage = (e) => {
       const { type, payload } = e.data || {};
@@ -1264,7 +1265,6 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
       if (outR !== outL) outR.set(outL);
       return true;
     }
-    const invSR = 1 / sampleRate;
     for (let i = 0; i < outL.length; i++) {
       const detune = pv(parameters.detune, i);
       const tablePos = clamp(pv(parameters.position, i), 0, 1);
@@ -1291,7 +1291,7 @@ class WavetableOscillatorProcessor extends AudioWorkletProcessor {
           gainR = gain1;
         }
         const fVoice = applySemitoneDetuneToFrequency(f, getUnisonDetune(voices, detune, n)); // voice detune
-        const dPhase = fVoice * invSR;
+        const dPhase = fVoice * this.invSR;
         const level = this._chooseMip(dPhase);
         const table = this.tables[level];
 
