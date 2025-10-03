@@ -1,6 +1,7 @@
 import { getAudioContext, registerSound } from './index.mjs';
 import { getCommonSampleInfo } from './util.mjs';
 import {
+  applyFM,
   applyParameterModulators,
   destroyAudioWorkletNode,
   getADSRValues,
