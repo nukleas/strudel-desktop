@@ -308,6 +308,7 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
     },
   );
   const vibratoOscillator = getVibratoOscillator(source.parameters.get('detune'), value, t);
+  const fm = applyFM(source.parameters.get('frequency'), value, t);
   const envGain = ac.createGain();
   const node = source.connect(envGain);
   getParamADSR(node.gain, attack, decay, sustain, release, 0, 0.3, t, holdEnd, 'linear');
@@ -318,6 +319,7 @@ export async function onTriggerSynth(t, value, onended, tables, cps, frameLen) {
     () => {
       destroyAudioWorkletNode(source);
       vibratoOscillator?.stop();
+      fm?.stop();
       node.disconnect();
       wtPosModulators?.disconnect();
       wtWarpModulators?.disconnect();
