@@ -44,10 +44,10 @@ export function Reference() {
         return true;
       }
 
-      const lowCaseSearch = search.toLowerCase();
+      const lowerCaseSearch = search.toLowerCase();
       return (
-        entry.name.toLowerCase().includes(lowCaseSearch) ||
-        (entry.synonyms?.some((s) => s.includes(lowCaseSearch)) ?? false)
+        entry.name.toLowerCase().includes(lowerCaseSearch) ||
+        (entry.synonyms?.some((s) => s.toLowerCase().includes(lowerCaseSearch)) ?? false)
       );
     });
   }, [search]);
