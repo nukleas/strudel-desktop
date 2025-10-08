@@ -21,7 +21,7 @@ export class State {
 
   // Returns new State with added controls.
   setControls(controls) {
-    return new State(this.span, {...this.controls, ...controls});
+    return new State(this.span, { ...this.controls, ...controls });
   }
 }
 

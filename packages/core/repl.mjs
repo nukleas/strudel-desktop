@@ -216,7 +216,7 @@ export function repl({
       if (Object.keys(pPatterns).length) {
         let patterns = [];
         for (const [key, value] of Object.entries(pPatterns)) {
-          patterns.push(value.withState(state => state.setControls({id: key})));
+          patterns.push(value.withState((state) => state.setControls({ id: key })));
         }
         if (eachTransform) {
           // Explicit lambda so only element (not index and array) are passed
