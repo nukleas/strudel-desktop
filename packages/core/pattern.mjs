@@ -98,10 +98,7 @@ export class Pattern {
 
   // runs func on query state
   withState(func) {
-    return this.withHaps((haps, state) => {
-      func(state);
-      return haps;
-    });
+    return new Pattern((state) => this.query(func(state)));
   }
 
   /**
