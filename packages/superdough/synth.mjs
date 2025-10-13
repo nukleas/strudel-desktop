@@ -1,5 +1,6 @@
 import { clamp } from './util.mjs';
-import { registerSound, getAudioContext, soundMap } from './superdough.mjs';
+import { registerSound, soundMap } from './superdough.mjs';
+import { getAudioContext } from './audioContext.mjs';
 import {
   applyFM,
   destroyAudioWorkletNode,

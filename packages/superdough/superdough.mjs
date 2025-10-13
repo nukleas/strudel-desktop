@@ -9,10 +9,11 @@ import './reverb.mjs';
 import './vowel.mjs';
 import { nanFallback, _mod, cycleToSeconds } from './util.mjs';
 import workletsUrl from './worklets.mjs?audioworklet';
-import { createFilter, gainNode, getCompressor, getLfo, getWorklet, effectSend } from './helpers.mjs';
+import { createFilter, gainNode, getCompressor, getDistortion, getLfo, getWorklet, effectSend } from './helpers.mjs';
 import { map } from 'nanostores';
 import { logger } from './logger.mjs';
 import { loadBuffer } from './sampler.mjs';
+import { getAudioContext } from './audioContext.mjs';
 import { SuperdoughAudioController } from './superdoughoutput.mjs';
 
 export const DEFAULT_MAX_POLYPHONY = 128;
@@ -154,6 +155,7 @@ let defaultDefaultValues = {
   phaserdepth: 0.75,
   shapevol: 1,
   distortvol: 1,
+  distorttype: 0,
   delay: 0,
   byteBeatExpression: '0',
   delayfeedback: 0.5,
@@ -199,25 +201,6 @@ export function setVersionDefaults(version) {
 }
 
 export const resetLoadedSounds = () => soundMap.set({});
-
-let audioContext;
-
-export const setDefaultAudioContext = () => {
-  audioContext = new AudioContext({ latencyHint: 'playback' });
-  return audioContext;
-};
-
-export const getAudioContext = () => {
-  if (!audioContext) {
-    return setDefaultAudioContext();
-  }
-
-  return audioContext;
-};
-
-export function getAudioContextCurrentTime() {
-  return getAudioContext().currentTime;
-}
 
 let externalWorklets = [];
 export function registerWorklet(url) {
@@ -473,6 +456,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
     shapevol = getDefaultValue('shapevol'),
     distort,
     distortvol = getDefaultValue('distortvol'),
+    distorttype = getDefaultValue('distorttype'),
     pan,
     vowel,
     delay = getDefaultValue('delay'),
@@ -646,8 +630,7 @@ export const superdough = async (value, t, hapDuration, cps = 0.5, cycle = 0.5) 
   // effects
   coarse !== undefined && chain.push(getWorklet(ac, 'coarse-processor', { coarse }));
   crush !== undefined && chain.push(getWorklet(ac, 'crush-processor', { crush }));
-  shape !== undefined && chain.push(getWorklet(ac, 'shape-processor', { shape, postgain: shapevol }));
-  distort !== undefined && chain.push(getWorklet(ac, 'distort-processor', { distort, postgain: distortvol }));
+  distort !== undefined && chain.push(getDistortion(distort, distortvol, distorttype));
 
   if (tremolosync != null) {
     tremolo = cps * tremolosync;

@@ -1887,19 +1887,52 @@ export const { roomsize, size, sz, rsize } = registerControl('roomsize', 'size',
 export const { shape } = registerControl(['shape', 'shapevol']);
 /**
  * Wave shaping distortion. CAUTION: it can get loud.
- * Second option in optional array syntax (ex: ".9:.5") applies a postgain to the output.
+ * Second option in optional array syntax (ex: ".9:.5") applies a postgain to the output. Third option sets the waveshaping type.
  * Most useful values are usually between 0 and 10 (depending on source gain). If you are feeling adventurous, you can turn it up to 11 and beyond ;)
  *
  * @name distort
  * @synonyms dist
- * @param {number | Pattern} distortion
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ * @param {number | string | Pattern} type type of distortion to apply
  * @example
  * s("bd sd [~ bd] sd,hh*8").distort("<0 2 3 10:.5>")
  * @example
  * note("d1!8").s("sine").penv(36).pdecay(.12).decay(.23).distort("8:.4")
+ * @example
+ * s("bd:4*4").bank("tr808").distort("3:0.5:diode")
  *
  */
-export const { distort, dist } = registerControl(['distort', 'distortvol'], 'dist');
+export const { distort, dist } = registerControl(['distort', 'distortvol', 'distorttype'], 'dist');
+
+/**
+ * Postgain for waveshaping distortion.
+ *
+ * @name distortvol
+ * @synonyms distvol
+ * @param {number | Pattern} volume linear postgain of the distortion
+ * @example
+ * s("bd*4").bank("tr909").distort(2).distortvol(0.8)
+ */
+export const { distortvol } = registerControl('distortvol', 'distvol');
+
+/**
+ * Type of waveshaping distortion to apply.
+ *
+ * @name distorttype
+ * @synonyms disttype
+ * @param {number | string | Pattern} type type of distortion to apply
+ * @example
+ * s("bd*4").bank("tr909").distort(2).distorttype("<0 1 2>")
+ *
+ * @example
+ * s("sine").note("F1*2").release(1)
+ *   .penv(24).pdecay(0.05)
+ *   .distort(rand.range(1, 8))
+ *   .distorttype("<fold chebyshev scurve diode asym sinefold>")
+ */
+export const { distorttype } = registerControl('distorttype', 'disttype');
+
 /**
  * Dynamics Compressor. The params are `compressor("threshold:ratio:knee:attack:release")`
  * More info [here](https://developer.mozilla.org/en-US/docs/Web/API/DynamicsCompressorNode?retiredLocale=de#instance_properties)

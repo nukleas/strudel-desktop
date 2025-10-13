@@ -3533,3 +3533,76 @@ export const morph = (frompat, topat, bypat) => {
   bypat = reify(bypat);
   return frompat.innerBind((from) => topat.innerBind((to) => bypat.innerBind((by) => _morph(from, to, by))));
 };
+
+/**
+ * Soft-clipping distortion
+ *
+ * @name soft
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+/**
+ * Hard-clipping distortion
+ *
+ * @name hard
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+/**
+ * Cubic polynomial distortion
+ *
+ * @name cubic
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+/**
+ * Diode-emulating distortion
+ *
+ * @name diode
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+/**
+ * Asymmetrical diode distortion
+ *
+ * @name asym
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+/**
+ * Wavefolding distortion
+ *
+ * @name fold
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+/**
+ * Wavefolding distortion composed with sinusoid
+ *
+ * @name sinefold
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+/**
+ * Distortion via Chebyshev polynomials
+ *
+ * @name chebyshev
+ * @param {number | Pattern} distortion amount of distortion to apply
+ * @param {number | Pattern} volume linear postgain of the distortion
+ *
+ */
+const distAlgoNames = ['scurve', 'soft', 'hard', 'cubic', 'diode', 'asym', 'fold', 'sinefold', 'chebyshev'];
+for (const name of distAlgoNames) {
+  // Add aliases for distortion algorithms
+  Pattern.prototype[name] = function (args) {
+    const argsPat = reify(args).fmap((v) => (Array.isArray(v) ? [...v, name] : [v, 1, name]));
+    return this.distort(argsPat);
+  };
+}

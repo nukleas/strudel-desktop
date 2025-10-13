@@ -4,6 +4,7 @@
 
 import OLAProcessor from './ola-processor';
 import FFT from './fft.js';
+import { getDistortionAlgorithm } from './helpers.mjs';
 
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 const mod = (n, m) => ((n % m) + m) % m;
@@ -430,9 +431,10 @@ class DistortProcessor extends AudioWorkletProcessor {
     ];
   }
 
-  constructor() {
+  constructor({ processorOptions }) {
     super();
     this.started = false;
+    this.algorithm = getDistortionAlgorithm(processorOptions.algorithm);
   }
 
   process(inputs, outputs, parameters) {
@@ -444,13 +446,12 @@ class DistortProcessor extends AudioWorkletProcessor {
       return false;
     }
     this.started = hasInput;
-
-    const shape = Math.expm1(parameters.distort[0]);
-    const postgain = Math.max(0.001, Math.min(1, parameters.postgain[0]));
-
     for (let n = 0; n < blockSize; n++) {
-      for (let i = 0; i < input.length; i++) {
-        output[i][n] = (((1 + shape) * input[i][n]) / (1 + shape * Math.abs(input[i][n]))) * postgain;
+      const postgain = clamp(pv(parameters.postgain, n), 0.001, 1);
+      const shape = Math.expm1(pv(parameters.distort, n));
+      for (let ch = 0; ch < input.length; ch++) {
+        const x = input[ch][n];
+        output[ch][n] = postgain * this.algorithm(x, shape);
       }
     }
     return true;

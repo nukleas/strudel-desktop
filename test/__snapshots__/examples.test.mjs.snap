@@ -2829,6 +2829,82 @@ exports[`runs examples > example "distort" example index 1 1`] = `
 ]
 `;
 
+exports[`runs examples > example "distort" example index 2 1`] = `
+[
+  "[ 0/1 → 1/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 1/4 → 1/2 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 1/2 → 3/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 3/4 → 1/1 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 1/1 → 5/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 5/4 → 3/2 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 3/2 → 7/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 7/4 → 2/1 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 2/1 → 9/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 9/4 → 5/2 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 5/2 → 11/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 11/4 → 3/1 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 3/1 → 13/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 13/4 → 7/2 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 7/2 → 15/4 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+  "[ 15/4 → 4/1 | s:bd n:4 bank:tr808 distort:3 distortvol:0.5 distorttype:diode ]",
+]
+`;
+
+exports[`runs examples > example "distorttype" example index 0 1`] = `
+[
+  "[ 0/1 → 1/4 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+  "[ 1/4 → 1/2 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+  "[ 1/2 → 3/4 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+  "[ 3/4 → 1/1 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+  "[ 1/1 → 5/4 | s:bd bank:tr909 distort:2 distorttype:1 ]",
+  "[ 5/4 → 3/2 | s:bd bank:tr909 distort:2 distorttype:1 ]",
+  "[ 3/2 → 7/4 | s:bd bank:tr909 distort:2 distorttype:1 ]",
+  "[ 7/4 → 2/1 | s:bd bank:tr909 distort:2 distorttype:1 ]",
+  "[ 2/1 → 9/4 | s:bd bank:tr909 distort:2 distorttype:2 ]",
+  "[ 9/4 → 5/2 | s:bd bank:tr909 distort:2 distorttype:2 ]",
+  "[ 5/2 → 11/4 | s:bd bank:tr909 distort:2 distorttype:2 ]",
+  "[ 11/4 → 3/1 | s:bd bank:tr909 distort:2 distorttype:2 ]",
+  "[ 3/1 → 13/4 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+  "[ 13/4 → 7/2 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+  "[ 7/2 → 15/4 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+  "[ 15/4 → 4/1 | s:bd bank:tr909 distort:2 distorttype:0 ]",
+]
+`;
+
+exports[`runs examples > example "distorttype" example index 1 1`] = `
+[
+  "[ (0/1 → 1/2) ⇝ 1/1 | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:1 distorttype:fold ]",
+  "[ 0/1 ⇜ (1/2 → 1/1) | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:1 distorttype:fold ]",
+  "[ (1/1 → 3/2) ⇝ 2/1 | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:4.6367951557040215 distorttype:chebyshev ]",
+  "[ 1/1 ⇜ (3/2 → 2/1) | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:4.6367951557040215 distorttype:chebyshev ]",
+  "[ (2/1 → 5/2) ⇝ 3/1 | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:7.716689839959145 distorttype:scurve ]",
+  "[ 2/1 ⇜ (5/2 → 3/1) | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:7.716689839959145 distorttype:scurve ]",
+  "[ (3/1 → 7/2) ⇝ 4/1 | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:2.5210237745195627 distorttype:diode ]",
+  "[ 3/1 ⇜ (7/2 → 4/1) | s:sine note:F1 release:1 penv:24 pdecay:0.05 distort:2.5210237745195627 distorttype:diode ]",
+]
+`;
+
+exports[`runs examples > example "distortvol" example index 0 1`] = `
+[
+  "[ 0/1 → 1/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 1/4 → 1/2 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 1/2 → 3/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 3/4 → 1/1 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 1/1 → 5/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 5/4 → 3/2 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 3/2 → 7/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 7/4 → 2/1 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 2/1 → 9/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 9/4 → 5/2 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 5/2 → 11/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 11/4 → 3/1 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 3/1 → 13/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 13/4 → 7/2 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 7/2 → 15/4 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+  "[ 15/4 → 4/1 | s:bd bank:tr909 distort:2 distortvol:0.8 ]",
+]
+`;
+
 exports[`runs examples > example "djf" example index 0 1`] = `
 [
   "[ 0/1 → 1/8 | note:D3 s:supersaw djf:0.5 ]",
