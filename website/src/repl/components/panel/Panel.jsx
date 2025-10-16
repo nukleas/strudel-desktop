@@ -9,9 +9,10 @@ import { SnippetsTab } from './SnippetsTab';
 import { useLogger } from '../useLogger';
 import { WelcomeTab } from './WelcomeTab';
 import { PatternsTab } from './PatternsTab';
+import { ChatTab } from './ChatTab';
 import { ChevronLeftIcon, XMarkIcon } from '@heroicons/react/16/solid';
 
-const TAURI = typeof window !== 'undefined' && window.__TAURI__;
+const TAURI = typeof window !== 'undefined' && window.__TAURI_INTERNALS__;
 
 export function HorizontalPanel({ context }) {
   const settings = useSettings();
@@ -61,7 +62,7 @@ export function VerticalPanel({ context }) {
         </div>
       ) : (
         <button
-          onClick={(e) => {
+          onClick={() => {
             setIsPanelOpened(true);
           }}
           aria-label="open menu panel"
@@ -87,6 +88,7 @@ const tabNames = {
 };
 if (TAURI) {
   tabNames.files = 'files';
+  tabNames.chat = 'chat';
 }
 
 function PanelNav({ children, className, settings, ...props }) {
@@ -130,6 +132,8 @@ function PanelContent({ context, tab }) {
       return <SoundsTab />;
     case tabNames.reference:
       return <Reference />;
+    case tabNames.chat:
+      return <ChatTab context={context} />;
     case tabNames.settings:
       return <SettingsTab started={context.started} />;
     case tabNames.files:

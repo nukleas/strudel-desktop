@@ -1,18 +1,28 @@
 import { Fragment, useEffect } from 'react';
 import React, { useMemo, useState } from 'react';
-import { isAudioFile, readDir, dir, playFile } from '../../files.mjs';
+import { isAudioFile, readDir, getDir, playFile } from '../../files.mjs';
 
 export function FilesTab() {
   const [path, setPath] = useState([]);
   useEffect(() => {
-    let init = false;
-    readDir('', { dir, recursive: true })
-      .then((children) => setPath([{ name: '~/music', children }]))
-      .catch((err) => {
-        console.log('error loadin files', err);
-      });
+    let cancelled = false;
+
+    async function loadFiles() {
+      try {
+        const dir = await getDir();
+        if (cancelled) return;
+        const children = await readDir('', { baseDir: dir, recursive: true });
+        if (cancelled) return;
+        setPath([{ name: '~/music', children }]);
+      } catch (err) {
+        console.log('error loading files', err);
+      }
+    }
+
+    loadFiles();
+
     return () => {
-      init = true;
+      cancelled = true;
     };
   }, []);
   const current = useMemo(() => path[path.length - 1], [path]);

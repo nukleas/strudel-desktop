@@ -1,5 +1,5 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/tooling/cli/schema.json",
   "productName": "Strudel Desktop",
   "version": "0.1.0",
   "identifier": "com.nukleas.strudel",
@@ -50,15 +50,6 @@
       "certificateThumbprint": null,
       "digestAlgorithm": "sha256",
       "timestampUrl": ""
-    }
-  },
-  "plugins": {
-    "dialog": {
-      "all": true
-    },
-    "fs": {
-      "all": true,
-      "scope": ["$HOME/**", "$HOME", "$HOME/*"]
     }
   }
 }

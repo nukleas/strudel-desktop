@@ -155,6 +155,30 @@ export function useReplContext() {
   const editorRef = useRef();
   const containerRef = useRef();
 
+  // Listen for code insertion events from chat
+  useEffect(() => {
+    const handleInsertCode = (event) => {
+      if (editorRef.current && event.detail) {
+        const { code, mode } = typeof event.detail === 'string'
+          ? { code: event.detail, mode: 'append' }
+          : event.detail;
+
+        if (mode === 'replace') {
+          // Replace all code
+          editorRef.current.setCode(code.trim());
+        } else {
+          // Append to existing code
+          const currentCode = editorRef.current.code || '';
+          const newCode = currentCode.trim() + '\n\n' + code.trim();
+          editorRef.current.setCode(newCode);
+        }
+      }
+    };
+
+    window.addEventListener('insert-code', handleInsertCode);
+    return () => window.removeEventListener('insert-code', handleInsertCode);
+  }, []);
+
   // this can be simplified once SettingsTab has been refactored to change codemirrorSettings directly!
   // this will be the case when the main repl is being replaced
   const _settings = useStore(settingsMap, { keys: Object.keys(defaultSettings) });
@@ -221,6 +245,7 @@ export function useReplContext() {
     pending,
     isDirty,
     activeCode,
+    code: activeCode, // Expose code for chat context
     handleTogglePlay,
     handleUpdate,
     handleShuffle,

@@ -7,21 +7,89 @@ import {
   loadBuffer,
 } from '@strudel/webaudio';
 
-let TAURI;
-if (typeof window !== 'undefined') {
-  TAURI = window?.__TAURI__;
-}
-export const { BaseDirectory, readDir, readBinaryFile, writeTextFile, readTextFile, exists } = TAURI?.fs || {};
+// Tauri v2 API - lazy loaded
+let _readDir, _readBinaryFile, _writeTextFile, _readTextFile, _exists, _BaseDirectory;
+let _fsInitialized = false;
+let _isTauri = false;
 
-export const dir = BaseDirectory?.Audio; // https://tauri.app/v1/api/js/path#audiodir
+async function ensureFsAPIs() {
+  if (_fsInitialized) return _isTauri;
+
+  _fsInitialized = true;
+
+  if (typeof window === 'undefined') {
+    _isTauri = false;
+    return false;
+  }
+
+  try {
+    const fs = await import('@tauri-apps/plugin-fs');
+    _readDir = fs.readDir;
+    _readBinaryFile = fs.readFile;
+    _writeTextFile = fs.writeTextFile;
+    _readTextFile = fs.readTextFile;
+    _exists = fs.exists;
+    _BaseDirectory = fs.BaseDirectory;
+    _isTauri = true;
+    return true;
+  } catch (e) {
+    console.log('Tauri fs not available:', e);
+    _isTauri = false;
+    return false;
+  }
+}
+
+// Export wrapper functions that ensure APIs are loaded
+export async function readDir(path, options) {
+  await ensureFsAPIs();
+  if (!_readDir) throw new Error('readDir not available');
+  return _readDir(path, options);
+}
+
+export async function readBinaryFile(path, options) {
+  await ensureFsAPIs();
+  if (!_readBinaryFile) throw new Error('readBinaryFile not available');
+  return _readBinaryFile(path, options);
+}
+
+export async function writeTextFile(path, contents, options) {
+  await ensureFsAPIs();
+  if (!_writeTextFile) throw new Error('writeTextFile not available');
+  return _writeTextFile(path, contents, options);
+}
+
+export async function readTextFile(path, options) {
+  await ensureFsAPIs();
+  if (!_readTextFile) throw new Error('readTextFile not available');
+  return _readTextFile(path, options);
+}
+
+export async function exists(path, options) {
+  await ensureFsAPIs();
+  if (!_exists) throw new Error('exists not available');
+  return _exists(path, options);
+}
+
+export async function getBaseDirectory() {
+  await ensureFsAPIs();
+  return _BaseDirectory;
+}
+
+export async function getDir() {
+  const BaseDirectory = await getBaseDirectory();
+  return BaseDirectory?.Audio;
+}
+
 const prefix = '~/music/';
 
 async function hasStrudelJson(subpath) {
-  return exists(subpath + '/strudel.json', { dir });
+  const dir = await getDir();
+  return exists(subpath + '/strudel.json', { baseDir: dir });
 }
 
 async function loadStrudelJson(subpath) {
-  const contents = await readTextFile(subpath + '/strudel.json', { dir });
+  const dir = await getDir();
+  const contents = await readTextFile(subpath + '/strudel.json', { baseDir: dir });
   const sampleMap = JSON.parse(contents);
   processSampleMap(sampleMap, (key, bank) => {
     registerSound(key, (t, hapValue, onended) => onTriggerSample(t, hapValue, onended, bank, fileResolver(subpath)), {
@@ -34,7 +102,8 @@ async function loadStrudelJson(subpath) {
 }
 
 async function writeStrudelJson(subpath) {
-  const children = await readDir(subpath, { dir, recursive: true });
+  const dir = await getDir();
+  const children = await readDir(subpath, { baseDir: dir, recursive: true });
   const name = subpath.split('/').slice(-1)[0];
   const tree = { name, children };
 
@@ -49,7 +118,7 @@ async function writeStrudelJson(subpath) {
   });
   const json = JSON.stringify(samples, null, 2);
   const filepath = subpath + '/strudel.json';
-  await writeTextFile(filepath, json, { dir });
+  await writeTextFile(filepath, json, { baseDir: dir });
   console.log(`wrote strudel.json with ${count} samples to ${subpath}!`);
 }
 
@@ -89,8 +158,9 @@ export async function resolveFileURL(url) {
   if (loadCache[url]) {
     return loadCache[url];
   }
+  const dir = await getDir();
   loadCache[url] = (async () => {
-    const contents = await readBinaryFile(url, { dir });
+    const contents = await readBinaryFile(url, { baseDir: dir });
     return uint8ArrayToDataURL(contents);
   })();
   return loadCache[url];

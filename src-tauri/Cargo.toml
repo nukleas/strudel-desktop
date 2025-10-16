@@ -22,6 +22,12 @@ midir = "0.9.1"
 tokio = { version = "1.29.0", features = ["full"] }
 rosc = "0.10.1"
 tauri-plugin-clipboard-manager = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+agentai = "0.1.5"
+genai = "0.1.15"
+anyhow = "1.0"
+chrono = "0.4"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
