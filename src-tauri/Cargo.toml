@@ -1,10 +1,10 @@
 [package]
 name = "app"
 version = "0.1.0"
-description = "A Tauri App"
+description = "Strudel Desktop - Live coding music patterns"
 authors = ["nukleas"]
 license = "AGPL-3.0"
-repository = "https://github.com/nukleas/strudel"
+repository = "https://github.com/nukleas/strudel-desktop"
 default-run = "app"
 edition = "2021"
 rust-version = "1.60"

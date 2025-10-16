@@ -14,11 +14,12 @@ export function Header({ context, embedded = false }) {
   const { isZen, isButtonRowHidden, isCSSAnimationDisabled, fontFamily } = useSettings();
 
   return (
+    <>
     <header
       id="header"
       className={cx(
-        'flex-none text-black  z-[100] text-lg select-none h-20 md:h-14',
-        !isZen && !isEmbedded && 'bg-lineHighlight',
+        'flex-none z-[100] text-lg select-none h-20 md:h-14',
+        !isZen && !isEmbedded && 'bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#0f172a] border-b border-[var(--border-cyan)] backdrop-blur-xl',
         isZen ? 'h-12 w-8 fixed top-0 left-0' : 'sticky top-0 w-full py-1 justify-between',
         isEmbedded ? 'flex' : 'md:flex',
       )}
@@ -36,9 +37,9 @@ export function Header({ context, embedded = false }) {
         >
           <div
             className={cx(
-              'mt-[1px]',
+              'mt-[1px] relative',
               started && !isCSSAnimationDisabled && 'animate-spin',
-              'cursor-pointer text-blue-500',
+              'cursor-pointer',
               isZen && 'fixed top-2 right-4',
             )}
             onClick={() => {
@@ -47,16 +48,31 @@ export function Header({ context, embedded = false }) {
               }
             }}
           >
-            <span className="block text-foreground rotate-90">꩜</span>
+            <span className="block text-foreground rotate-90 icon-glow">꩜</span>
+            {started && !isCSSAnimationDisabled && (
+              <span className="absolute inset-0 bg-[var(--cyan-400)] opacity-20 blur-xl rounded-full"></span>
+            )}
           </div>
           {!isZen && (
-            <div className="space-x-2">
-              <span className="">strudel</span>
-              <span className="text-sm font-medium">REPL</span>
+            <div className="space-x-2 flex items-baseline">
+              <span className="gradient-text-cyan font-bold tracking-wide">strudel</span>
+              <span className="text-sm font-medium text-[var(--foreground)] opacity-80">REPL</span>
               {!isEmbedded && isButtonRowHidden && (
-                <a href={`${baseNoTrailing}/learn`} className="text-sm opacity-25 font-medium">
+                <a href={`${baseNoTrailing}/learn`} className="text-sm opacity-25 font-medium text-[var(--cyan-400)]">
                   DOCS
                 </a>
+              )}
+              {started && (
+                <span className="status-badge status-badge-live">
+                  <span className="status-dot status-dot-live"></span>
+                  LIVE
+                </span>
+              )}
+              {pending && (
+                <span className="status-badge status-badge-init">
+                  <span className="status-dot status-dot-loading"></span>
+                  LOADING
+                </span>
               )}
             </div>
           )}
@@ -68,30 +84,32 @@ export function Header({ context, embedded = false }) {
             onClick={handleTogglePlay}
             title={started ? 'stop' : 'play'}
             className={cx(
-              !isEmbedded ? 'p-2' : 'px-2',
-              'hover:opacity-50',
+              !isEmbedded ? 'px-4 py-2' : 'px-3 py-1',
+              'rounded-md font-medium transition-all duration-200',
+              started ? 'button-live' : 'button-cyberpunk',
               !started && !isCSSAnimationDisabled && 'animate-pulse',
             )}
           >
             {!pending ? (
               <span className={cx('flex items-center space-x-2')}>
-                {started ? <StopCircleIcon className="w-6 h-6" /> : <PlayCircleIcon className="w-6 h-6" />}
-                {!isEmbedded && <span>{started ? 'stop' : 'play'}</span>}
+                {started ? <StopCircleIcon className="w-5 h-5" /> : <PlayCircleIcon className="w-5 h-5" />}
+                {!isEmbedded && <span className="uppercase tracking-wider text-sm font-mono">{started ? 'Stop' : 'Execute'}</span>}
               </span>
             ) : (
-              <>loading...</>
+              <span className="uppercase tracking-wider text-sm font-mono">Loading...</span>
             )}
           </button>
           <button
             onClick={handleEvaluate}
             title="update"
             className={cx(
-              'flex items-center space-x-1',
-              !isEmbedded ? 'p-2' : 'px-2',
-              !isDirty || !activeCode ? 'opacity-50' : 'hover:opacity-50',
+              'flex items-center space-x-1 rounded-md font-medium transition-all duration-200',
+              !isEmbedded ? 'px-4 py-2' : 'px-3 py-1',
+              'button-cyberpunk',
+              !isDirty || !activeCode ? 'opacity-50 cursor-not-allowed' : '',
             )}
           >
-            {!isEmbedded && <span>update</span>}
+            {!isEmbedded && <span className="uppercase tracking-wider text-sm font-mono">Update</span>}
           </button>
           {/* !isEmbedded && (
             <button
@@ -106,21 +124,26 @@ export function Header({ context, embedded = false }) {
             <button
               title="share"
               className={cx(
-                'cursor-pointer hover:opacity-50 flex items-center space-x-1',
-                !isEmbedded ? 'p-2' : 'px-2',
+                'cursor-pointer flex items-center space-x-1 rounded-md font-medium transition-all duration-200',
+                !isEmbedded ? 'px-4 py-2' : 'px-3 py-1',
+                'button-cyberpunk',
               )}
               onClick={handleShare}
             >
-              <span>share</span>
+              <span className="uppercase tracking-wider text-sm font-mono">Share</span>
             </button>
           )}
           {!isEmbedded && (
             <a
               title="learn"
               href={`${baseNoTrailing}/workshop/getting-started/`}
-              className={cx('hover:opacity-50 flex items-center space-x-1', !isEmbedded ? 'p-2' : 'px-2')}
+              className={cx(
+                'flex items-center space-x-1 rounded-md font-medium transition-all duration-200',
+                !isEmbedded ? 'px-4 py-2' : 'px-3 py-1',
+                'button-cyberpunk',
+              )}
             >
-              <span>learn</span>
+              <span className="uppercase tracking-wider text-sm font-mono">Learn</span>
             </a>
           )}
           {/* {isEmbedded && (
@@ -146,5 +169,9 @@ export function Header({ context, embedded = false }) {
         </div>
       )}
     </header>
+    {!isZen && !isEmbedded && (
+      <div className="header-gradient-border"></div>
+    )}
+    </>
   );
 }

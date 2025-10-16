@@ -220,6 +220,10 @@ export class StrudelMirror {
         if (v.docChanged) {
           this.code = v.state.doc.toString();
           this.repl.setCode?.(this.code);
+          // Auto-evaluate if enabled and pattern is playing
+          if (replOptions.autoEvalEnabled && this.repl.scheduler?.started) {
+            this.evaluate();
+          }
         }
       },
       onEvaluate: () => this.evaluate(),

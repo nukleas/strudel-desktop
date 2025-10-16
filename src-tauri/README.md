@@ -10,20 +10,36 @@ From the project root:
 
 - install Strudel dependencies
 
-```js
+```bash
 pnpm i
 ```
 
-- to run Strudel for development
+- to run Strudel for development (desktop app)
 
-```js
-pnpm tauri dev
+```bash
+npm run tauri:dev
+# or
+npm run desktop
 ```
 
 - to build the binary and installer/bundle
 
-```js
-pnpm tauri build
+```bash
+npm run tauri:build
+```
+
+- to get Tauri environment information
+
+```bash
+npm run tauri:info
 ```
 
 The binary and installer can be found in the 'src-tauri/target/release/bundle' directory
+
+## Available Scripts
+
+- `npm run tauri:dev` - Start the desktop app in development mode
+- `npm run desktop` - Alias for `tauri:dev` (easier to remember)
+- `npm run tauri:build` - Build the desktop app for production
+- `npm run tauri:info` - Show Tauri environment and configuration info
+- `npm run tauri` - Run any Tauri CLI command directly

@@ -63,7 +63,7 @@ async function getModule(name) {
 const initialCode = `// LOADING`;
 
 export function useReplContext() {
-  const { isSyncEnabled, audioEngineTarget } = useSettings();
+  const { isSyncEnabled, audioEngineTarget, autoEvalEnabled } = useSettings();
   const shouldUseWebaudio = audioEngineTarget !== audioEngineTargets.osc;
   const defaultOutput = shouldUseWebaudio ? webaudioOutput : superdirtOutput;
   const getTime = shouldUseWebaudio ? getAudioContextCurrentTime : getPerformanceTimeSeconds;
@@ -84,6 +84,7 @@ export function useReplContext() {
       pattern: silence,
       drawTime,
       drawContext,
+      autoEvalEnabled,
       prebake: async () => Promise.all([modulesLoading, presets]),
       onUpdateState: (state) => {
         setReplState({ ...state });
@@ -147,7 +148,7 @@ export function useReplContext() {
     });
 
     editorRef.current = editor;
-  }, []);
+  }, [autoEvalEnabled]);
 
   const [replState, setReplState] = useState({});
   const { started, isDirty, error, activeCode, pending } = replState;

@@ -50,6 +50,7 @@ export const defaultSettings = {
   isCSSAnimationDisabled: false,
   maxPolyphony: 128,
   multiChannelOrbits: false,
+  autoEvalEnabled: true, // Auto-evaluate code when it changes (while playing)
 };
 
 let search = null;
@@ -96,6 +97,7 @@ export function useSettings() {
     isPanelOpen: parseBoolean(state.isPanelOpen),
     userPatterns: userPatterns,
     multiChannelOrbits: parseBoolean(state.multiChannelOrbits),
+    autoEvalEnabled: parseBoolean(state.autoEvalEnabled),
   };
 }
 

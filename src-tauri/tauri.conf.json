@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "productName": "Strudel (nukleas fork)",
+  "productName": "Strudel Desktop",
   "version": "0.1.0",
   "identifier": "com.nukleas.strudel",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Strudel REPL",
+        "title": "Strudel Desktop",
         "width": 1800,
         "height": 1200,
         "resizable": true,

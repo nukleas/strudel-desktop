@@ -5,6 +5,7 @@ import { FilesTab } from './FilesTab';
 import { Reference } from './Reference';
 import { SettingsTab } from './SettingsTab';
 import { SoundsTab } from './SoundsTab';
+import { SnippetsTab } from './SnippetsTab';
 import { useLogger } from '../useLogger';
 import { WelcomeTab } from './WelcomeTab';
 import { PatternsTab } from './PatternsTab';
@@ -77,6 +78,7 @@ export function VerticalPanel({ context }) {
 
 const tabNames = {
   welcome: 'intro',
+  snippets: 'snippets',
   patterns: 'patterns',
   sounds: 'sounds',
   reference: 'reference',
@@ -107,7 +109,7 @@ function PanelNav({ children, className, settings, ...props }) {
         }
       }}
       aria-label="Menu Panel"
-      className={cx('bg-lineHighlight group overflow-x-auto', className)}
+      className={cx('bg-gradient-to-br from-[#1e293b] to-[#0f172a] border-t border-[var(--border-cyan)] group overflow-x-auto', className)}
       {...props}
     >
       {children}
@@ -118,6 +120,8 @@ function PanelNav({ children, className, settings, ...props }) {
 function PanelContent({ context, tab }) {
   useLogger();
   switch (tab) {
+    case tabNames.snippets:
+      return <SnippetsTab context={context} />;
     case tabNames.patterns:
       return <PatternsTab context={context} />;
     case tabNames.console:
@@ -141,8 +145,10 @@ function PanelTab({ label, isSelected, onClick }) {
       <button
         onClick={onClick}
         className={cx(
-          'h-8 px-2 text-foreground cursor-pointer hover:opacity-50 flex items-center space-x-1 border-b',
-          isSelected ? 'border-foreground' : 'border-transparent',
+          'h-8 px-3 py-2 text-foreground cursor-pointer transition-all duration-200 flex items-center space-x-1 font-mono text-xs uppercase tracking-wider border-b-2',
+          isSelected
+            ? 'border-[var(--cyan-400)] text-[var(--cyan-400)] bg-[rgba(34,211,238,0.1)]'
+            : 'border-transparent hover:border-[var(--cyan-400)] hover:text-[var(--cyan-400)] opacity-70',
         )}
       >
         {label}

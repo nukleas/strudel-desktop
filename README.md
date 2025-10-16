@@ -1,49 +1,119 @@
-# strudel
+# Strudel Desktop
 
-Live coding patterns on the web
-https://strudel.cc/
+A desktop application for live coding music patterns, built with Tauri.
 
-- Try it here: <https://strudel.cc>
-- Docs: <https://strudel.cc/learn>
-- Technical Blog Post: <https://loophole-letters.vercel.app/strudel>
-- 1 Year of Strudel Blog Post: <https://loophole-letters.vercel.app/strudel1year>
-- 2 Years of Strudel Blog Post: <https://strudel.cc/blog/#year-2>
+**Repository**: https://github.com/nukleas/strudel-desktop  
+**Original Project**: https://codeberg.org/uzu/strudel
 
-## Running Locally
+## About
 
-After cloning the project, you can run the REPL locally:
+This is a desktop-focused fork of Strudel, the live coding pattern language for making music. Strudel brings TidalCycles to JavaScript and runs natively on desktop platforms using Tauri.
 
-1. Install [Node.js](https://nodejs.org/)
-2. Install [pnpm](https://pnpm.io/installation)
-3. Install dependencies by running the following command:
+## Features
+
+- 🎵 **Live Coding**: Write music patterns in real-time
+- 🖥️ **Desktop Native**: Full desktop app experience with file system access
+- 🔊 **Audio Engine**: Built-in Web Audio API for synthesis and effects
+- 📁 **Local Samples**: Load samples from your local file system
+- 🎛️ **MIDI Support**: Connect MIDI controllers and devices
+- 🌐 **OSC Integration**: Connect to SuperCollider and other audio software
+
+## Installation
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) >= 18
+- [pnpm](https://pnpm.io/)
+- [Rust](https://rustup.rs/) (for Tauri)
+
+### Development Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/nukleas/strudel-desktop.git
+   cd strudel-desktop
+   ```
+
+2. Install dependencies:
    ```bash
    pnpm i
    ```
-4. Run the development server:
+
+3. Run in development mode:
    ```bash
-   pnpm dev
+   pnpm desktop
    ```
 
-## Using Strudel In Your Project
+### Building
 
-This project is organized into many [packages](./packages), which are also available on [npm](https://www.npmjs.com/search?q=%40strudel).
+Build the desktop app for production:
 
-Read more about how to use these in your own project [here](https://strudel.cc/technical-manual/project-start).
+```bash
+ pnpm tauri:build
+```
 
-You will need to abide by the terms of the [GNU Affero Public Licence v3](LICENSE). As such, Strudel code can only be shared within free/open source projects under the same license -- see the license for details.
+The built app will be in `src-tauri/target/release/bundle/`
 
-Licensing info for the default sound banks can be found over on the [dough-samples](https://github.com/felixroos/dough-samples/blob/main/README.md) repository.
+## Usage
+
+### Basic Patterns
+
+```javascript
+// Simple drum pattern
+d1("bd hh sd hh")
+
+// Melodic pattern
+d2("c3 e3 g3 b3")
+
+// Effects
+d3("c3 e3 g3 b3").saw().lpf(800)
+```
+
+### Loading Local Samples
+
+```javascript
+// Load samples from your music directory
+samples('~/music/my_samples');
+
+// Use them in patterns
+d1("kick snare kick snare")
+```
+
+## Development
+
+### Available Commands
+
+- `pnpm desktop` - Start desktop app in development mode
+- `pnpm tauri:build` - Build desktop app for production
+- `pnpm dev` - Start web development server
+- `pnpm test` - Run tests
+- `pnpm lint` - Check code style
+
+### Project Structure
+
+- `src-tauri/` - Rust/Tauri backend code
+- `packages/` - JavaScript packages (core, audio, UI, etc.)
+- `website/` - Web frontend (used by desktop app)
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+See [LICENSE](LICENSE) for details.
 
 ## Contributing
 
-There are many ways to contribute to this project! See [contribution guide](./CONTRIBUTING.md). You can find the full list of contributors [here](https://codeberg.org/uzu/strudel/activity/contributors).
+This is a fork focused on desktop development. For contributing to the main Strudel project, see the [original repository](https://codeberg.org/uzu/strudel).
 
-## Community
+## Acknowledgments
 
-There is a #strudel channel on the TidalCycles discord: <https://discord.com/invite/HGEdXmRkzT>
+- Original Strudel project by [uzu](https://codeberg.org/uzu) and contributors
+- TidalCycles by Alex McLean and contributors
+- Built with [Tauri](https://tauri.app/)
 
-You can also ask questions and find related discussions on the tidal club forum: <https://club.tidalcycles.org/>
+## Links
 
-The discord and forum is shared with the haskell (tidal) and python (vortex) siblings of this project.
-
-We also have a mastodon account: <a rel="me" href="https://social.toplap.org/@strudel">social.toplap.org/@strudel</a>
+- [Strudel Web REPL](https://strudel.cc)
+- [Documentation](https://strudel.cc/learn)
+- [TidalCycles Discord](https://discord.com/invite/HGEdXmRkzT)
+- [Tidal Club Forum](https://club.tidalcycles.org/)
