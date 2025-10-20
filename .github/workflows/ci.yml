@@ -119,6 +119,9 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install
 
+      - name: Generate docs (doc.json)
+        run: pnpm run jsdoc-json
+
       - name: Check examples.json exists
         run: |
           if [ ! -f "website/public/examples.json" ]; then
