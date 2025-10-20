@@ -240,12 +240,19 @@ export function useReplContext() {
   };
 
   const handleShare = async () => shareCode(replState.code);
+
+  // Get live code from editor (updates as user types)
+  const getLiveCode = () => {
+    return editorRef.current?.code || activeCode || '';
+  };
+
   const context = {
     started,
     pending,
     isDirty,
     activeCode,
-    code: activeCode, // Expose code for chat context
+    code: getLiveCode(), // Live code from editor
+    getLiveCode, // Function to get latest code
     handleTogglePlay,
     handleUpdate,
     handleShuffle,

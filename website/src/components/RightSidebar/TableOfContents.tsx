@@ -14,6 +14,8 @@ const TableOfContents: FC<{ headings: MarkdownHeading[]; currentPage: string }> 
   const itemOffsets = useRef<ItemOffsets[]>([]);
   const [currentID, setCurrentID] = useState('overview');
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const getItemOffsets = () => {
       const titles = document.querySelectorAll('article :is(h1, h2, h3, h4)');
       itemOffsets.current = Array.from(titles).map((title) => ({
@@ -31,7 +33,7 @@ const TableOfContents: FC<{ headings: MarkdownHeading[]; currentPage: string }> 
   }, []);
 
   useEffect(() => {
-    if (!toc.current) return;
+    if (typeof window === 'undefined' || !toc.current) return;
 
     const setCurrent: IntersectionObserverCallback = (entries) => {
       for (const entry of entries) {

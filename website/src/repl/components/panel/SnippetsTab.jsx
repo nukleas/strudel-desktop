@@ -1,28 +1,50 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useSettings } from '@src/settings.mjs';
+import { 
+  MusicalNoteIcon, 
+  SpeakerWaveIcon, 
+  SpeakerXMarkIcon,
+  MusicalNoteIcon as NoteIcon,
+  SpeakerWaveIcon as SynthIcon,
+  CircleStackIcon,
+  SparklesIcon,
+  ArrowPathIcon,
+  BoltIcon,
+  DocumentTextIcon,
+  WrenchScrewdriverIcon,
+  MusicalNoteIcon as ScaleIcon,
+  UserIcon,
+  MusicalNoteIcon as MelodyIcon,
+  MusicalNoteIcon as CompleteIcon,
+  StarIcon,
+  ComputerDesktopIcon,
+  MusicalNoteIcon as JazzIcon,
+  SpeakerWaveIcon as ElectronicIcon,
+  GlobeAltIcon
+} from '@heroicons/react/16/solid';
 
 // Snippet categories inspired by strudel-desktop
 const snippetCategories = {
-  drums: { name: 'Drums & Beats', icon: '🥁' },
-  percussion: { name: 'Percussion', icon: '🪘' },
-  melodic: { name: 'Melodic & Keys', icon: '🎹' },
-  bass: { name: 'Bass', icon: '🎸' },
-  synth: { name: 'Synths', icon: '🎛️' },
-  samples: { name: 'Sample Banks', icon: '💿' },
-  effects: { name: 'Effects', icon: '✨' },
-  sequences: { name: 'Sequences', icon: '🔄' },
-  techniques: { name: 'Techniques', icon: '🎯' },
-  mininotation: { name: 'Mini Notation', icon: '📝' },
-  manipulation: { name: 'Sample Tricks', icon: '🔧' },
-  scales: { name: 'Scales & Harmony', icon: '🎼' },
-  funky: { name: 'Funky Grooves', icon: '🕺' },
-  melodies: { name: 'Melody Ideas', icon: '🎶' },
-  complete: { name: 'Full Patterns', icon: '🎵' },
-  famous: { name: 'Famous Tunes', icon: '⭐' },
-  videogame: { name: 'Video Game Music', icon: '🎮' },
-  jazz: { name: 'Jazz Patterns', icon: '🎷' },
-  electronic: { name: 'Electronic', icon: '🔊' },
-  world: { name: 'World Music', icon: '🌍' },
+  drums: { name: 'Drums & Beats', icon: MusicalNoteIcon },
+  percussion: { name: 'Percussion', icon: SpeakerWaveIcon },
+  melodic: { name: 'Melodic & Keys', icon: NoteIcon },
+  bass: { name: 'Bass', icon: SpeakerWaveIcon },
+  synth: { name: 'Synths', icon: SynthIcon },
+  samples: { name: 'Sample Banks', icon: CircleStackIcon },
+  effects: { name: 'Effects', icon: SparklesIcon },
+  sequences: { name: 'Sequences', icon: ArrowPathIcon },
+  techniques: { name: 'Techniques', icon: BoltIcon },
+  mininotation: { name: 'Mini Notation', icon: DocumentTextIcon },
+  manipulation: { name: 'Sample Tricks', icon: WrenchScrewdriverIcon },
+  scales: { name: 'Scales & Harmony', icon: ScaleIcon },
+  funky: { name: 'Funky Grooves', icon: UserIcon },
+  melodies: { name: 'Melody Ideas', icon: MelodyIcon },
+  complete: { name: 'Full Patterns', icon: CompleteIcon },
+  famous: { name: 'Famous Tunes', icon: StarIcon },
+  videogame: { name: 'Video Game Music', icon: ComputerDesktopIcon },
+  jazz: { name: 'Jazz Patterns', icon: JazzIcon },
+  electronic: { name: 'Electronic', icon: ElectronicIcon },
+  world: { name: 'World Music', icon: GlobeAltIcon },
 };
 
 // Example snippets collection
@@ -1366,13 +1388,14 @@ export function SnippetsTab({ context }) {
             <button
               key={key}
               onClick={() => setSelectedCategory(selectedCategory === key ? null : key)}
-              className={`px-2 py-1 rounded text-xs font-mono uppercase tracking-wider transition-all ${
+              className={`px-2 py-1 rounded text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-1 ${
                 selectedCategory === key
                   ? 'bg-[var(--cyan-400)] text-[#0f172a]'
                   : 'bg-[rgba(34,211,238,0.1)] text-[var(--cyan-400)] hover:bg-[rgba(34,211,238,0.2)]'
               }`}
             >
-              {category.icon} {category.name}
+              {React.createElement(category.icon, { className: "w-3 h-3" })}
+              {category.name}
             </button>
           ))}
         </div>
@@ -1388,7 +1411,7 @@ export function SnippetsTab({ context }) {
           Object.entries(groupedSnippets).map(([categoryKey, categorySnippets]) => (
             <div key={categoryKey} className="mb-4">
               <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--cyan-400)] mb-2 flex items-center gap-2">
-                <span>{snippetCategories[categoryKey].icon}</span>
+                {React.createElement(snippetCategories[categoryKey].icon, { className: "w-4 h-4" })}
                 <span>{snippetCategories[categoryKey].name}</span>
                 <span className="text-[var(--foreground)] opacity-30">({categorySnippets.length})</span>
               </h3>

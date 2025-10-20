@@ -1,0 +1,35 @@
+---
+export interface Props {
+  variant?: 'default' | 'outline' | 'ghost';
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  class?: string;
+}
+
+const { 
+  variant = 'default', 
+  padding = 'md', 
+  class: className = '',
+  ...rest 
+} = Astro.props;
+
+const baseClasses = 'rounded-lg transition-colors';
+
+const variantClasses = {
+  default: 'bg-[rgba(34,211,238,0.05)] border border-[var(--border-cyan)]',
+  outline: 'border border-[var(--cyan-400)]',
+  ghost: 'bg-transparent'
+};
+
+const paddingClasses = {
+  none: '',
+  sm: 'p-2',
+  md: 'p-4',
+  lg: 'p-6'
+};
+
+const classes = `${baseClasses} ${variantClasses[variant]} ${paddingClasses[padding]} ${className}`;
+---
+
+<div class={classes} {...rest}>
+  <slot />
+</div>

@@ -1,0 +1,225 @@
+---
+import HeadCommon from '../components/HeadCommon.astro';
+import Header from '../components/Header/Header.astro';
+import PageContent from '../components/PageContent/PageContent.astro';
+import LeftSidebar from '../components/LeftSidebar/LeftSidebar.astro';
+import RightSidebar from '../components/RightSidebar/RightSidebar.astro';
+---
+
+<html lang="en" class="m-0 dark">
+  <head>
+    <HeadCommon />
+    <title>Examples - Strudel</title>
+    <meta name="description" content="Discover what's possible with Strudel through 70+ real compositions by the community. These complete songs showcase the full power of live coding music." />
+  </head>
+  <body class="bg-slate-900 text-slate-100">
+    <Header />
+    <div class="flex">
+      <LeftSidebar />
+      <PageContent>
+        <h1>Strudel Community Songs Collection</h1>
+        
+        <p>Discover what's possible with Strudel through <strong>70+ real compositions</strong> by the community. These complete songs showcase the full power of live coding music, from classical waltzes to experimental electronic pieces.</p>
+
+        <h2>🎵 Real Community Compositions</h2>
+
+        <p>Each song below is a complete musical composition created with Strudel, demonstrating the platform's capabilities across different genres and styles. Click any song to copy the code and explore how it works.</p>
+
+        <div id="examples-browser"></div>
+      </PageContent>
+      <RightSidebar headings={[]} />
+    </div>
+  </body>
+</html>
+
+<script>
+  // Mount the component
+  const container = document.getElementById('examples-browser');
+  if (container) {
+    // This would be handled by your React/JSX setup
+    // For now, we'll create a simple vanilla JS version
+    loadExamplesBrowser();
+  }
+
+  async function loadExamplesBrowser() {
+    try {
+      const response = await fetch('/examples.json');
+      const data = await response.json();
+      
+      const container = document.getElementById('examples-browser');
+      if (container) {
+        container.innerHTML = createExamplesHTML(data.examples || []);
+      }
+    } catch (error) {
+      console.error('Error loading examples:', error);
+      document.getElementById('examples-browser').innerHTML = 
+        '<div class="error">Failed to load examples. Please try again later.</div>';
+    }
+  }
+
+  function createExamplesHTML(examples) {
+    const categories = [...new Set(examples.map(ex => ex.category))];
+    
+    return `
+      <div class="examples-container">
+        <div class="examples-header">
+          <h2>Community Examples</h2>
+          <p>Click on any example to copy the code to your clipboard</p>
+        </div>
+        
+        <div class="examples-grid">
+          ${categories.map(category => `
+            <div class="category-section">
+              <h3 class="category-title">${category.charAt(0).toUpperCase() + category.slice(1)}</h3>
+              <div class="examples-list">
+                ${examples.filter(ex => ex.category === category).map(example => `
+                  <div class="example-card" onclick="copyToClipboard('${example.code.replace(/'/g, "\\'")}')">
+                    <h4 class="example-name">${example.name}</h4>
+                    <p class="example-description">${example.description}</p>
+                    <pre class="example-code"><code>${example.code}</code></pre>
+                    ${example.author ? `<div class="example-author">by ${example.author}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <style>
+        .examples-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 2rem;
+        }
+        
+        .examples-header {
+          text-align: center;
+          margin-bottom: 3rem;
+        }
+        
+        .examples-header h2 {
+          color: #22d3ee;
+          font-size: 2.5rem;
+          margin-bottom: 1rem;
+        }
+        
+        .examples-header p {
+          color: #94a3b8;
+          font-size: 1.1rem;
+        }
+        
+        .category-section {
+          margin-bottom: 3rem;
+        }
+        
+        .category-title {
+          color: #22d3ee;
+          font-size: 1.5rem;
+          margin-bottom: 1.5rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+        }
+        
+        .examples-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: 1.5rem;
+        }
+        
+        .example-card {
+          background: rgba(15, 23, 42, 0.8);
+          border: 1px solid rgba(34, 211, 238, 0.2);
+          border-radius: 8px;
+          padding: 1.5rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .example-card:hover {
+          border-color: #22d3ee;
+          background: rgba(34, 211, 238, 0.05);
+          transform: translateY(-2px);
+        }
+        
+        .example-name {
+          color: #22d3ee;
+          font-size: 1.2rem;
+          margin-bottom: 0.5rem;
+        }
+        
+        .example-description {
+          color: #94a3b8;
+          font-size: 0.9rem;
+          margin-bottom: 1rem;
+          line-height: 1.4;
+        }
+        
+        .example-code {
+          background: #0f172a;
+          border: 1px solid rgba(34, 211, 238, 0.1);
+          border-radius: 4px;
+          padding: 1rem;
+          overflow-x: auto;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          font-size: 0.8rem;
+          color: #e2e8f0;
+          margin-bottom: 1rem;
+        }
+        
+        .example-author {
+          color: #64748b;
+          font-size: 0.8rem;
+          font-style: italic;
+        }
+        
+        .error {
+          text-align: center;
+          color: #ef4444;
+          padding: 2rem;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.2);
+          border-radius: 8px;
+        }
+        
+        @media (max-width: 768px) {
+          .examples-list {
+            grid-template-columns: 1fr;
+          }
+          
+          .examples-container {
+            padding: 1rem;
+          }
+        }
+      </style>
+    `;
+  }
+
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Show a temporary success message
+      const notification = document.createElement('div');
+      notification.textContent = 'Code copied to clipboard!';
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #22d3ee;
+        color: #0f172a;
+        padding: 1rem 2rem;
+        border-radius: 4px;
+        font-weight: bold;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+      `;
+      
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.remove();
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }
+</script>

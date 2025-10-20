@@ -1,0 +1,42 @@
+---
+export interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  href?: string;
+  class?: string;
+}
+
+const { 
+  variant = 'primary', 
+  size = 'md', 
+  disabled = false, 
+  href,
+  class: className = '',
+  ...rest 
+} = Astro.props;
+
+const baseClasses = 'inline-flex items-center justify-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+
+const variantClasses = {
+  primary: 'bg-[var(--cyan-400)] text-background hover:bg-[var(--cyan-500)] focus:ring-[var(--cyan-400)]',
+  secondary: 'bg-lineHighlight text-foreground hover:bg-lineBackground focus:ring-lineHighlight',
+  ghost: 'text-foreground hover:bg-lineHighlight focus:ring-lineHighlight',
+  danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500'
+};
+
+const sizeClasses = {
+  sm: 'px-2 py-1 text-xs rounded',
+  md: 'px-3 py-2 text-sm rounded-md',
+  lg: 'px-4 py-2 text-base rounded-md'
+};
+
+const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
+
+const Tag = href ? 'a' : 'button';
+const tagProps = href ? { href } : { disabled };
+---
+
+<Tag class={classes} {...tagProps} {...rest}>
+  <slot />
+</Tag>
