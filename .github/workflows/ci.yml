@@ -41,12 +41,15 @@ jobs:
 
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
+        working-directory: src-tauri
 
       - name: Run Rust clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: src-tauri
 
       - name: Check Rust compilation
         run: cargo check --all-targets --all-features
+        working-directory: src-tauri
 
   test-build:
     name: Test Build on ${{ matrix.platform }}
