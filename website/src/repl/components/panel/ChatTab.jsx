@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import cx from '@src/cx.mjs';
 import { Textbox } from '../textbox/Textbox';
+import { Cog6ToothIcon, TrashIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/16/solid';
 
 const TAURI = typeof window !== 'undefined' && window.__TAURI_INTERNALS__;
 
@@ -19,11 +20,13 @@ export function ChatTab({ context }) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [provider, setProvider] = useState('gpt-4o');
+  const [provider, setProvider] = useState('claude-sonnet-4-5-20250929');
   const [apiKey, setApiKey] = useState('');
   const [docsLoaded, setDocsLoaded] = useState(false);
+  const [configLoaded, setConfigLoaded] = useState(false);
   const messagesEndRef = useRef(null);
-  const codeRef = useRef(context?.code || '');
+  const codeRef = useRef('');
+  const [currentCode, setCurrentCode] = useState(''); // Track current code for re-rendering
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -33,6 +36,33 @@ export function ChatTab({ context }) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load saved config on mount
+  useEffect(() => {
+    if (!TAURI || configLoaded) return;
+
+    const loadConfig = async () => {
+      const invoke = await getInvoke();
+      if (!invoke) return;
+
+      try {
+        const config = await invoke('get_chat_config');
+        if (config.provider) {
+          setProvider(config.provider);
+        }
+        if (config.api_key) {
+          setApiKey(config.api_key);
+        }
+        setConfigLoaded(true);
+        console.log('✅ Chat config loaded from store');
+      } catch (error) {
+        console.error('Failed to load chat config:', error);
+        setConfigLoaded(true);
+      }
+    };
+
+    loadConfig();
+  }, [configLoaded]);
 
   // Load chat history on mount
   useEffect(() => {
@@ -53,7 +83,7 @@ export function ChatTab({ context }) {
     loadHistory();
   }, []);
 
-  // Load Strudel docs on mount
+  // Load Strudel docs and examples on mount
   useEffect(() => {
     if (!TAURI || docsLoaded) return;
 
@@ -62,44 +92,68 @@ export function ChatTab({ context }) {
       if (!invoke) return;
 
       try {
-        // Fetch doc.json
-        const response = await fetch('/doc.json');
-        const docsJson = await response.json();
+        // Fetch doc.json and examples.json in parallel
+        const [docsResponse, examplesResponse] = await Promise.all([
+          fetch('/doc.json'),
+          fetch('/examples.json')
+        ]);
 
-        // Send to backend
-        await invoke('load_strudel_docs', { docsJson: JSON.stringify(docsJson) });
+        const docsJson = await docsResponse.json();
+        const examplesJson = await examplesResponse.json();
+
+        // Send both to backend
+        await invoke('load_strudel_docs', {
+          docsJson: JSON.stringify(docsJson),
+          examplesJson: JSON.stringify(examplesJson)
+        });
+
         setDocsLoaded(true);
-        console.log('Strudel docs loaded into chat agent');
+        console.log('✅ Strudel docs and examples loaded into chat agent');
       } catch (error) {
-        console.error('Failed to load Strudel docs:', error);
+        console.error('❌ Failed to load Strudel docs:', error);
+        // Try to continue without docs
+        setDocsLoaded(true);
       }
     };
 
     loadDocs();
   }, [docsLoaded]);
 
-  // Update code context when context.code changes
+  // Poll editor for live code updates
   useEffect(() => {
-    if (!TAURI || !context?.code) return;
+    if (!TAURI || !context?.editorRef) return;
 
     const updateCodeContext = async () => {
       const invoke = await getInvoke();
       if (!invoke) return;
 
+      // Get live code directly from editor
+      const liveCode = context.editorRef.current?.code || '';
+
       // Only update if code has changed
-      if (codeRef.current !== context.code) {
-        codeRef.current = context.code;
+      if (liveCode && codeRef.current !== liveCode) {
+        const prevLength = codeRef.current.length;
+        codeRef.current = liveCode;
+        setCurrentCode(liveCode);
+
         try {
-          await invoke('set_code_context', { code: context.code });
-          console.log('Code context updated');
+          await invoke('set_code_context', { code: liveCode });
+          console.log('💻 Code context updated -', liveCode.length, 'chars',
+                     prevLength === 0 ? '(initial)' : `(+${liveCode.length - prevLength})`);
         } catch (error) {
-          console.error('Failed to update code context:', error);
+          console.error('❌ Failed to update code context:', error);
         }
       }
     };
 
+    // Update immediately
     updateCodeContext();
-  }, [context?.code]);
+
+    // Poll every 2 seconds for code changes
+    const interval = setInterval(updateCodeContext, 2000);
+
+    return () => clearInterval(interval);
+  }, [context?.editorRef]);
 
   const handleSendMessage = async () => {
     if (!input.trim() || isLoading || !TAURI) return;
@@ -205,12 +259,31 @@ export function ChatTab({ context }) {
             onChange={(e) => setProvider(e.target.value)}
             className="px-3 py-2 bg-background text-foreground border border-lineHighlight rounded"
           >
-            <option value="gpt-4o">OpenAI: GPT-4o</option>
-            <option value="gpt-4o-mini">OpenAI: GPT-4o Mini</option>
-            <option value="claude-3-5-sonnet-20241022">Anthropic: Claude 3.5 Sonnet</option>
-            <option value="claude-3-5-haiku-20241022">Anthropic: Claude 3.5 Haiku</option>
-            <option value="gemini-2.0-flash-exp">Google: Gemini 2.0 Flash</option>
-            <option value="ollama:llama3.2">Ollama: Llama 3.2 (Local)</option>
+            <optgroup label="OpenAI (Recommended for Speed)">
+              <option value="gpt-5">GPT-5 ⭐ Latest & Best</option>
+              <option value="gpt-5-pro">GPT-5 Pro (Extended Reasoning)</option>
+              <option value="o4-mini">o4-mini (Fast Reasoning)</option>
+              <option value="o3">o3 (Advanced Reasoning)</option>
+              <option value="o3-pro">o3-pro (Max Reasoning)</option>
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4o-mini">GPT-4o Mini</option>
+            </optgroup>
+            <optgroup label="Anthropic Claude (Best for Code)">
+              <option value="claude-sonnet-4-5-20250929">Claude Sonnet 4.5 ⭐ Best for Coding</option>
+              <option value="claude-opus-4-1-20250805">Claude Opus 4.1 (Complex Tasks)</option>
+              <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (Fast)</option>
+              <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (Legacy)</option>
+              <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (Legacy)</option>
+            </optgroup>
+            <optgroup label="Google Gemini">
+              <option value="gemini-2.5-pro-exp">Gemini 2.5 Pro (Experimental)</option>
+              <option value="gemini-2.5-flash">Gemini 2.5 Flash (Thinking)</option>
+              <option value="gemini-2.0-flash-thinking-exp">Gemini 2.0 Flash Thinking</option>
+              <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash</option>
+            </optgroup>
+            <optgroup label="Local Models">
+              <option value="ollama:llama3.2">Ollama: Llama 3.2 (Free, Local)</option>
+            </optgroup>
           </select>
         </div>
 
@@ -225,6 +298,9 @@ export function ChatTab({ context }) {
           />
           <p className="text-xs text-foreground opacity-50">
             For OpenAI, Anthropic, or Google models. Not needed for Ollama.
+          </p>
+          <p className="text-xs text-foreground opacity-50 mt-2">
+            ⚡ Models marked with ⭐ or containing "Pro", "o3", "o4", "Thinking" support extended reasoning.
           </p>
         </div>
 
@@ -253,6 +329,8 @@ export function ChatTab({ context }) {
         <div className="text-sm text-foreground">
           <span className="font-bold">AI Assistant</span>
           {docsLoaded && <span className="ml-2 text-xs opacity-50">(docs loaded)</span>}
+          {configLoaded && apiKey && <span className="ml-2 text-xs opacity-50">✓ configured</span>}
+          {currentCode && <span className="ml-2 text-xs text-cyan-400">💻 {currentCode.length} chars tracked</span>}
         </div>
         <div className="flex gap-2">
           <button
@@ -260,14 +338,14 @@ export function ChatTab({ context }) {
             className="text-xs px-2 py-1 text-foreground hover:bg-lineHighlight rounded"
             title="Settings"
           >
-            ⚙️
+            <Cog6ToothIcon className="w-4 h-4" />
           </button>
           <button
             onClick={handleClearHistory}
             className="text-xs px-2 py-1 text-foreground hover:bg-lineHighlight rounded"
             title="Clear History"
           >
-            🗑️
+            <TrashIcon className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -278,6 +356,14 @@ export function ChatTab({ context }) {
           <div className="text-center text-foreground opacity-50 py-8">
             <p className="mb-2">Ask me anything about Strudel!</p>
             <p className="text-xs">I can help you create music patterns, explain functions, and debug code.</p>
+            <div className="mt-4 text-left max-w-md mx-auto text-xs">
+              <p className="font-bold mb-1">💡 Pro tips:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Type <code className="bg-lineBackground px-1">/search function_name</code> to search docs</li>
+                <li>Your code is automatically tracked every 2 seconds</li>
+                <li>I use {provider.includes('claude') ? 'Claude' : provider.includes('gpt') || provider.includes('o') ? 'OpenAI' : 'Gemini'} {provider.includes('4.5') || provider.includes('5') || provider.includes('o3') || provider.includes('o4') ? 'with extended reasoning' : ''}</li>
+              </ul>
+            </div>
           </div>
         )}
 
@@ -354,17 +440,19 @@ function MessageBubble({ message, onInsertCode }) {
             <div className="mt-2 flex gap-2">
               <button
                 onClick={() => onInsertCode(code, 'append')}
-                className="text-xs px-3 py-1 bg-[var(--cyan-400)] text-background rounded hover:bg-[var(--cyan-500)]"
+                className="text-xs px-3 py-1 bg-[var(--cyan-400)] text-background rounded hover:bg-[var(--cyan-500)] flex items-center gap-1"
                 title="Add this code to the end of your current code"
               >
-                ➕ Append
+                <PlusIcon className="w-3 h-3" />
+                Append
               </button>
               <button
                 onClick={() => onInsertCode(code, 'replace')}
-                className="text-xs px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600"
+                className="text-xs px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 flex items-center gap-1"
                 title="Replace all your code with this"
               >
-                🔄 Replace All
+                <ArrowPathIcon className="w-3 h-3" />
+                Replace All
               </button>
             </div>
           </div>

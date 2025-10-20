@@ -6,6 +6,8 @@ import { Reference } from './Reference';
 import { SettingsTab } from './SettingsTab';
 import { SoundsTab } from './SoundsTab';
 import { SnippetsTab } from './SnippetsTab';
+import { ExamplesTab } from './ExamplesTab';
+import { ExportTab } from './ExportTab';
 import { useLogger } from '../useLogger';
 import { WelcomeTab } from './WelcomeTab';
 import { PatternsTab } from './PatternsTab';
@@ -80,6 +82,7 @@ export function VerticalPanel({ context }) {
 const tabNames = {
   welcome: 'intro',
   snippets: 'snippets',
+  examples: 'examples',
   patterns: 'patterns',
   sounds: 'sounds',
   reference: 'reference',
@@ -89,6 +92,7 @@ const tabNames = {
 if (TAURI) {
   tabNames.files = 'files';
   tabNames.chat = 'chat';
+  tabNames.export = 'export';
 }
 
 function PanelNav({ children, className, settings, ...props }) {
@@ -124,6 +128,8 @@ function PanelContent({ context, tab }) {
   switch (tab) {
     case tabNames.snippets:
       return <SnippetsTab context={context} />;
+    case tabNames.examples:
+      return <ExamplesTab context={context} />;
     case tabNames.patterns:
       return <PatternsTab context={context} />;
     case tabNames.console:
@@ -134,6 +140,8 @@ function PanelContent({ context, tab }) {
       return <Reference />;
     case tabNames.chat:
       return <ChatTab context={context} />;
+    case tabNames.export:
+      return <ExportTab context={context} code={context?.code} />;
     case tabNames.settings:
       return <SettingsTab started={context.started} />;
     case tabNames.files:
