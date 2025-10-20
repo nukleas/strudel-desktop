@@ -1,5 +1,5 @@
 use hound::{SampleFormat, WavSpec, WavWriter};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use tauri::WebviewWindow;
@@ -183,16 +183,13 @@ async fn render_pattern(
         PathBuf::from("../../packages/supradough/render-pattern.mjs"),
     ];
 
-    let script_path = possible_paths
-        .iter()
-        .find(|p| p.exists())
-        .ok_or_else(|| {
-            AudioExportError::Subprocess(format!(
-                "Render script not found. Tried: {:?}. Current dir: {:?}",
-                possible_paths,
-                std::env::current_dir().ok()
-            ))
-        })?;
+    let script_path = possible_paths.iter().find(|p| p.exists()).ok_or_else(|| {
+        AudioExportError::Subprocess(format!(
+            "Render script not found. Tried: {:?}. Current dir: {:?}",
+            possible_paths,
+            std::env::current_dir().ok()
+        ))
+    })?;
 
     // Calculate cps (cycles per second) - default to 0.5 (120 BPM at 4/4)
     // In the future, this should come from the pattern's tempo
@@ -213,31 +210,37 @@ async fn render_pattern(
     // Check if the process succeeded
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(AudioExportError::Subprocess(
-            format!("Rendering failed: {}", stderr)
-        ));
+        return Err(AudioExportError::Subprocess(format!(
+            "Rendering failed: {}",
+            stderr
+        )));
     }
 
     // Parse JSON output
     let stdout = String::from_utf8_lossy(&output.stdout);
 
     // Debug: log first 200 chars of stdout
-    eprintln!("DEBUG stdout (first 200 chars): {:?}", &stdout.chars().take(200).collect::<String>());
+    eprintln!(
+        "DEBUG stdout (first 200 chars): {:?}",
+        &stdout.chars().take(200).collect::<String>()
+    );
     eprintln!("DEBUG stdout length: {}", stdout.len());
 
-    let rendered: RenderedAudio = serde_json::from_str(&stdout)
-        .map_err(|e| {
-            eprintln!("DEBUG JSON parse error: {}", e);
-            eprintln!("DEBUG stdout first 500 chars: {}", &stdout.chars().take(500).collect::<String>());
-            AudioExportError::Json(e)
-        })?;
+    let rendered: RenderedAudio = serde_json::from_str(&stdout).map_err(|e| {
+        eprintln!("DEBUG JSON parse error: {}", e);
+        eprintln!(
+            "DEBUG stdout first 500 chars: {}",
+            &stdout.chars().take(500).collect::<String>()
+        );
+        AudioExportError::Json(e)
+    })?;
 
     // Validate output
     if rendered.left_channel.len() != rendered.sample_count
         || rendered.right_channel.len() != rendered.sample_count
     {
         return Err(AudioExportError::RenderError(
-            "Mismatched audio buffer sizes".to_string()
+            "Mismatched audio buffer sizes".to_string(),
         ));
     }
 

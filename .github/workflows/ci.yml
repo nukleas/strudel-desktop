@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
-    tags: [ 'strudel-v*' ]
+    branches: [main, develop]
+    tags: ["strudel-v*"]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch: # Allow manual triggering
 
 env:
@@ -17,30 +17,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.2
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "pnpm"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-      
+
       - name: Install frontend dependencies
-        run: npm install
-      
+        run: pnpm install
+
       - name: Run frontend tests
-        run: npm test
-      
+        run: pnpm test
+
       - name: Check Rust formatting
         run: cargo fmt --all -- --check
-      
+
       - name: Run Rust clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
-      
+
       - name: Check Rust compilation
         run: cargo check --all-targets --all-features
 
@@ -51,59 +55,63 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest, windows-latest, macos-latest]
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "pnpm"
+
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-      
+
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
-      
+          workspaces: "./src-tauri -> target"
+
       - name: Install frontend dependencies
-        run: npm install
-      
+        run: pnpm install
+
       - name: Install system dependencies (Ubuntu)
         if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      
+
       - name: Build frontend
-        run: npm run build
-      
+        run: pnpm run build
+
       - name: Test Tauri build (no release)
-        run: npm run tauri build
+        run: pnpm run tauri build
 
   test-ai-chat:
     name: Test AI Chat Integration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.2
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "pnpm"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Install frontend dependencies
-        run: npm install
-      
+        run: pnpm install
+
       - name: Check examples.json exists
         run: |
           if [ ! -f "website/public/examples.json" ]; then
@@ -120,7 +128,7 @@ jobs:
             }
             console.log('✅ examples.json has valid structure with', examples.examples.length, 'examples');
           "
-      
+
       - name: Check doc.json exists
         run: |
           if [ ! -f "doc.json" ]; then
@@ -128,13 +136,13 @@ jobs:
             exit 1
           fi
           echo "✅ doc.json found"
-      
+
       - name: Test Rust compilation with AI dependencies
         run: |
           cd src-tauri
           cargo check --features custom-protocol
           echo "✅ Rust compilation successful with AI chat dependencies"
-      
+
       - name: Test AI chat tools compilation
         run: |
           cd src-tauri
@@ -146,22 +154,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.2
+
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "pnpm"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Install frontend dependencies
-        run: npm install
-      
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate
-      
+        run: pnpm install
+
+      - name: Run pnpm audit
+        run: pnpm audit --audit-level=moderate
+
       - name: Run cargo audit
         run: |
           cargo install cargo-audit
@@ -175,42 +187,42 @@ jobs:
       fail-fast: false
       matrix:
         platform: [ubuntu-latest, windows-latest, macos-latest]
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "pnpm"
+
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-      
+
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
-      
+          workspaces: "./src-tauri -> target"
+
       - name: Install frontend dependencies
-        run: npm install
-      
+        run: pnpm install
+
       - name: Install system dependencies (Ubuntu)
         if: matrix.platform == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      
+
       - name: Build and Release Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'Strudel Desktop ${{ github.ref_name }}'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseName: "Strudel Desktop ${{ github.ref_name }}"
+          releaseBody: "See the assets to download this version and install."
           releaseDraft: true
           prerelease: false

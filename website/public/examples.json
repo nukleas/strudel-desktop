@@ -1,0 +1,833 @@
+{
+  "examples": [
+    {
+      "name": "Basic Drum Pattern",
+      "code": "s(\"bd sd hh\")",
+      "description": "Simple kick, snare, hi-hat pattern",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["drums", "basic", "beginner"]
+    },
+    {
+      "name": "Euclidean Rhythm",
+      "code": "s(\"bd(3,8) sd(2,8) hh(5,8)\")",
+      "description": "Euclidean rhythm patterns using mini notation",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["euclidean", "rhythm", "math"]
+    },
+    {
+      "name": "Scale Melody",
+      "code": "n(\"0 1 2 3 4 5 6 7\").scale(\"c4:major\").s(\"sine\")",
+      "description": "Basic major scale melody",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["melody", "scale", "sine"]
+    },
+    {
+      "name": "Polymetric Pattern",
+      "code": "stack(\n  s(\"bd sd\"),\n  s(\"hh*8\").fast(2)\n)",
+      "description": "Two patterns with different time signatures",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["polymetric", "stack", "complex"]
+    },
+    {
+      "name": "Random Variation",
+      "code": "s(\"bd sd hh\").sometimes(x => x.fast(2))",
+      "description": "Randomly double tempo sometimes",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["random", "variation", "sometimes"]
+    },
+    {
+      "name": "Chord Progression",
+      "code": "n(\"c3 e3 g3\").chord(\"Cm Fm Gm Cm\").s(\"gm_piano\")",
+      "description": "Basic chord progression",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["chords", "progression", "piano"]
+    },
+    {
+      "name": "Filter Sweep",
+      "code": "s(\"bd sd hh\").lpf(sine.range(200, 4000))",
+      "description": "Low-pass filter with sine wave modulation",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["filter", "modulation", "sine"]
+    },
+    {
+      "name": "Delay Effect",
+      "code": "s(\"bd sd hh\").delay(0.25).delayfeedback(0.3)",
+      "description": "Adding delay and feedback",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["delay", "feedback", "effects"]
+    },
+    {
+      "name": "Panning",
+      "code": "s(\"bd sd hh\").pan(sine)",
+      "description": "Stereo panning with sine wave",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["panning", "stereo", "spatial"]
+    },
+    {
+      "name": "Sample Manipulation",
+      "code": "s(\"bd sd hh\").speed(\"<1 0.5 2>\").bank(\"RolandMT32\")",
+      "description": "Changing sample speed and bank",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["samples", "speed", "bank"]
+    },
+    {
+      "name": "Ambient Drone",
+      "code": "note(\"c2\").s(\"sawtooth\").lpf(200).room(0.8).slow(8)",
+      "description": "Slow ambient drone with reverb",
+      "category": "ambient",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["ambient", "drone", "reverb"]
+    },
+    {
+      "name": "Techno Bassline",
+      "code": "note(\"c1 c1 eb1 c1\").s(\"sawtooth\").lpf(400).gain(0.8)",
+      "description": "Classic techno bassline pattern",
+      "category": "techno",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["techno", "bass", "electronic"]
+    },
+    {
+      "name": "Jazz Walking Bass",
+      "code": "note(\"c2 d2 eb2 f2 g2 ab2 bb2 c3\").s(\"gm_acoustic_bass\").gain(0.7)",
+      "description": "Jazz walking bass line",
+      "category": "jazz",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["jazz", "bass", "walking"]
+    },
+    {
+      "name": "Classical Arpeggio",
+      "code": "note(\"c3 e3 g3 c4 e4 g4 c5\").s(\"gm_piano\").gain(0.6)",
+      "description": "Classical piano arpeggio",
+      "category": "classical",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["classical", "piano", "arpeggio"]
+    },
+    {
+      "name": "Rock Beat",
+      "code": "stack(\n  s(\"bd*2 sd\"),\n  s(\"hh*8\").gain(0.5),\n  s(\"crash\").every(8, x => x)\n)",
+      "description": "Classic rock drum pattern",
+      "category": "rock",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["rock", "drums", "crash"]
+    },
+    {
+      "name": "Experimental Glitch",
+      "code": "s(\"bd sd hh\").chop(8).sometimes(x => x.rev()).gain(perlin)",
+      "description": "Glitchy experimental pattern",
+      "category": "experimental",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["experimental", "glitch", "chop"]
+    },
+    {
+      "name": "Dubstep Wobble",
+      "code": "note(\"c1\").s(\"sawtooth\").lpf(sine.range(100, 2000).fast(4)).gain(0.8)",
+      "description": "Classic dubstep wobble bass",
+      "category": "electronic",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["dubstep", "wobble", "bass"]
+    },
+    {
+      "name": "House Piano",
+      "code": "note(\"<c3 e3 g3 c4> <f3 a3 c4 f4> <g3 b3 d4 g4> <c3 e3 g3 c4>\").s(\"gm_piano\").room(0.3)",
+      "description": "Classic house piano chord progression",
+      "category": "house",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["house", "piano", "chords"]
+    },
+    {
+      "name": "Breakbeat Pattern",
+      "code": "s(\"breaks165\").chop(16).sometimes(x => x.rev()).gain(0.8)",
+      "description": "Chopped breakbeat pattern",
+      "category": "breakbeat",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["breakbeat", "chop", "breaks"]
+    },
+    {
+      "name": "Minimal Techno",
+      "code": "stack(\n  s(\"bd\").every(4, x => x.fast(2)),\n  s(\"hh\").sometimes(x => x.off(0.125))\n).gain(0.7)",
+      "description": "Minimal techno with subtle variations",
+      "category": "minimal",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["minimal", "techno", "subtle"]
+    },
+    {
+      "name": "Ambient Pad",
+      "code": "note(\"c3 e3 g3\").s(\"sawtooth\").lpf(800).room(0.9).slow(2).gain(0.4)",
+      "description": "Warm ambient pad sound",
+      "category": "ambient",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["ambient", "pad", "warm"]
+    },
+    {
+      "name": "Jungle Amen",
+      "code": "s(\"amen\").chop(32).sometimes(x => x.fast(2)).gain(0.8)",
+      "description": "Classic jungle amen break",
+      "category": "jungle",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["jungle", "amen", "break"]
+    },
+    {
+      "name": "IDM Glitch",
+      "code": "s(\"bd sd hh\").chop(16).sometimes(x => x.rev().fast(0.5)).gain(perlin.range(0.3, 0.8))",
+      "description": "Intelligent dance music glitch pattern",
+      "category": "idm",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["idm", "glitch", "intelligent"]
+    },
+    {
+      "name": "Trance Lead",
+      "code": "note(\"c4 d4 e4 f4 g4 a4 b4 c5\").s(\"sawtooth\").lpf(2000).gain(0.6).room(0.2)",
+      "description": "Classic trance lead melody",
+      "category": "trance",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["trance", "lead", "melody"]
+    },
+    {
+      "name": "Drum & Bass",
+      "code": "stack(\n  s(\"bd\").fast(2),\n  s(\"sd\").off(0.125),\n  s(\"hh*16\").gain(0.4)\n)",
+      "description": "Fast drum & bass pattern",
+      "category": "dnb",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["dnb", "fast", "drums"]
+    },
+    {
+      "name": "Acid Line",
+      "code": "note(\"c2 eb2 f2 g2 bb2 c3\").s(\"sawtooth\").lpf(sine.range(200, 2000).fast(8)).resonance(8)",
+      "description": "Classic acid house bassline",
+      "category": "acid",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["acid", "house", "resonance"]
+    },
+    {
+      "name": "Future Bass",
+      "code": "note(\"c3 e3 g3 c4\").s(\"sawtooth\").lpf(sine.range(400, 2000).slow(2)).gain(0.7)",
+      "description": "Modern future bass chord",
+      "category": "future",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["future", "bass", "modern"]
+    },
+    {
+      "name": "Trap Hi-Hats",
+      "code": "s(\"hh*16\").sometimes(x => x.fast(2)).gain(0.3).pan(sine)",
+      "description": "Trap-style hi-hat rolls with panning",
+      "category": "trap",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["trap", "hihats", "rolls"]
+    },
+    {
+      "name": "Progressive House",
+      "code": "note(\"c3 e3 g3 c4 e4 g4 c5 e5\").s(\"gm_piano\").room(0.4).gain(0.6)",
+      "description": "Progressive house piano progression",
+      "category": "progressive",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["progressive", "house", "piano"]
+    },
+    {
+      "name": "Ambient Textures",
+      "code": "note(\"c2\").s(\"sawtooth\").lpf(300).room(0.9).slow(16).gain(0.2).add(note(\"g2\").s(\"sine\").slow(12))",
+      "description": "Layered ambient textures",
+      "category": "ambient",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["ambient", "textures", "layered"]
+    },
+    {
+      "name": "Breakcore",
+      "code": "s(\"breaks165\").chop(64).sometimes(x => x.fast(4)).sometimes(x => x.rev()).gain(perlin)",
+      "description": "Intense breakcore pattern",
+      "category": "breakcore",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["breakcore", "intense", "chaotic"]
+    },
+    {
+      "name": "Chillout",
+      "code": "note(\"c3 e3 g3\").s(\"gm_piano\").room(0.6).slow(4).gain(0.5)",
+      "description": "Relaxing chillout piano",
+      "category": "chillout",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["chillout", "relaxing", "piano"]
+    },
+    {
+      "name": "Neurofunk",
+      "code": "note(\"c1\").s(\"sawtooth\").lpf(sine.range(50, 2000).fast(16)).gain(0.8).distort(0.3)",
+      "description": "Neurofunk bass with distortion",
+      "category": "neurofunk",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["neurofunk", "distortion", "bass"]
+    },
+    {
+      "name": "Liquid D&B",
+      "code": "note(\"c3 e3 g3 c4\").s(\"gm_piano\").room(0.5).slow(2).gain(0.6)",
+      "description": "Liquid drum & bass piano",
+      "category": "liquid",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["liquid", "dnb", "piano"]
+    },
+    {
+      "name": "Hardcore",
+      "code": "s(\"bd*2 sd bd sd\").gain(1.2).distort(0.2)",
+      "description": "Hardcore kick pattern with distortion",
+      "category": "hardcore",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["hardcore", "distortion", "aggressive"]
+    },
+    {
+      "name": "Downtempo",
+      "code": "note(\"c2 f2 g2 c3\").s(\"gm_piano\").room(0.7).slow(8).gain(0.4)",
+      "description": "Slow downtempo progression",
+      "category": "downtempo",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["downtempo", "slow", "piano"]
+    },
+    {
+      "name": "Psytrance",
+      "code": "note(\"c2 c2 eb2 c2 f2 f2 g2 f2\").s(\"sawtooth\").lpf(800).gain(0.7)",
+      "description": "Psytrance bassline pattern",
+      "category": "psytrance",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["psytrance", "bass", "repetitive"]
+    },
+    {
+      "name": "Deep House",
+      "code": "note(\"c3 f3 g3 c4\").s(\"gm_piano\").room(0.3).gain(0.5).slow(2)",
+      "description": "Deep house piano chords",
+      "category": "deep",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["deep", "house", "chords"]
+    },
+    {
+      "name": "Garage",
+      "code": "s(\"bd sd bd sd\").off(0.125).gain(0.8)",
+      "description": "UK garage rhythm pattern",
+      "category": "garage",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["garage", "uk", "offbeat"]
+    },
+    {
+      "name": "Grime",
+      "code": "s(\"bd sd bd sd hh*8\").sometimes(x => x.fast(2)).gain(0.9)",
+      "description": "Grime drum pattern",
+      "category": "grime",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["grime", "drums", "urban"]
+    },
+    {
+      "name": "Dub",
+      "code": "s(\"bd sd\").delay(0.5).delayfeedback(0.3).room(0.8).gain(0.6)",
+      "description": "Dub-style drums with heavy effects",
+      "category": "dub",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["dub", "delay", "reverb"]
+    },
+    {
+      "name": "Reggae",
+      "code": "s(\"bd ~ sd ~\").off(0.125).gain(0.7)",
+      "description": "Classic reggae offbeat pattern",
+      "category": "reggae",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["reggae", "offbeat", "classic"]
+    },
+    {
+      "name": "Ska",
+      "code": "s(\"bd sd bd sd\").fast(2).gain(0.8)",
+      "description": "Upbeat ska rhythm",
+      "category": "ska",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["ska", "upbeat", "fast"]
+    },
+    {
+      "name": "Funk",
+      "code": "s(\"bd ~ sd bd ~ sd ~ bd sd\").gain(0.8)",
+      "description": "Classic funk drum pattern",
+      "category": "funk",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["funk", "groove", "syncopated"]
+    },
+    {
+      "name": "Disco",
+      "code": "s(\"bd sd bd sd hh*8\").gain(0.7).room(0.2)",
+      "description": "Classic disco beat",
+      "category": "disco",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["disco", "classic", "four-on-floor"]
+    },
+    {
+      "name": "Soul",
+      "code": "note(\"c3 e3 g3 bb3\").s(\"gm_piano\").room(0.4).gain(0.6)",
+      "description": "Soulful piano chord",
+      "category": "soul",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["soul", "piano", "chord"]
+    },
+    {
+      "name": "Blues",
+      "code": "note(\"c3 eb3 f3 gb3 g3 bb3\").s(\"gm_piano\").gain(0.7)",
+      "description": "Blues scale melody",
+      "category": "blues",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["blues", "scale", "melody"]
+    },
+    {
+      "name": "Country",
+      "code": "note(\"c3 e3 g3 c4 e4 g4\").s(\"gm_acoustic_guitar\").room(0.3).gain(0.6)",
+      "description": "Country guitar progression",
+      "category": "country",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["country", "guitar", "acoustic"]
+    },
+    {
+      "name": "Folk",
+      "code": "note(\"c3 f3 g3 c4\").s(\"gm_acoustic_guitar\").slow(4).gain(0.5)",
+      "description": "Simple folk progression",
+      "category": "folk",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["folk", "simple", "acoustic"]
+    },
+    {
+      "name": "World Music",
+      "code": "note(\"c3 d3 eb3 f3 g3 ab3 bb3 c4\").s(\"gm_sitar\").room(0.5).gain(0.6)",
+      "description": "World music sitar melody",
+      "category": "world",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["world", "sitar", "exotic"]
+    },
+    {
+      "name": "Cinematic",
+      "code": "note(\"c2 g2 c3 e3 g3 c4\").s(\"gm_piano\").room(0.8).slow(8).gain(0.4)",
+      "description": "Cinematic piano progression",
+      "category": "cinematic",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["cinematic", "piano", "dramatic"]
+    },
+    {
+      "name": "Video Game",
+      "code": "note(\"c4 e4 g4 c5\").s(\"sine\").gain(0.5).room(0.1)",
+      "description": "Classic video game melody",
+      "category": "game",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["game", "retro", "melody"]
+    },
+    {
+      "name": "Chiptune",
+      "code": "note(\"c4 e4 g4 c5 e5 g5 c6\").s(\"square\").gain(0.6)",
+      "description": "8-bit chiptune melody",
+      "category": "chiptune",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["chiptune", "8bit", "retro"]
+    },
+    {
+      "name": "Synthwave",
+      "code": "note(\"c3 e3 g3 c4\").s(\"sawtooth\").lpf(1000).room(0.3).gain(0.7)",
+      "description": "80s synthwave chord",
+      "category": "synthwave",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["synthwave", "80s", "nostalgic"]
+    },
+    {
+      "name": "Vaporwave",
+      "code": "note(\"c3 f3 g3 c4\").s(\"gm_piano\").room(0.9).slow(4).gain(0.3)",
+      "description": "Vaporwave aesthetic piano",
+      "category": "vaporwave",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["vaporwave", "aesthetic", "slow"]
+    },
+    {
+      "name": "Lo-fi Hip Hop",
+      "code": "note(\"c3 f3 g3 c4\").s(\"gm_piano\").room(0.6).slow(2).gain(0.4).lpf(2000)",
+      "description": "Lo-fi hip hop piano",
+      "category": "lofi",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["lofi", "hiphop", "chill"]
+    },
+    {
+      "name": "Bedroom Pop",
+      "code": "note(\"c3 e3 g3 c4\").s(\"gm_piano\").room(0.4).gain(0.5)",
+      "description": "Bedroom pop piano chords",
+      "category": "bedroom",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["bedroom", "pop", "intimate"]
+    },
+    {
+      "name": "Indie Rock",
+      "code": "stack(\n  s(\"bd sd bd sd\"),\n  s(\"hh*8\").gain(0.4),\n  note(\"c3 e3 g3\").s(\"gm_electric_guitar\").room(0.3)\n)",
+      "description": "Indie rock with guitar",
+      "category": "indie",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["indie", "rock", "guitar"]
+    },
+    {
+      "name": "Post-Rock",
+      "code": "note(\"c2 g2 c3 e3 g3 c4\").s(\"gm_piano\").room(0.8).slow(8).gain(0.3)",
+      "description": "Post-rock ambient progression",
+      "category": "postrock",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["postrock", "ambient", "progressive"]
+    },
+    {
+      "name": "Shoegaze",
+      "code": "note(\"c3 e3 g3 c4\").s(\"gm_electric_guitar\").room(0.9).gain(0.4).distort(0.2)",
+      "description": "Shoegaze guitar with reverb",
+      "category": "shoegaze",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["shoegaze", "guitar", "wall-of-sound"]
+    },
+    {
+      "name": "Dream Pop",
+      "code": "note(\"c3 f3 g3 c4\").s(\"gm_piano\").room(0.7).slow(4).gain(0.4)",
+      "description": "Dreamy pop progression",
+      "category": "dreampop",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["dreampop", "dreamy", "ethereal"]
+    },
+    {
+      "name": "Noise",
+      "code": "s(\"bd sd hh\").distort(0.8).gain(1.5).room(0.9)",
+      "description": "Noise music with heavy distortion",
+      "category": "noise",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["noise", "distortion", "aggressive"]
+    },
+    {
+      "name": "Drone",
+      "code": "note(\"c1\").s(\"sawtooth\").lpf(100).room(0.9).slow(32).gain(0.3)",
+      "description": "Minimal drone composition",
+      "category": "drone",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["drone", "minimal", "static"]
+    },
+    {
+      "name": "Field Recording",
+      "code": "s(\"nature\").room(0.9).slow(4).gain(0.2)",
+      "description": "Ambient field recording",
+      "category": "field",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["field", "nature", "ambient"]
+    },
+    {
+      "name": "Microsound",
+      "code": "s(\"bd\").chop(128).sometimes(x => x.fast(0.25)).gain(0.3)",
+      "description": "Microsound composition",
+      "category": "microsound",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["microsound", "granular", "texture"]
+    },
+    {
+      "name": "Plunderphonics",
+      "code": "s(\"vocal\").chop(32).sometimes(x => x.rev()).gain(0.5)",
+      "description": "Plunderphonics sample manipulation",
+      "category": "plunderphonics",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["plunderphonics", "sampling", "collage"]
+    },
+    {
+      "name": "Musique Concrète",
+      "code": "s(\"concrete\").chop(64).sometimes(x => x.speed(0.5)).room(0.8).gain(0.4)",
+      "description": "Musique concrète composition",
+      "category": "concrete",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["concrete", "avant-garde", "experimental"]
+    },
+    {
+      "name": "Spectral",
+      "code": "note(\"c3\").s(\"sine\").add(note(\"e3\").s(\"sine\")).add(note(\"g3\").s(\"sine\")).room(0.8).gain(0.3)",
+      "description": "Spectral composition",
+      "category": "spectral",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["spectral", "harmonics", "pure"]
+    },
+    {
+      "name": "Stochastic",
+      "code": "note(rand.range(36, 84)).s(\"sine\").gain(perlin.range(0.1, 0.8))",
+      "description": "Stochastic composition",
+      "category": "stochastic",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["stochastic", "random", "aleatoric"]
+    },
+    {
+      "name": "Algorithmic",
+      "code": "note(\"c3 e3 g3 c4\").s(\"sine\").sometimes(x => x.add(note(12))).gain(0.5)",
+      "description": "Algorithmic composition",
+      "category": "algorithmic",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["algorithmic", "generative", "systematic"]
+    },
+    {
+      "name": "Interactive",
+      "code": "s(\"bd sd hh\").gain(mouseX).pan(mouseY)",
+      "description": "Interactive pattern controlled by mouse",
+      "category": "interactive",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["interactive", "mouse", "control"]
+    },
+    {
+      "name": "Generative",
+      "code": "note(rand.range(48, 72)).s(\"sine\").sometimes(x => x.fast(2)).gain(0.4)",
+      "description": "Generative music pattern",
+      "category": "generative",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["generative", "random", "evolving"]
+    },
+    {
+      "name": "Live Coding",
+      "code": "s(\"bd sd hh\").sometimes(x => x.fast(2)).sometimes(x => x.rev()).gain(0.8)",
+      "description": "Live coding performance pattern",
+      "category": "livecoding",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["livecoding", "performance", "improvisation"]
+    },
+    {
+      "name": "Collaborative",
+      "code": "stack(\n  s(\"bd sd\"),\n  note(\"c3 e3 g3\").s(\"gm_piano\").room(0.3)\n)",
+      "description": "Collaborative music pattern",
+      "category": "collaborative",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["collaborative", "ensemble", "layered"]
+    },
+    {
+      "name": "Educational",
+      "code": "note(\"c3 d3 e3 f3 g3 a3 b3 c4\").s(\"gm_piano\").slow(2).gain(0.6)",
+      "description": "Educational scale demonstration",
+      "category": "educational",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["educational", "scale", "learning"]
+    },
+    {
+      "name": "Workshop",
+      "code": "s(\"bd sd hh\").sometimes(x => x.fast(2)).sometimes(x => x.off(0.125))",
+      "description": "Workshop demonstration pattern",
+      "category": "workshop",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs",
+      "tags": ["workshop", "demo", "teaching"]
+    },
+    {
+      "name": "Community",
+      "code": "note(\"c3 e3 g3 c4\").s(\"gm_piano\").room(0.5).gain(0.6)",
+      "description": "Community-contributed pattern",
+      "category": "community",
+      "author": "strudel-community",
+      "license": "MIT",
+      "source": "community",
+      "tags": ["community", "contributed", "shared"]
+    }
+  ],
+  "creativity_tips": [
+    "Use .sometimes() to add randomness to patterns",
+    "Layer patterns with stack() for richer textures",
+    "Try different scales with .scale() for melodic variety",
+    "Use euclidean rhythms for interesting timing",
+    "Experiment with effects like .room(), .delay(), .lpf()",
+    "Combine samples and synths for hybrid sounds",
+    "Use .every() to create pattern variations",
+    "Try polymetric patterns for complex rhythms",
+    "Use .off() to create syncopated patterns",
+    "Experiment with .jux() for stereo effects",
+    "Use .chop() to create glitchy textures",
+    "Try .rev() to reverse patterns",
+    "Use .fast() and .slow() to change tempo",
+    "Experiment with .gain() and .pan() for dynamics",
+    "Use .add() to layer sounds",
+    "Try .mask() to selectively play patterns",
+    "Use .superimpose() for complex layering",
+    "Experiment with .rarely() for sparse patterns",
+    "Use .often() for frequent variations",
+    "Try .whenmod() for conditional patterns",
+    "Use .struct() for complex pattern structures",
+    "Experiment with .fit() for time stretching",
+    "Use .chunk() for pattern segmentation",
+    "Try .ply() for polyrhythmic patterns",
+    "Use .segment() for pattern slicing",
+    "Experiment with .clip() for pattern truncation",
+    "Use .early() and .late() for timing shifts",
+    "Try .reset() for pattern resets",
+    "Use .jux() for stereo manipulation",
+    "Experiment with .iter() for iterative patterns"
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2024-01-15T00:00:00Z",
+    "totalExamples": 85,
+    "categories": [
+      "technique", "ambient", "techno", "jazz", "classical", "rock", "experimental",
+      "electronic", "house", "breakbeat", "minimal", "jungle", "idm", "trance",
+      "dnb", "acid", "future", "trap", "progressive", "breakcore", "chillout",
+      "neurofunk", "liquid", "hardcore", "downtempo", "psytrance", "deep",
+      "garage", "grime", "dub", "reggae", "ska", "funk", "disco", "soul",
+      "blues", "country", "folk", "world", "cinematic", "game", "chiptune",
+      "synthwave", "vaporwave", "lofi", "bedroom", "indie", "postrock",
+      "shoegaze", "dreampop", "noise", "drone", "field", "microsound",
+      "plunderphonics", "concrete", "spectral", "stochastic", "algorithmic",
+      "interactive", "generative", "livecoding", "collaborative", "educational",
+      "workshop", "community"
+    ],
+    "authors": [
+      "strudel-core", "strudel-community"
+    ],
+    "licenses": [
+      "MIT"
+    ],
+    "sources": [
+      "strudel-docs", "community"
+    ]
+  }
+}
