@@ -1,0 +1,190 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      
+      - name: Install frontend dependencies
+        run: npm install
+      
+      - name: Run frontend tests
+        run: npm test
+      
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+      
+      - name: Run Rust clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      
+      - name: Check Rust compilation
+        run: cargo check --all-targets --all-features
+
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install frontend dependencies
+        run: npm install
+      
+      - name: Build frontend
+        run: npm run build
+      
+      - name: Install Tauri CLI
+        run: npm install -g @tauri-apps/cli@next
+      
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+      
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install webkit2gtk
+      
+      - name: Build Tauri app
+        run: npm run tauri build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload macOS artifacts
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: src-tauri/target/release/bundle/macos/*.app
+      
+      - name: Upload Windows artifacts
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: src-tauri/target/release/bundle/msi/*.msi
+      
+      - name: Upload Linux artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-app
+          path: src-tauri/target/release/bundle/deb/*.deb
+
+  test-ai-chat:
+    name: Test AI Chat Integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install frontend dependencies
+        run: npm install
+      
+      - name: Check examples.json exists
+        run: |
+          if [ ! -f "website/public/examples.json" ]; then
+            echo "❌ examples.json is missing - AI chat will not work properly"
+            exit 1
+          fi
+          echo "✅ examples.json found"
+          # Check if it has the expected structure
+          node -e "
+            const examples = require('./website/public/examples.json');
+            if (!examples.examples || !Array.isArray(examples.examples)) {
+              console.error('❌ examples.json has invalid structure');
+              process.exit(1);
+            }
+            console.log('✅ examples.json has valid structure with', examples.examples.length, 'examples');
+          "
+      
+      - name: Check doc.json exists
+        run: |
+          if [ ! -f "doc.json" ]; then
+            echo "❌ doc.json is missing - AI chat documentation search will not work"
+            exit 1
+          fi
+          echo "✅ doc.json found"
+      
+      - name: Test Rust compilation with AI dependencies
+        run: |
+          cd src-tauri
+          cargo check --features custom-protocol
+          echo "✅ Rust compilation successful with AI chat dependencies"
+      
+      - name: Test AI chat tools compilation
+        run: |
+          cd src-tauri
+          cargo check --bin app --features custom-protocol
+          echo "✅ AI chat tools compilation successful"
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install frontend dependencies
+        run: npm install
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+      
+      - name: Run cargo audit
+        run: |
+          cargo install cargo-audit
+          cargo audit

@@ -1,0 +1,106 @@
+{
+  "examples": [
+    {
+      "name": "Basic Drum Pattern",
+      "code": "s(\"bd sd hh\")",
+      "description": "Simple kick, snare, hi-hat pattern",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Euclidean Rhythm",
+      "code": "s(\"bd(3,8) sd(2,8) hh(5,8)\")",
+      "description": "Euclidean rhythm patterns using mini notation",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Scale Melody",
+      "code": "n(\"0 1 2 3 4 5 6 7\").scale(\"c4:major\").s(\"sine\")",
+      "description": "Basic major scale melody",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Polymetric Pattern",
+      "code": "stack(\n  s(\"bd sd\"),\n  s(\"hh*8\").fast(2)\n)",
+      "description": "Two patterns with different time signatures",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Random Variation",
+      "code": "s(\"bd sd hh\").sometimes(x => x.fast(2))",
+      "description": "Randomly double tempo sometimes",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Chord Progression",
+      "code": "n(\"c3 e3 g3\").chord(\"Cm Fm Gm Cm\").s(\"gm_piano\")",
+      "description": "Basic chord progression",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Filter Sweep",
+      "code": "s(\"bd sd hh\").lpf(sine.range(200, 4000))",
+      "description": "Low-pass filter with sine wave modulation",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Delay Effect",
+      "code": "s(\"bd sd hh\").delay(0.25).delayfeedback(0.3)",
+      "description": "Adding delay and feedback",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Panning",
+      "code": "s(\"bd sd hh\").pan(sine)",
+      "description": "Stereo panning with sine wave",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    },
+    {
+      "name": "Sample Manipulation",
+      "code": "s(\"bd sd hh\").speed(\"<1 0.5 2>\").bank(\"RolandMT32\")",
+      "description": "Changing sample speed and bank",
+      "category": "technique",
+      "author": "strudel-core",
+      "license": "MIT",
+      "source": "strudel-docs"
+    }
+  ],
+  "creativity_tips": [
+    "Use .sometimes() to add randomness to patterns",
+    "Layer patterns with stack() for richer textures",
+    "Try different scales with .scale() for melodic variety",
+    "Use euclidean rhythms for interesting timing",
+    "Experiment with effects like .room(), .delay(), .lpf()",
+    "Combine samples and synths for hybrid sounds",
+    "Use .every() to create pattern variations",
+    "Try polymetric patterns for complex rhythms",
+    "Use .off() to create syncopated patterns",
+    "Experiment with .jux() for stereo effects"
+  ]
+}

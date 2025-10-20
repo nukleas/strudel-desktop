@@ -9,6 +9,10 @@ default-run = "app"
 edition = "2021"
 rust-version = "1.60"
 
+[lib]
+name = "app_lib"
+path = "src/lib.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
@@ -24,10 +28,21 @@ rosc = "0.10.1"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
-agentai = "0.1.5"
+agentai = { version = "0.1.5", features = ["macros"] }
 genai = "0.1.15"
 anyhow = "1.0"
 chrono = "0.4"
+tauri-plugin-store = "2"
+regex = "1.9.6"
+async-trait = "0.1"
+schemars = "0.9"
+keyring = "3.0"
+thiserror = "1.0"
+tauri-plugin-devtools = "2"
+
+# Audio export dependencies
+hound = "3.5"
+mp3lame-encoder = "0.2"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
