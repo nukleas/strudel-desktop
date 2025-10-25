@@ -6,7 +6,6 @@ use midir::MidiOutput;
 use tokio::sync::{ mpsc, Mutex };
 use tokio::time::Instant;
 use serde::Deserialize;
-use std::thread::sleep;
 
 use crate::loggerbridge::Logger;
 pub struct MidiMessage {
@@ -53,7 +52,7 @@ pub fn init(
     let out_ports = midiout.ports();
     let mut port_names = Vec::new();
     //TODO: Send these print messages to the UI logger instead of the rust console so the user can see them
-    if out_ports.len() == 0 {
+    if out_ports.is_empty() {
       logger.log(
         " No MIDI devices found. Connect a device or enable IAC Driver to enable midi.".to_string(),
         "".to_string()
@@ -62,7 +61,7 @@ pub fn init(
       return;
     }
     // give the frontend couple seconds to load on start, or the log messages will get lost
-    sleep(Duration::from_secs(3));
+    tokio::time::sleep(Duration::from_secs(3)).await;
     logger.log(format!("Found {} midi devices!", out_ports.len()), "".to_string());
 
     // the user could reference any port at anytime during runtime,
@@ -79,10 +78,12 @@ pub fn init(
       output_connections.insert(port_name, out_con);
     }
     /* ...........................................................
-                        Process queued messages 
+                        Process queued messages
     ............................................................*/
 
+    let mut interval = tokio::time::interval(Duration::from_millis(1));
     loop {
+      interval.tick().await;
       let mut message_queue = message_queue_clone.lock().await;
 
       //iterate over each message, play and remove messages when they are ready
@@ -96,7 +97,7 @@ pub fn init(
         // ex: 'bus 1' instead of 'IAC Driver bus 1' so let's emulate that behavior
         if out_con.is_none() {
           let key = port_names.iter().find(|port_name| {
-            return port_name.contains(&message.requestedport);
+            port_name.contains(&message.requestedport)
           });
           if key.is_some() {
             out_con = output_connections.get_mut(key.unwrap());
@@ -105,16 +106,14 @@ pub fn init(
 
         if out_con.is_some() {
           // process the message
-          if let Err(err) = (&mut out_con.unwrap()).send(&message.message) {
+          if let Err(err) = out_con.unwrap().send(&message.message) {
             logger.log(format!("Midi message send error: {}", err), "error".to_string());
           }
         } else {
           logger.log(format!("failed to find midi device: {}", message.requestedport), "error".to_string());
         }
-        return false;
+        false
       });
-
-      sleep(Duration::from_millis(1));
     }
   });
 }

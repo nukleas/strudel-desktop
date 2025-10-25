@@ -5,8 +5,7 @@ use std::net::UdpSocket;
 
 use serde::Deserialize;
 use std::sync::Arc;
-use std::thread::sleep;
-use std::time::{Duration};
+use std::time::Duration;
 use tokio::sync::{mpsc, Mutex};
 
 use crate::loggerbridge::Logger;
@@ -65,23 +64,21 @@ pub fn init(
                             Process queued messages
         ............................................................*/
 
+        let mut interval = tokio::time::interval(Duration::from_millis(1));
         loop {
+            interval.tick().await;
             let mut message_queue = message_queue_clone.lock().await;
 
             message_queue.retain(|message| {
                 let result = sock.send(&message.msg_buf);
                 if result.is_err() {
                     logger.log(
-                        format!(
-                            "OSC Message failed to send, the server might no longer be available"
-                        ),
+                        "OSC Message failed to send, the server might no longer be available".to_string(),
                         "error".to_string(),
                     );
                 }
-                return false;
+                false
             });
-
-            sleep(Duration::from_millis(1));
         }
     });
 }

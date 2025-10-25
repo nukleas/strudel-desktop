@@ -7,23 +7,12 @@ mod loggerbridge;
 mod midibridge;
 mod oscbridge;
 mod tools;
-mod tools_simple;
 use std::sync::Arc;
 
 use loggerbridge::Logger;
 use tauri::Manager;
 use tokio::sync::mpsc;
 use tokio::sync::Mutex;
-
-// Add DevTools for debugging JavaScript features
-#[cfg(debug_assertions)]
-use tauri_plugin_devtools;
-// the payload type must implement `Serialize` and `Clone`.
-#[derive(Clone, serde::Serialize)]
-struct Payload {
-    message: String,
-    message_type: String,
-}
 fn main() {
     let (async_input_transmitter_midi, async_input_receiver_midi) = mpsc::channel(1);
     let (async_output_transmitter_midi, async_output_receiver_midi) = mpsc::channel(1);

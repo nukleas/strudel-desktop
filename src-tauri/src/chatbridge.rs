@@ -1,15 +1,15 @@
+use crate::tools::StrudelToolBox;
 use agentai::Agent;
+use keyring::Entry;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, State, WebviewWindow};
 use tauri_plugin_store::StoreExt;
-use tokio::sync::{Mutex, RwLock};
-use crate::tools::StrudelToolBox;
-use keyring::Entry;
 use thiserror::Error;
+use tokio::sync::{Mutex, RwLock};
 
 // Structured error types for better error handling
 #[derive(Error, Debug)]
@@ -125,6 +125,12 @@ pub struct ChatState {
     pub examples: Arc<RwLock<Option<String>>>,     // RwLock for read-heavy access
     pub code_context: Arc<RwLock<Option<String>>>, // RwLock for read-heavy access
     pub rate_limiter: Arc<Mutex<RateLimiter>>,     // Rate limiting for tool calls
+}
+
+impl Default for ChatState {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ChatState {
@@ -307,15 +313,17 @@ pub async fn send_chat_message(
                 // Include last N messages for context (exclude current user message at end)
                 let history_limit = 10; // Keep last 10 messages for context
                 let start = messages.len().saturating_sub(history_limit + 1);
-                let relevant_messages: Vec<String> = messages[start..messages.len()-1]
+                let relevant_messages: Vec<String> = messages[start..messages.len() - 1]
                     .iter()
                     .map(|msg| format!("{}: {}", msg.role, msg.content))
                     .collect();
 
                 if !relevant_messages.is_empty() {
-                    format!("Previous conversation:\n{}\n\nCurrent message: {}",
+                    format!(
+                        "Previous conversation:\n{}\n\nCurrent message: {}",
                         relevant_messages.join("\n"),
-                        current_prompt)
+                        current_prompt
+                    )
                 } else {
                     current_prompt.clone()
                 }
@@ -443,9 +451,7 @@ pub async fn send_chat_message(
         attempt += 1;
         if attempt >= MAX_VALIDATION_RETRIES {
             // Max retries reached, return with warning
-            let error_text = validation_error
-                .as_ref()
-                .map(|s| s.as_str())
+            let error_text = validation_error.as_deref()
                 .unwrap_or("Unknown error");
             let warning_response = format!(
                 "{}\n\n⚠️ **Validation Warning**: Generated code failed validation after {} attempts.\n\
@@ -471,9 +477,7 @@ pub async fn send_chat_message(
         }
 
         // Prepare retry prompt
-        let error_text = validation_error
-            .as_ref()
-            .map(|s| s.as_str())
+        let error_text = validation_error.as_deref()
             .unwrap_or("Unknown error");
         current_prompt = format!(
             "The code you generated has a syntax error:\n{}\n\n\
@@ -576,7 +580,7 @@ pub async fn set_chat_config(
     store.set("chat_provider".to_string(), serde_json::json!(provider));
 
     // Remove any legacy plaintext API keys from store (migration)
-    let _ = store.delete("chat_api_key".to_string());
+    let _ = store.delete("chat_api_key");
 
     store
         .save()
@@ -867,7 +871,7 @@ pub async fn get_chat_config(
                         eprintln!("Failed to migrate API key to keychain: {}", e);
                     } else {
                         // Successfully migrated, remove from plaintext store
-                        let _ = store.delete("chat_api_key".to_string());
+                        let _ = store.delete("chat_api_key");
                         let _ = store.save();
                         println!("✅ API key migrated to secure keychain");
                     }
@@ -939,19 +943,19 @@ pub async fn validate_strudel_code(
     // Security: Comprehensive escaping to prevent injection attacks
     // This properly escapes all potentially dangerous characters
     let escaped_code = code
-        .replace('\\', "\\\\")  // Backslash
-        .replace('`', "\\`")    // Backticks (template strings)
-        .replace('$', "\\$")    // Dollar signs (template interpolation)
-        .replace('"', "\\\"")   // Double quotes (SECURITY FIX)
-        .replace('\'', "\\'")   // Single quotes (SECURITY FIX)
-        .replace('\n', "\\n")   // Newlines
-        .replace('\r', "\\r")   // Carriage returns
-        .replace('\t', "\\t");  // Tabs (SECURITY FIX)
+        .replace('\\', "\\\\") // Backslash
+        .replace('`', "\\`") // Backticks (template strings)
+        .replace('$', "\\$") // Dollar signs (template interpolation)
+        .replace('"', "\\\"") // Double quotes (SECURITY FIX)
+        .replace('\'', "\\'") // Single quotes (SECURITY FIX)
+        .replace('\n', "\\n") // Newlines
+        .replace('\r', "\\r") // Carriage returns
+        .replace('\t', "\\t"); // Tabs (SECURITY FIX)
 
     // Validation with timeout to prevent DoS
     let validation_future = async {
         window
-            .eval(&format!(
+            .eval(format!(
                 r#"
                 (async () => {{
                     try {{
