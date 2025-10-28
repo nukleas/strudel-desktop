@@ -20,7 +20,18 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "main-window",
+          "description": "Main window capabilities for Strudel Desktop",
+          "windows": ["main"],
+          "permissions": [
+            "core:default",
+            "dialog:default"
+          ]
+        }
+      ]
     }
   },
   "bundle": {

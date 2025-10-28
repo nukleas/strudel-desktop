@@ -1,51 +1,91 @@
 // Strudel AI Chat Tools
 // Tools that the AI agent can use to interact with documentation and code
 
-use agentai::tool::{toolbox, Tool, ToolBox, ToolError, ToolResult};
-use std::sync::Arc;
-use tokio::sync::{RwLock, Mutex};
 use crate::chatbridge::RateLimiter;
-use anyhow::anyhow;
+use crate::music_theory::MusicTheory;
+use anyhow::{anyhow, Result as AnyResult};
+use rig::{completion::ToolDefinition as RigToolDefinition, tool::Tool as RigTool};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
+use std::sync::Arc;
+use tauri::{AppHandle, Emitter};
+use thiserror::Error;
+use tokio::sync::{Mutex, RwLock};
 
-/// StrudelToolBox provides tools for the AI agent to:
-/// - Search documentation on-demand
-/// - Validate code before responding
-/// - Access user's current code
-/// - Find relevant examples
-/// - List available sounds
 #[derive(Clone)]
-pub struct StrudelToolBox {
+pub struct ToolRuntimeContext {
     pub full_docs: Arc<RwLock<Option<serde_json::Value>>>,
-    pub examples: Arc<RwLock<Option<String>>>,
-    pub code_context: Arc<RwLock<Option<String>>>,
     pub rate_limiter: Arc<Mutex<RateLimiter>>,
+    pub rag_state: Arc<crate::rag::RagState>,
+    app_handle: AppHandle,
+    window_label: String,
+    live_edit_enabled: bool,
 }
 
-#[toolbox]
-impl StrudelToolBox {
-    #[tool]
-    /// Search the Strudel documentation for functions matching the query
-    async fn search_strudel_docs(
+impl ToolRuntimeContext {
+    pub fn new(
+        full_docs: Arc<RwLock<Option<serde_json::Value>>>,
+        rate_limiter: Arc<Mutex<RateLimiter>>,
+        rag_state: Arc<crate::rag::RagState>,
+        app_handle: tauri::AppHandle,
+        window_label: String,
+        live_edit_enabled: bool,
+    ) -> Self {
+        Self {
+            full_docs,
+            rate_limiter,
+            rag_state,
+            app_handle,
+            window_label,
+            live_edit_enabled,
+        }
+    }
+
+    async fn check_rate_limit(&self, tool_name: &str) -> AnyResult<()> {
+        let mut limiter = self.rate_limiter.lock().await;
+        limiter
+            .check_and_increment(tool_name)
+            .map_err(|e| anyhow!(e))
+    }
+
+    pub async fn search_strudel_docs(
         &self,
-        /// The function name or keyword to search for (e.g., "scale", "delay", "euclid")
         query: String,
-        /// Optional: Maximum number of results to return (default: 5)
         limit: Option<usize>,
-    ) -> ToolResult {
-        // Rate limiting check
-        {
-            let mut rate_limiter = self.rate_limiter.lock().await;
-            rate_limiter
-                .check_and_increment("search_strudel_docs")
-                .map_err(|e| ToolError::from(anyhow!(e)))?;
-        }
+    ) -> AnyResult<String> {
+        self.check_rate_limit("search_strudel_docs").await?;
 
-        // Input validation
         if query.len() > 500 {
-            return Err(ToolError::from(anyhow!("Query too long (max 500 characters)")));
+            return Err(anyhow!("Query too long (max 500 characters)"));
         }
 
-        let limit = limit.unwrap_or(5).min(10); // Cap at 10 results
+        let limit = limit.unwrap_or(5).min(10);
+
+        if let Ok(query_embedding) = self.rag_state.embed_query(&query).await {
+            if let Ok(rag_results) = self
+                .rag_state
+                .search_with_embedding(&query_embedding, limit)
+                .await
+            {
+                if !rag_results.is_empty() {
+                    let mut formatted_results = Vec::new();
+                    for result in rag_results.iter() {
+                        let mut output = String::new();
+                        if let Some(name) = &result.chunk.metadata.name {
+                            output.push_str(&format!("**{}**", name));
+                        }
+                        output.push_str(&format!(" (relevance: {:.2})\n", result.score));
+                        output.push_str(&result.chunk.content);
+                        formatted_results.push(output);
+                    }
+                    return Ok(format!(
+                        "Semantic search found {} result(s):\n\n{}",
+                        formatted_results.len(),
+                        formatted_results.join("\n\n")
+                    ));
+                }
+            }
+        }
 
         let full_docs = self.full_docs.read().await;
 
@@ -56,7 +96,6 @@ impl StrudelToolBox {
 
                 for doc in docs_array.iter() {
                     if let Some(name) = doc["name"].as_str() {
-                        // Fuzzy match: check if query is contained in name
                         if name.to_lowercase().contains(&query_lower) {
                             let mut result = format!("**{}**", name);
 
@@ -102,114 +141,19 @@ impl StrudelToolBox {
         Ok(format!("No functions found matching '{}'", query))
     }
 
-    // // TEMP DISABLED: Testing which tool causes Anthropic schema error
-    // // #[tool]
-    // // /// Get the current Strudel code from the user's editor
-    // // async fn get_user_code(&self) -> ToolResult {
-    // //     let code_context = self.code_context.read().await;
-
-    // //     if let Some(code) = code_context.as_ref() {
-    // //         Ok(format!("Current user code:\n```javascript\n{}\n```", code))
-    // //     } else {
-    // //         Ok("No code context available (user's editor may be empty)".to_string())
-    // //     }
-    // // }
-
-    // // TEMP DISABLED: Testing which tool causes Anthropic schema error
-    // // #[tool]
-    // // /// Get Strudel example patterns filtered by style or genre
-    // // async fn get_strudel_examples(
-    // //     &self,
-    //     /// Optional: Filter by style/genre (e.g., "techno", "jazz", "ambient")
-    // //     style: Option<String>,
-    // //     /// Optional: Maximum number of examples to return (default: 3)
-    // //     limit: Option<usize>,
-    // // ) -> ToolResult {
-    //     let limit = limit.unwrap_or(3);
-    //     let examples = self.examples.read().await;
-
-    //     if let Some(ex_text) = examples.as_ref() {
-    //         // If style filter provided, try to find matching examples
-    //         if let Some(style_filter) = style {
-    //             let style_lower = style_filter.to_lowercase();
-    //             let lines: Vec<&str> = ex_text.lines().collect();
-    //             let mut filtered_examples = Vec::new();
-    //             let mut current_example = Vec::new();
-    //             let mut matches_style = false;
-
-    //             for line in lines {
-    //                 if line.ends_with(':') && !line.starts_with("```") {
-    //                     // New example title
-    //                     if matches_style && !current_example.is_empty() {
-    //                         filtered_examples.push(current_example.join("\n"));
-    //                         if filtered_examples.len() >= limit {
-    //                             break;
-    //                         }
-    //                     }
-    //                     current_example.clear();
-    //                     matches_style = line.to_lowercase().contains(&style_lower);
-    //                 }
-
-    //                 if matches_style || current_example.is_empty() {
-    //                     current_example.push(line);
-    //                 }
-    //             }
-
-    //             // Add last example if it matches
-    //             if matches_style && !current_example.is_empty() && filtered_examples.len() < limit {
-    //                 filtered_examples.push(current_example.join("\n"));
-    //             }
-
-    //             if !filtered_examples.is_empty() {
-    //                 return Ok(filtered_examples.join("\n\n"));
-    //             }
-    //         }
-
-    //         // No filter or no matches - return first N examples
-    //         let lines: Vec<&str> = ex_text.lines().collect();
-    //         let mut examples_found = 0;
-    //         let mut result = Vec::new();
-
-    //         for line in lines {
-    //             result.push(line);
-    //             if line.ends_with(':') && !line.starts_with("```") {
-    //                 examples_found += 1;
-    //                 if examples_found >= limit {
-    //                     break;
-    //                 }
-    //             }
-    //         }
-
-    //         Ok(result.join("\n"))
-    //     } else {
-    //         Ok("No examples loaded".to_string())
-    //     }
-    // }
-
-    #[tool]
-    /// List available sound sources (samples, synths, or GM instruments)
-    async fn list_available_sounds(
+    pub async fn list_available_sounds(
         &self,
-        /// Type of sounds: "samples", "synths", or "gm"
         sound_type: String,
-        /// Optional: Filter by name prefix (e.g., "gm_piano" would match "gm_piano*")
         filter: Option<String>,
-    ) -> ToolResult {
-        // Rate limiting check
-        {
-            let mut rate_limiter = self.rate_limiter.lock().await;
-            rate_limiter
-                .check_and_increment("list_available_sounds")
-                .map_err(|e| ToolError::from(anyhow!(e)))?;
-        }
+    ) -> AnyResult<String> {
+        self.check_rate_limit("list_available_sounds").await?;
 
-        // Input validation
         if sound_type.len() > 50 {
-            return Err(ToolError::from(anyhow!("Sound type parameter too long")));
+            return Err(anyhow!("Sound type parameter too long"));
         }
         if let Some(ref f) = filter {
             if f.len() > 100 {
-                return Err(ToolError::from(anyhow!("Filter parameter too long")));
+                return Err(anyhow!("Filter parameter too long"));
             }
         }
 
@@ -288,5 +232,476 @@ impl StrudelToolBox {
                 filtered.join(", ")
             ))
         }
+    }
+
+    pub fn live_edit_enabled(&self) -> bool {
+        self.live_edit_enabled
+    }
+
+    pub async fn apply_live_edit(&self, mode: LiveEditMode, code: String) -> AnyResult<String> {
+        if !self.live_edit_enabled {
+            return Ok(
+                "Live edits are disabled. Ask the user to enable them in Chat settings.".into(),
+            );
+        }
+
+        if code.trim().is_empty() {
+            return Err(anyhow!("Refusing to apply an empty code edit"));
+        }
+
+        if code.len() > 50_000 {
+            return Err(anyhow!("Edit too large (max 50k characters)"));
+        }
+
+        let payload = LiveEditPayload {
+            mode: mode.clone(),
+            code: code.clone(),
+        };
+
+        self.app_handle
+            .emit_to(&self.window_label, "chat-live-edit", payload)
+            .map_err(|e| anyhow!("Failed to emit live edit event: {}", e))?;
+
+        Ok(format!(
+            "Applied {} live edit ({} chars)",
+            mode,
+            code.chars().count()
+        ))
+    }
+
+    pub async fn queue_live_edit(
+        &self,
+        mode: LiveEditMode,
+        code: String,
+        description: String,
+        wait_cycles: u32,
+    ) -> AnyResult<String> {
+        if !self.live_edit_enabled {
+            return Ok(
+                "Live edits are disabled. Ask the user to enable them in Chat settings.".into(),
+            );
+        }
+
+        if code.trim().is_empty() {
+            return Err(anyhow!("Refusing to queue an empty code edit"));
+        }
+
+        if code.len() > 50_000 {
+            return Err(anyhow!("Edit too large (max 50k characters)"));
+        }
+
+        let payload = QueuedEditPayload {
+            mode: mode.clone(),
+            code: code.clone(),
+            description: description.clone(),
+            wait_cycles,
+        };
+
+        self.app_handle
+            .emit_to(&self.window_label, "chat-queue-edit", payload)
+            .map_err(|e| anyhow!("Failed to emit queue edit event: {}", e))?;
+
+        Ok(format!(
+            "Queued: {} ({} chars, wait {} cycles)",
+            description,
+            code.chars().count(),
+            wait_cycles
+        ))
+    }
+
+    pub async fn generate_chord_progression(
+        &self,
+        key: String,
+        style: String,
+    ) -> AnyResult<String> {
+        self.check_rate_limit("generate_chord_progression").await?;
+
+        if key.len() > 10 || style.len() > 50 {
+            return Err(anyhow!("Parameter too long"));
+        }
+
+        let progression =
+            MusicTheory::generate_chord_progression(&key, &style).map_err(|e| anyhow!("{}", e))?;
+
+        Ok(format!(
+            "{} progression in {}: {}\n\nStrudel pattern:\n```javascript\nnote(\"{}\").struct(\"1 ~ ~ ~\")\n```",
+            style, key, progression, progression
+        ))
+    }
+
+    pub async fn generate_euclidean_rhythm(
+        &self,
+        hits: usize,
+        steps: usize,
+        sound: Option<String>,
+    ) -> AnyResult<String> {
+        self.check_rate_limit("generate_euclidean_rhythm").await?;
+
+        if hits > 32 || steps > 64 {
+            return Err(anyhow!("Parameters too large (max 32 hits, 64 steps)"));
+        }
+
+        let sound_name = sound.unwrap_or_else(|| "bd".to_string());
+        if sound_name.len() > 50 {
+            return Err(anyhow!("Sound name too long"));
+        }
+
+        let pattern = MusicTheory::generate_euclidean_pattern(hits, steps, &sound_name)
+            .map_err(|e| anyhow!("{}", e))?;
+
+        let rhythm =
+            MusicTheory::generate_euclidean_rhythm(hits, steps).map_err(|e| anyhow!("{}", e))?;
+
+        Ok(format!(
+            "Euclidean rhythm: {} hits in {} steps\nPattern: {}\n\nStrudel pattern:\n```javascript\n{}\n```",
+            hits, steps, rhythm, pattern
+        ))
+    }
+}
+
+#[derive(Debug, Error)]
+#[error("{0}")]
+pub struct ToolInvocationError(#[from] anyhow::Error);
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum LiveEditMode {
+    Append,
+    Replace,
+}
+
+impl std::fmt::Display for LiveEditMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LiveEditMode::Append => write!(f, "append"),
+            LiveEditMode::Replace => write!(f, "replace"),
+        }
+    }
+}
+
+impl LiveEditMode {
+    pub fn parse(mode: &str) -> Option<Self> {
+        match mode.to_lowercase().as_str() {
+            "append" => Some(LiveEditMode::Append),
+            "replace" => Some(LiveEditMode::Replace),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Serialize)]
+struct LiveEditPayload {
+    mode: LiveEditMode,
+    code: String,
+}
+
+#[derive(Clone, Serialize)]
+struct QueuedEditPayload {
+    mode: LiveEditMode,
+    code: String,
+    description: String,
+    wait_cycles: u32,
+}
+
+#[derive(Clone)]
+pub struct RigSearchDocsTool {
+    ctx: ToolRuntimeContext,
+}
+
+impl RigSearchDocsTool {
+    pub fn new(ctx: ToolRuntimeContext) -> Self {
+        Self { ctx }
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct RigSearchDocsArgs {
+    query: String,
+    limit: Option<usize>,
+}
+
+impl RigTool for RigSearchDocsTool {
+    const NAME: &'static str = "search_strudel_docs";
+
+    type Error = ToolInvocationError;
+    type Args = RigSearchDocsArgs;
+    type Output = String;
+
+    async fn definition(&self, _prompt: String) -> RigToolDefinition {
+        RigToolDefinition {
+            name: Self::NAME.to_string(),
+            description: "Search the Strudel documentation for functions, effects, and helpers."
+                .to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Function or keyword to search for."
+                    },
+                    "limit": {
+                        "type": "number",
+                        "description": "Maximum number of results to return (default 5)."
+                    }
+                },
+                "required": ["query"]
+            }),
+        }
+    }
+
+    async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
+        self.ctx
+            .search_strudel_docs(args.query, args.limit)
+            .await
+            .map_err(ToolInvocationError::from)
+    }
+}
+
+#[derive(Clone)]
+pub struct RigListSoundsTool {
+    ctx: ToolRuntimeContext,
+}
+
+impl RigListSoundsTool {
+    pub fn new(ctx: ToolRuntimeContext) -> Self {
+        Self { ctx }
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct RigListSoundsArgs {
+    sound_type: String,
+    filter: Option<String>,
+}
+
+impl RigTool for RigListSoundsTool {
+    const NAME: &'static str = "list_available_sounds";
+
+    type Error = ToolInvocationError;
+    type Args = RigListSoundsArgs;
+    type Output = String;
+
+    async fn definition(&self, _prompt: String) -> RigToolDefinition {
+        RigToolDefinition {
+            name: Self::NAME.to_string(),
+            description: "List available Strudel samples, synths, or GM instruments.".to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "sound_type": {
+                        "type": "string",
+                        "description": "One of: samples, synths, gm."
+                    },
+                    "filter": {
+                        "type": "string",
+                        "description": "Optional filter to narrow the list."
+                    }
+                },
+                "required": ["sound_type"]
+            }),
+        }
+    }
+
+    async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
+        self.ctx
+            .list_available_sounds(args.sound_type, args.filter)
+            .await
+            .map_err(ToolInvocationError::from)
+    }
+}
+
+#[derive(Clone)]
+pub struct RigApplyLiveEditTool {
+    ctx: ToolRuntimeContext,
+}
+
+impl RigApplyLiveEditTool {
+    pub fn new(ctx: ToolRuntimeContext) -> Self {
+        Self { ctx }
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct RigLiveEditArgs {
+    mode: LiveEditMode,
+    code: String,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    wait_cycles: Option<u32>,
+}
+
+impl RigTool for RigApplyLiveEditTool {
+    const NAME: &'static str = "apply_live_code_edit";
+
+    type Error = ToolInvocationError;
+    type Args = RigLiveEditArgs;
+    type Output = String;
+
+    async fn definition(&self, _prompt: String) -> RigToolDefinition {
+        RigToolDefinition {
+            name: Self::NAME.to_string(),
+            description: "Apply code edits to the user's Strudel document. In Queue Mode (🎬), use wait_cycles to stage changes progressively. Call this tool multiple times to queue several changes."
+                .to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": ["append", "replace"],
+                        "description": "Whether to append or replace the user's code."
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "The Strudel code to write into the editor."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Optional description of what this change does (shown in queue UI). Example: 'Add kick drum pattern'"
+                    },
+                    "wait_cycles": {
+                        "type": "integer",
+                        "description": "Optional: Number of cycles to wait before auto-applying this change (0 = immediate, 4 = wait 4 cycles). Only used in Queue Mode."
+                    }
+                },
+                "required": ["mode", "code"]
+            }),
+        }
+    }
+
+    async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
+        // If description and wait_cycles are provided, queue the change
+        // Otherwise apply directly (legacy behavior)
+        if args.description.is_some() || args.wait_cycles.is_some() {
+            self.ctx
+                .queue_live_edit(
+                    args.mode,
+                    args.code,
+                    args.description
+                        .unwrap_or_else(|| "Pattern change".to_string()),
+                    args.wait_cycles.unwrap_or(0),
+                )
+                .await
+                .map_err(ToolInvocationError::from)
+        } else {
+            self.ctx
+                .apply_live_edit(args.mode, args.code)
+                .await
+                .map_err(ToolInvocationError::from)
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct RigChordProgressionTool {
+    ctx: ToolRuntimeContext,
+}
+
+impl RigChordProgressionTool {
+    pub fn new(ctx: ToolRuntimeContext) -> Self {
+        Self { ctx }
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct RigChordProgressionArgs {
+    key: String,
+    style: String,
+}
+
+impl RigTool for RigChordProgressionTool {
+    const NAME: &'static str = "generate_chord_progression";
+
+    type Error = ToolInvocationError;
+    type Args = RigChordProgressionArgs;
+    type Output = String;
+
+    async fn definition(&self, _prompt: String) -> RigToolDefinition {
+        RigToolDefinition {
+            name: Self::NAME.to_string(),
+            description: "Generate a chord progression for a given key and musical style."
+                .to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Musical key (e.g., C, D, F#)"
+                    },
+                    "style": {
+                        "type": "string",
+                        "enum": ["pop", "jazz", "blues", "folk", "rock", "classical", "modal", "edm"],
+                        "description": "Progression style"
+                    }
+                },
+                "required": ["key", "style"]
+            }),
+        }
+    }
+
+    async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
+        self.ctx
+            .generate_chord_progression(args.key, args.style)
+            .await
+            .map_err(ToolInvocationError::from)
+    }
+}
+
+#[derive(Clone)]
+pub struct RigEuclideanRhythmTool {
+    ctx: ToolRuntimeContext,
+}
+
+impl RigEuclideanRhythmTool {
+    pub fn new(ctx: ToolRuntimeContext) -> Self {
+        Self { ctx }
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct RigEuclideanRhythmArgs {
+    hits: usize,
+    steps: usize,
+    sound: Option<String>,
+}
+
+impl RigTool for RigEuclideanRhythmTool {
+    const NAME: &'static str = "generate_euclidean_rhythm";
+
+    type Error = ToolInvocationError;
+    type Args = RigEuclideanRhythmArgs;
+    type Output = String;
+
+    async fn definition(&self, _prompt: String) -> RigToolDefinition {
+        RigToolDefinition {
+            name: Self::NAME.to_string(),
+            description: "Generate a Euclidean rhythm pattern with evenly distributed hits."
+                .to_string(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "hits": {
+                        "type": "number",
+                        "description": "Number of hits to distribute"
+                    },
+                    "steps": {
+                        "type": "number",
+                        "description": "Total number of steps"
+                    },
+                    "sound": {
+                        "type": "string",
+                        "description": "Sound to use (default: bd)"
+                    }
+                },
+                "required": ["hits", "steps"]
+            }),
+        }
+    }
+
+    async fn call(&self, args: Self::Args) -> Result<Self::Output, Self::Error> {
+        self.ctx
+            .generate_euclidean_rhythm(args.hits, args.steps, args.sound)
+            .await
+            .map_err(ToolInvocationError::from)
     }
 }

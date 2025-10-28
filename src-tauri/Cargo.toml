@@ -13,6 +13,10 @@ rust-version = "1.60"
 name = "app_lib"
 path = "src/lib.rs"
 
+[[bin]]
+name = "generate_embeddings"
+path = "bin/generate_embeddings.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
@@ -26,9 +30,9 @@ midir = "0.9.1"
 tokio = { version = "1.29.0", features = ["full"] }
 rosc = "0.10.1"
 tauri-plugin-clipboard-manager = "2"
+futures = "0.3"
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
-agentai = { version = "0.1.5", features = ["macros"] }
 genai = "0.1.15"
 anyhow = "1.0"
 chrono = "0.4"
@@ -36,13 +40,17 @@ tauri-plugin-store = "2"
 regex = "1.9.6"
 async-trait = "0.1"
 schemars = "0.9"
-keyring = "3.0"
 thiserror = "1.0"
 tauri-plugin-devtools = "2"
+rig = { package = "rig-core", version = "0.21" }
 
 # Audio export dependencies
 hound = "3.5"
 mp3lame-encoder = "0.2"
+
+# RAG (Retrieval-Augmented Generation) dependencies
+# Using pre-computed embeddings + in-memory search for offline capability
+# No heavy ML dependencies - embeddings generated at build time
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

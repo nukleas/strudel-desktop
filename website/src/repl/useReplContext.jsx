@@ -36,6 +36,8 @@ import { getRandomTune, initCode, loadModules, shareCode } from './util.mjs';
 import './Repl.css';
 import { setInterval, clearInterval } from 'worker-timers';
 import { getMetadata } from '../metadata_parser';
+// Register validation handler for Tauri
+import '../validation';
 
 const { latestCode, maxPolyphony, audioDeviceName, multiChannelOrbits } = settingsMap.get();
 let modulesLoading, presets, drawContext, clearCanvas, audioReady;
@@ -246,6 +248,136 @@ export function useReplContext() {
     return editorRef.current?.code || activeCode || '';
   };
 
+  // Queue system state
+  const [changeQueue, setChangeQueue] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [queueEnabled, setQueueEnabled] = useState(false);
+  const [cyclesSinceLastChange, setCyclesSinceLastChange] = useState(0);
+  const [lastChangeCycle, setLastChangeCycle] = useState(0);
+
+  // Track cycles for timing using Strudel's native cycle counter
+  useEffect(() => {
+    if (!queueEnabled || !started) return;
+
+    const interval = setInterval(() => {
+      if (editorRef.current?.repl?.scheduler) {
+        const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
+        const cyclesElapsed = currentCycle - lastChangeCycle;
+        setCyclesSinceLastChange(cyclesElapsed);
+      }
+    }, 100); // Check 10 times per second for accuracy
+
+    return () => clearInterval(interval);
+  }, [queueEnabled, started, lastChangeCycle]);
+
+  // Queue actions
+  const addToQueue = (items) => {
+    const queueItems = Array.isArray(items) ? items : [items];
+
+    // Soft limit: max 5 items recommended (prevents excessive queuing)
+    const MAX_QUEUE_SIZE = 5;
+    const remainingSlots = MAX_QUEUE_SIZE - changeQueue.length;
+
+    if (remainingSlots <= 0) {
+      console.warn(`🎬 Queue full (${MAX_QUEUE_SIZE} items). Cannot add more. Apply or clear existing items first.`);
+      return;
+    }
+
+    const itemsToAdd = queueItems.slice(0, remainingSlots);
+
+    if (itemsToAdd.length < queueItems.length) {
+      console.warn(`🎬 Queue limit: adding ${itemsToAdd.length}/${queueItems.length} items (${MAX_QUEUE_SIZE} max)`);
+    }
+
+    setChangeQueue(prev => [...prev, ...itemsToAdd]);
+
+    // Initialize cycle tracking if this is the first item
+    if (changeQueue.length === 0 && editorRef.current?.repl?.scheduler) {
+      const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
+      setLastChangeCycle(currentCycle);
+      setCyclesSinceLastChange(0);
+    }
+  };
+
+  const applyNextChange = () => {
+    if (changeQueue.length === 0) return;
+
+    const nextChange = changeQueue[0];
+    if (!nextChange) return;
+
+    // Apply the change
+    if (nextChange.mode === 'replace') {
+      editorRef.current?.setCode(nextChange.code.trim());
+    } else {
+      const currentCode = editorRef.current?.code || '';
+      const newCode = currentCode.trim() + '\n\n' + nextChange.code.trim();
+      editorRef.current?.setCode(newCode);
+    }
+
+    // Mark as applied and remove from queue
+    setChangeQueue(prev => prev.slice(1));
+    setCurrentStep(prev => prev + 1);
+
+    // Reset cycle counter using Strudel's current cycle
+    if (editorRef.current?.repl?.scheduler) {
+      const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
+      setLastChangeCycle(currentCycle);
+      setCyclesSinceLastChange(0);
+    }
+
+    // Auto-evaluate if requested
+    if (nextChange.autoEvaluate !== false) {
+      setTimeout(() => handleEvaluate(), 100);
+    }
+  };
+
+  const skipNextChange = () => {
+    setChangeQueue(prev => prev.slice(1));
+  };
+
+  const clearQueue = () => {
+    setChangeQueue([]);
+    setCurrentStep(0);
+  };
+
+  const previewNextChange = () => {
+    return changeQueue[0] || null;
+  };
+
+  const applyAllChanges = () => {
+    if (changeQueue.length === 0) return;
+
+    let finalCode = editorRef.current?.code || '';
+
+    changeQueue.forEach(change => {
+      if (change.mode === 'replace') {
+        finalCode = change.code.trim();
+      } else {
+        finalCode = finalCode.trim() + '\n\n' + change.code.trim();
+      }
+    });
+
+    editorRef.current?.setCode(finalCode);
+    setChangeQueue([]);
+    setCurrentStep(prev => prev + changeQueue.length);
+
+    setTimeout(() => handleEvaluate(), 100);
+  };
+
+  // Auto-advance: automatically apply next change when wait cycles elapsed
+  useEffect(() => {
+    if (!queueEnabled || changeQueue.length === 0) return;
+
+    const nextChange = changeQueue[0];
+    const waitCycles = nextChange.waitCycles || 0;
+
+    // Check if we've waited long enough
+    if (cyclesSinceLastChange >= waitCycles && waitCycles >= 0) {
+      console.log(`🎬 Auto-applying "${nextChange.description}" after ${cyclesSinceLastChange} cycles (waited ${waitCycles})`);
+      applyNextChange();
+    }
+  }, [cyclesSinceLastChange, changeQueue, queueEnabled]);
+
   const context = {
     started,
     pending,
@@ -262,6 +394,18 @@ export function useReplContext() {
     error,
     editorRef,
     containerRef,
+    // Queue system
+    changeQueue,
+    queueEnabled,
+    setQueueEnabled,
+    addToQueue,
+    applyNextChange,
+    skipNextChange,
+    clearQueue,
+    previewNextChange,
+    applyAllChanges,
+    currentStep,
+    cyclesSinceLastChange,
   };
   return context;
 }

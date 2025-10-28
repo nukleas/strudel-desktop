@@ -1,7 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import cx from '@src/cx.mjs';
 import { Textbox } from '../textbox/Textbox';
-import { Cog6ToothIcon, TrashIcon, PlusIcon, ArrowPathIcon } from '@heroicons/react/16/solid';
+import {
+  Cog6ToothIcon,
+  TrashIcon,
+  PlusIcon,
+  ArrowPathIcon,
+  PlayIcon,
+  ForwardIcon,
+  XMarkIcon,
+  EyeIcon,
+  ClockIcon
+} from '@heroicons/react/16/solid';
 
 const TAURI = typeof window !== 'undefined' && window.__TAURI_INTERNALS__;
 
@@ -15,17 +25,197 @@ async function getInvoke() {
   return _invoke;
 }
 
+// Queue Panel Component
+function QueuePanel({ context }) {
+  const [showPreview, setShowPreview] = useState(false);
+  const nextChange = context.previewNextChange();
+
+  if (!nextChange) return null;
+
+  const remainingCount = context.changeQueue.length;
+  const cyclesWaited = context.cyclesSinceLastChange || 0;
+  const waitCycles = nextChange.waitCycles || 0;
+  const canApply = cyclesWaited >= waitCycles;
+
+  return (
+    <div className="border-b border-purple-500 bg-gradient-to-r from-purple-900/20 to-purple-800/10 p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 text-purple-400 font-bold text-sm">
+            <ClockIcon className="w-4 h-4" />
+            <span>Queue Active</span>
+          </div>
+          <div className="text-xs text-foreground opacity-50">
+            Step {context.currentStep + 1} • {remainingCount} pending
+          </div>
+        </div>
+        <button
+          onClick={() => context.clearQueue()}
+          className="text-xs px-2 py-1 text-red-400 hover:bg-red-900/20 rounded flex items-center gap-1"
+          title="Clear Queue"
+        >
+          <XMarkIcon className="w-3 h-3" />
+          Clear
+        </button>
+      </div>
+
+      {/* Next Change Preview */}
+      <div className="bg-background/50 rounded p-2 mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-bold text-purple-300">Next: {nextChange.description || 'Pattern Change'}</span>
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 rounded flex items-center gap-1"
+          >
+            <EyeIcon className="w-3 h-3" />
+            {showPreview ? 'Hide' : 'Preview'}
+          </button>
+        </div>
+        {showPreview && (
+          <pre className="text-xs font-mono text-foreground opacity-70 bg-lineBackground p-2 rounded overflow-x-auto mt-2">
+            {nextChange.code}
+          </pre>
+        )}
+      </div>
+
+      {/* Timing Info */}
+      {waitCycles > 0 && (
+        <div className="text-xs text-foreground opacity-60 mb-2 flex items-center gap-2">
+          <ClockIcon className="w-3 h-3" />
+          {canApply ? (
+            <span className="text-green-400">Ready to apply (waited {cyclesWaited} cycles)</span>
+          ) : (
+            <span>Waiting... ({cyclesWaited}/{waitCycles} cycles)</span>
+          )}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => context.applyNextChange()}
+          disabled={!canApply && waitCycles > 0}
+          className={cx(
+            "flex-1 px-3 py-1.5 rounded text-xs font-bold flex items-center justify-center gap-1",
+            canApply || waitCycles === 0
+              ? "bg-purple-500 text-white hover:bg-purple-600"
+              : "bg-lineHighlight text-foreground opacity-50 cursor-not-allowed"
+          )}
+        >
+          <PlayIcon className="w-3 h-3" />
+          Apply Next
+        </button>
+        <button
+          onClick={() => context.skipNextChange()}
+          className="px-3 py-1.5 bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 rounded text-xs flex items-center gap-1"
+        >
+          <ForwardIcon className="w-3 h-3" />
+          Skip
+        </button>
+        <button
+          onClick={() => context.applyAllChanges()}
+          className="px-3 py-1.5 bg-green-500/20 text-green-300 hover:bg-green-500/30 rounded text-xs flex items-center gap-1"
+        >
+          <ArrowPathIcon className="w-3 h-3" />
+          Apply All
+        </button>
+      </div>
+
+      {/* Queue List Preview */}
+      {remainingCount > 1 && (
+        <div className="mt-2 text-xs text-foreground opacity-50">
+          <details>
+            <summary className="cursor-pointer hover:opacity-70">View all {remainingCount} queued changes</summary>
+            <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+              {context.changeQueue.map((change, idx) => (
+                <div key={idx} className="flex items-center gap-2 p-1 bg-lineBackground rounded">
+                  <span className="text-purple-400 font-mono">{idx + 1}.</span>
+                  <span>{change.description || `Change ${idx + 1}`}</span>
+                  {change.waitCycles > 0 && (
+                    <span className="ml-auto text-xs opacity-50">({change.waitCycles} cycles)</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </details>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Parse queue items from agent messages using simple markdown format
+function parseAndQueueChanges(content, addToQueue) {
+  try {
+    const queueItems = [];
+
+    // Pattern 1: Look for queue blocks with emojis (🎬 or 📋)
+    // Format: 🎬 QUEUE: Description (mode, wait N cycles)
+    //         ```javascript
+    //         code here
+    //         ```
+    const queueBlockRegex = /(?:🎬|📋)\s*QUEUE:\s*([^\n]+)\n```(?:javascript|js)?\n([\s\S]+?)```/g;
+    let match;
+
+    while ((match = queueBlockRegex.exec(content)) !== null) {
+      const header = match[1].trim();
+      const code = match[2].trim();
+
+      // Parse header: "Description (replace, wait 4 cycles)"
+      const modeMatch = header.match(/\((replace|append)/i);
+      const waitMatch = header.match(/wait\s+(\d+)\s+cycles?/i);
+      const descMatch = header.match(/^([^(]+)/);
+
+      const item = {
+        description: descMatch ? descMatch[1].trim() : 'Pattern change',
+        code: code,
+        mode: modeMatch ? modeMatch[1].toLowerCase() : 'replace',
+        waitCycles: waitMatch ? parseInt(waitMatch[1]) : 0,
+        autoEvaluate: true
+      };
+
+      queueItems.push(item);
+      console.log('📋 Parsed queue item:', item.description);
+    }
+
+    // Pattern 2: Fallback to old JSON format for backwards compatibility
+    if (queueItems.length === 0) {
+      const jsonMatch = content.match(/```json\s*(\{[\s\S]*?"queue"[\s\S]*?\})\s*```/);
+      if (jsonMatch) {
+        const queueData = JSON.parse(jsonMatch[1]);
+        if (queueData.queue && Array.isArray(queueData.queue)) {
+          queueItems.push(...queueData.queue);
+          console.log('📋 Parsed JSON queue with', queueItems.length, 'items');
+        }
+      }
+    }
+
+    // Add all parsed items to queue
+    if (queueItems.length > 0) {
+      console.log('✅ Adding', queueItems.length, 'items to queue');
+      addToQueue(queueItems);
+    }
+
+  } catch (error) {
+    console.error('Failed to parse queue:', error);
+  }
+}
+
 export function ChatTab({ context }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [provider, setProvider] = useState('claude-sonnet-4-5-20250929');
   const [apiKey, setApiKey] = useState('');
+  const [allowLiveEdit, setAllowLiveEdit] = useState(false);
   const [docsLoaded, setDocsLoaded] = useState(false);
   const [configLoaded, setConfigLoaded] = useState(false);
   const messagesEndRef = useRef(null);
   const codeRef = useRef('');
+  const streamingBufferRef = useRef('');
+  const hadStreamingRef = useRef(false);
   const [currentCode, setCurrentCode] = useState(''); // Track current code for re-rendering
 
   // Auto-scroll to bottom when new messages arrive
@@ -52,6 +242,9 @@ export function ChatTab({ context }) {
         }
         if (config.api_key) {
           setApiKey(config.api_key);
+        }
+        if (typeof config.live_edit_enabled === 'boolean') {
+          setAllowLiveEdit(config.live_edit_enabled);
         }
         setConfigLoaded(true);
         console.log('✅ Chat config loaded from store');
@@ -98,6 +291,11 @@ export function ChatTab({ context }) {
           fetch('/examples-safe.json').catch(() => null) // Safe examples, optional
         ]);
 
+        // Check if docs response is ok before parsing
+        if (!docsResponse.ok) {
+          throw new Error(`Failed to fetch docs: ${docsResponse.status} ${docsResponse.statusText}`);
+        }
+
         const docsJson = await docsResponse.json();
         const examplesJson = examplesResponse ? await examplesResponse.json() : { examples: [], creativity_tips: [] };
 
@@ -111,13 +309,339 @@ export function ChatTab({ context }) {
         console.log('✅ Strudel docs and examples loaded into chat agent');
       } catch (error) {
         console.error('❌ Failed to load Strudel docs:', error);
-        // Try to continue without docs
+        
+        // Fallback: Create minimal docs from Context7 data
+        const fallbackDocs = {
+          docs: [
+            {
+              name: "note",
+              description: "Create musical note patterns",
+              examples: ['note("c3 eb3 g3")', 'note("c3 [e3 g3]*2")']
+            },
+            {
+              name: "s",
+              description: "Select sounds/samples by name",
+              examples: ['s("bd hh")', 's("bd sd [- bd] sd")']
+            },
+            {
+              name: "sound",
+              description: "Play sounds with optional bank selection",
+              examples: ['sound("bd sd")', 'sound("bd sd").bank("RolandTR909")']
+            },
+            {
+              name: "stack",
+              description: "Layer patterns vertically",
+              examples: ['stack(note("c2"), s("bd"))']
+            },
+            {
+              name: "cat",
+              description: "Concatenate patterns horizontally",
+              examples: ['cat("g3,b3,e4", "a3,c3,e4")']
+            },
+            {
+              name: "fast",
+              description: "Speed up patterns",
+              examples: ['fast(2)', 'fast("<1 2 4>")']
+            },
+            {
+              name: "slow",
+              description: "Slow down patterns",
+              examples: ['slow(2)', 'slow("<1 2 4>")']
+            },
+            {
+              name: "scale",
+              description: "Apply musical scales to notes",
+              examples: ['scale("C:major")', 'scale("C4:minor")']
+            },
+            {
+              name: "gain",
+              description: "Control volume/amplitude",
+              examples: ['gain(0.5)', 'gain("<0.3 0.7>")']
+            },
+            {
+              name: "pan",
+              description: "Control stereo panning",
+              examples: ['pan(0.5)', 'pan("<0 1>")']
+            },
+            {
+              name: "lpf",
+              description: "Low-pass filter",
+              examples: ['lpf(800)', 'lpf("<400 1200>")']
+            },
+            {
+              name: "hpf",
+              description: "High-pass filter",
+              examples: ['hpf(200)', 'hpf("<100 500>")']
+            },
+            {
+              name: "room",
+              description: "Reverb effect",
+              examples: ['room(0.5)', 'room("<0.2 0.8>")']
+            },
+            {
+              name: "delay",
+              description: "Delay effect",
+              examples: ['delay(0.5)', 'delay("<0.2 0.8>")']
+            },
+            {
+              name: "sometimes",
+              description: "Apply function with probability",
+              examples: ['sometimes(x => x.fast(2))', 'sometimes(x => x.rev())']
+            },
+            {
+              name: "often",
+              description: "Apply function often (80% chance)",
+              examples: ['often(x => x.fast(2))']
+            },
+            {
+              name: "rarely",
+              description: "Apply function rarely (20% chance)",
+              examples: ['rarely(x => x.fast(2))']
+            }
+          ]
+        };
+        
+        const fallbackExamples = {
+          examples: [
+            {
+              name: "Basic Beat",
+              code: 's("bd hh sd hh")',
+              description: "Simple four-on-the-floor beat"
+            },
+            {
+              name: "Melodic Pattern",
+              code: 'note("c3 eb3 g3 bb3").scale("C:minor")',
+              description: "Minor scale melody"
+            },
+            {
+              name: "Layered Pattern",
+              code: 'stack(s("bd sd"), note("c2 eb2 g2"))',
+              description: "Drums and bass together"
+            }
+          ],
+          creativity_tips: [
+            "Use mini-notation for quick pattern creation",
+            "Layer different elements with stack()",
+            "Add variation with sometimes() and often()",
+            "Experiment with scales and chords",
+            "Use effects like reverb and delay for atmosphere"
+          ]
+        };
+        
+        // Send fallback docs to backend
+        await invoke('load_strudel_docs', {
+          docsJson: JSON.stringify(fallbackDocs),
+          examplesJson: JSON.stringify(fallbackExamples)
+        });
+        
+        console.log('✅ Fallback Strudel docs loaded');
         setDocsLoaded(true);
       }
     };
 
     loadDocs();
   }, [docsLoaded]);
+
+  // Listen for streaming updates from Tauri backend
+  useEffect(() => {
+    if (!TAURI) return undefined;
+
+    let unlisten;
+
+    const setupListener = async () => {
+      try {
+        const { listen } = await import('@tauri-apps/api/event');
+        unlisten = await listen('chat-stream', ({ payload }) => {
+          if (!payload || !payload.event) return;
+          const eventType = payload.event;
+          switch (eventType) {
+            case 'start':
+              hadStreamingRef.current = true;
+              streamingBufferRef.current = '';
+              setStreamingMessage({
+                content: '',
+                reasoning: [],
+                provider: payload.provider,
+                model: payload.model,
+              });
+              setIsLoading(true);
+              break;
+            case 'delta': {
+              streamingBufferRef.current += payload.content || '';
+              setStreamingMessage((prev) =>
+                prev
+                  ? { ...prev, content: streamingBufferRef.current }
+                  : prev
+              );
+              break;
+            }
+            case 'reasoning': {
+              const thought = payload.content;
+              if (!thought) break;
+              setStreamingMessage((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      reasoning: [...(prev.reasoning || []), thought],
+                    }
+                  : prev
+              );
+              break;
+            }
+            case 'done': {
+              const finalContent =
+                payload.content || streamingBufferRef.current || '';
+              streamingBufferRef.current = '';
+              if (finalContent) {
+                const assistantMessage = {
+                  role: 'assistant',
+                  content: finalContent,
+                  timestamp: Date.now(),
+                };
+                if (payload.usage) {
+                  assistantMessage.usage = payload.usage;
+                }
+                setMessages((prev) => [...prev, assistantMessage]);
+
+                // Check for queue JSON in the message
+                if (context?.queueEnabled && context?.addToQueue) {
+                  parseAndQueueChanges(finalContent, context.addToQueue);
+                }
+              }
+              setStreamingMessage(null);
+              setIsLoading(false);
+              break;
+            }
+            case 'error': {
+              const errorText =
+                payload.content ||
+                'Streaming error. Check your model settings and try again.';
+              setMessages((prev) => [
+                ...prev,
+                {
+                  role: 'assistant',
+                  content: errorText,
+                  timestamp: Date.now(),
+                },
+              ]);
+              streamingBufferRef.current = '';
+              setStreamingMessage(null);
+              setIsLoading(false);
+              break;
+            }
+            default:
+              break;
+          }
+        });
+      } catch (error) {
+        console.error('Failed to attach chat-stream listener', error);
+      }
+    };
+
+    setupListener();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
+
+  // Listen for live edit events and pipe them into the REPL
+  useEffect(() => {
+    if (!TAURI) return undefined;
+
+    let unlisten;
+
+    const setupListener = async () => {
+      try {
+        const { listen } = await import('@tauri-apps/api/event');
+        unlisten = await listen('chat-live-edit', ({ payload }) => {
+          if (!payload || !payload.mode || typeof payload.code !== 'string') return;
+
+          window.dispatchEvent(new CustomEvent('insert-code', {
+            detail: { code: payload.code, mode: payload.mode }
+          }));
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: `✏️ Applied ${payload.mode} live edit (${payload.code.length} chars)`,
+              timestamp: Date.now(),
+            },
+          ]);
+        });
+      } catch (error) {
+        console.error('Failed to attach chat-live-edit listener', error);
+      }
+    };
+
+    setupListener();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []);
+
+  // Listen for queue edit events and add to queue
+  // Store latest context in a ref to avoid re-subscribing
+  const contextRef = useRef(context);
+  useEffect(() => {
+    contextRef.current = context;
+  }, [context]);
+
+  // Set up event listener ONCE (empty dependency array)
+  useEffect(() => {
+    if (!TAURI) return undefined;
+
+    let unlisten;
+
+    const setupListener = async () => {
+      try {
+        const { listen } = await import('@tauri-apps/api/event');
+        unlisten = await listen('chat-queue-edit', ({ payload }) => {
+          if (!payload || !payload.mode || typeof payload.code !== 'string') return;
+
+          console.log('📋 Received queue edit:', payload.description);
+
+          // Add to queue - queue size limit is enforced in useReplContext.addToQueue
+          if (contextRef.current?.addToQueue) {
+            const queueItem = {
+              description: payload.description || 'Pattern change',
+              code: payload.code,
+              mode: payload.mode,
+              waitCycles: payload.wait_cycles || 0,
+              autoEvaluate: true
+            };
+            contextRef.current.addToQueue(queueItem);
+
+            // Show feedback message
+            setMessages((prev) => [
+              ...prev,
+              {
+                role: 'assistant',
+                content: `🎬 Queued: ${queueItem.description} (wait ${queueItem.waitCycles} cycles)`,
+                timestamp: Date.now(),
+              },
+            ]);
+          }
+        });
+      } catch (error) {
+        console.error('Failed to attach chat-queue-edit listener', error);
+      }
+    };
+
+    setupListener();
+
+    return () => {
+      if (unlisten) {
+        unlisten();
+      }
+    };
+  }, []); // Empty array = set up once on mount, clean up on unmount
 
   // Poll editor for live code updates
   useEffect(() => {
@@ -160,6 +684,9 @@ export function ChatTab({ context }) {
 
     const invoke = await getInvoke();
     if (!invoke) return;
+    streamingBufferRef.current = '';
+    setStreamingMessage(null);
+    hadStreamingRef.current = false;
 
     const userMessage = {
       role: 'user',
@@ -174,13 +701,14 @@ export function ChatTab({ context }) {
     try {
       const response = await invoke('send_chat_message', { message: input });
 
-      const assistantMessage = {
-        role: 'assistant',
-        content: response,
-        timestamp: Date.now(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (!hadStreamingRef.current) {
+        const assistantMessage = {
+          role: 'assistant',
+          content: response,
+          timestamp: Date.now(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
       const errorMessage = {
@@ -190,7 +718,11 @@ export function ChatTab({ context }) {
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      if (!hadStreamingRef.current) {
+        setIsLoading(false);
+      }
+      hadStreamingRef.current = false;
+      streamingBufferRef.current = '';
     }
   };
 
@@ -200,11 +732,12 @@ export function ChatTab({ context }) {
     const invoke = await getInvoke();
     if (!invoke) return;
 
-    try {
-      await invoke('set_chat_config', {
-        provider,
-        apiKey: apiKey.trim() ? apiKey : null
-      });
+      try {
+        await invoke('set_chat_config', {
+          provider,
+          apiKey: apiKey.trim() ? apiKey : null,
+          liveEditEnabled: allowLiveEdit,
+        });
       setShowSettings(false);
       alert('Settings saved! You can now start chatting.');
     } catch (error) {
@@ -304,6 +837,22 @@ export function ChatTab({ context }) {
           </p>
         </div>
 
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-foreground">Live edit autopilot</label>
+          <label className="flex items-center gap-2 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={allowLiveEdit}
+              onChange={(e) => setAllowLiveEdit(e.target.checked)}
+              className="w-4 h-4"
+            />
+            Allow the assistant to apply code changes directly while streaming
+          </label>
+          <p className="text-xs text-foreground opacity-50">
+            When enabled, the assistant can append or replace your REPL code automatically. You can still undo manually.
+          </p>
+        </div>
+
         <div className="flex gap-2">
           <button
             onClick={handleSaveSettings}
@@ -322,6 +871,13 @@ export function ChatTab({ context }) {
     );
   }
 
+  // Queue toggle button in header
+  const handleToggleQueue = () => {
+    if (context?.setQueueEnabled) {
+      context.setQueueEnabled(prev => !prev);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -331,8 +887,22 @@ export function ChatTab({ context }) {
           {docsLoaded && <span className="ml-2 text-xs opacity-50">(docs loaded)</span>}
           {configLoaded && apiKey && <span className="ml-2 text-xs opacity-50">✓ configured</span>}
           {currentCode && <span className="ml-2 text-xs text-cyan-400">💻 {currentCode.length} chars tracked</span>}
+          {allowLiveEdit && <span className="ml-2 text-xs text-lime-400">🛠 live edits on</span>}
+          {context?.queueEnabled && <span className="ml-2 text-xs text-purple-400">🎬 queue mode</span>}
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleToggleQueue}
+            className={cx(
+              "text-xs px-2 py-1 rounded",
+              context?.queueEnabled
+                ? "bg-purple-500 text-white"
+                : "text-foreground hover:bg-lineHighlight"
+            )}
+            title="Toggle Queue Mode"
+          >
+            🎬
+          </button>
           <button
             onClick={() => setShowSettings(true)}
             className="text-xs px-2 py-1 text-foreground hover:bg-lineHighlight rounded"
@@ -349,6 +919,11 @@ export function ChatTab({ context }) {
           </button>
         </div>
       </div>
+
+      {/* Queue UI */}
+      {context?.queueEnabled && context?.changeQueue && context.changeQueue.length > 0 && (
+        <QueuePanel context={context} />
+      )}
 
       {/* Messages */}
       <div className="flex-grow overflow-y-auto p-4 space-y-4">
@@ -375,7 +950,19 @@ export function ChatTab({ context }) {
           />
         ))}
 
-        {isLoading && (
+        {streamingMessage && (
+          <MessageBubble
+            message={{
+              role: 'assistant',
+              content: streamingMessage.content || '…',
+              reasoning: streamingMessage.reasoning,
+              streaming: true,
+            }}
+            onInsertCode={handleInsertCode}
+          />
+        )}
+
+        {isLoading && !streamingMessage && (
           <div className="flex justify-start">
             <div className="px-4 py-2 rounded-lg bg-lineHighlight text-foreground animate-pulse">
               Thinking...
@@ -418,15 +1005,24 @@ export function ChatTab({ context }) {
 
 function MessageBubble({ message, onInsertCode }) {
   const isUser = message.role === 'user';
-  const hasCodeBlock = message.content.includes('```');
+  const content = message.content || '';
+  const hasCodeBlock = content.includes('```');
 
   const renderContent = () => {
+    if (!content) {
+      return (
+        <p className="whitespace-pre-wrap opacity-70">
+          {message.streaming ? '…' : ''}
+        </p>
+      );
+    }
+
     if (!hasCodeBlock) {
-      return <p className="whitespace-pre-wrap">{message.content}</p>;
+      return <p className="whitespace-pre-wrap">{content}</p>;
     }
 
     // Split content by code blocks
-    const parts = message.content.split(/(```(?:javascript)?\n[\s\S]*?```)/);
+    const parts = content.split(/(```(?:javascript)?\n[\s\S]*?```)/);
 
     return parts.map((part, idx) => {
       const codeMatch = part.match(/```(?:javascript)?\n([\s\S]*?)```/);
@@ -469,10 +1065,16 @@ function MessageBubble({ message, onInsertCode }) {
           'max-w-[80%] px-4 py-2 rounded-lg',
           isUser
             ? 'bg-[var(--cyan-400)] text-background'
-            : 'bg-lineHighlight text-foreground'
+            : 'bg-lineHighlight text-foreground',
+          message.streaming && !isUser && 'opacity-80'
         )}
       >
         {renderContent()}
+        {message.reasoning && message.reasoning.length > 0 && (
+          <div className="text-xs opacity-60 italic mt-2">
+            {message.reasoning.slice(-3).join(' ')}
+          </div>
+        )}
       </div>
     </div>
   );

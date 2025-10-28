@@ -769,6 +769,142 @@
       "license": "MIT",
       "source": "community",
       "tags": ["community", "contributed", "shared"]
+    },
+    {
+      "name": "Coastline",
+      "code": "// coastline by eddyflux\nsamples('github:eddyflux/crate')\nsetcps(.75)\nlet chords = chord(\"<Bbm9 Fm9>/4\").dict('ireal')\nstack(\n  stack(\n    s(\"bd\").struct(\"<[x*<1 2> [~@3 x]] x>\"),\n    s(\"~ [rim, sd:<2 3>]\").room(\"<0 .2>\"),\n    n(\"[0 <1 3>]*<2!3 4>\").s(\"hh\"),\n    s(\"rd:<1!3 2>*2\").mask(\"<0 0 1 1>/16\").gain(.5)\n  ).bank('crate').mask(\"<[0 1] 1 1 1>/16\".early(.5)),\n  chords.offset(-1).voicing().s(\"gm_epiano1:1\").phaser(4).room(.5),\n  n(\"<0!3 1*2>\").set(chords).mode(\"root:g2\").voicing().s(\"gm_acoustic_bass\"),\n  chords.n(\"[0 <4 3 <2 5>>*2](<3 5>,8)\").anchor(\"D5\").voicing().segment(4)\n    .room(.75).shape(.3).delay(.25)\n    .fm(sine.range(3,8).slow(8))\n    .lpf(sine.range(500,1000).slow(8)).lpq(5)\n).late(\"[0 .01]*4\").late(\"[0 .01]*2\").size(4)",
+      "description": "Full ambient composition with complex patterns",
+      "category": "ambient",
+      "author": "eddyflux",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs",
+      "tags": ["ambient", "complete", "composition"]
+    },
+    {
+      "name": "Broken Cut 1",
+      "code": "// broken cut 1 by froos\nsamples('github:tidalcycles/dirt-samples')\nsetcps(1.25)\nnote(\"[c2 ~](3,8)*2,eb,g,bb,d\").s(\"sawtooth\")\n  .noise(0.3)\n  .lpf(perlin.range(800,2000).mul(0.6))\n  .lpenv(perlin.range(1,5)).lpa(.25).lpd(.1)\n  .add.mix(note(\"<0!3 [1 <4!3 12]>\"))\n  .vib(\"4:.2\")\n  .room(1).roomsize(4).slow(4)\n  .stack(\n    s(\"bd\").late(\"<0.01 .251>\"),\n    s(\"breaks165:1/2\").fit().chop(4).sometimesBy(.4, ply(\"2\"))\n      .gain(1.5).sometimes(mul(speed(\"1.05\"))).cut(1),\n    s(\"<whirl attack>?\").delay(\".8:.1:.8\").room(2).slow(8).cut(2)\n  ).reset(\"<x@30 [x*[8 [8 [16 32]]]]@2>\".late(2))",
+      "description": "Experimental bass with breakbeat drums and effects",
+      "category": "experimental",
+      "author": "froos",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs",
+      "tags": ["experimental", "bass", "breakbeat"]
+    },
+    {
+      "name": "Acidic Tooth",
+      "code": "// acidic tooth by eddyflux\nsetcps(1)\nstack(\n  note(\"[<g1 f1>/8](<3 5>,8)\")\n    .clip(perlin.range(.15,1.5))\n    .release(.1)\n    .s(\"sawtooth\")\n    .lpf(sine.range(400,800).slow(16))\n    .lpq(cosine.range(6,14).slow(3))\n    .lpenv(sine.mul(4).slow(4))\n    .lpd(.2).lpa(.02)\n    .ftype('24db')\n    .rarely(add(note(12)))\n    .room(.2).shape(.3).postgain(.5)\n    .superimpose(x=>x.add(note(12)).delay(.5).bpf(1000))\n    .gain(\"[.2 1@3]*2\"),\n  s(\"bd*2\").mask(\"<0@4 1@16>\"),\n  s(\"hh*8\").gain(saw.mul(saw.fast(2))).clip(sine).bank('RolandTR909')\n)",
+      "description": "Acid bass with techno drums and sidechain",
+      "category": "techno",
+      "author": "eddyflux",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs",
+      "tags": ["acid", "techno", "bass"]
+    },
+    {
+      "name": "Amelie Waltz",
+      "code": "setDefaultVoicings('legacy')\nstack(\n  n(\"[0@2 ~, ~ [[1,2,3] ~]!2]\")\n  .chord(\"<[Dm Am]!2 [F C]!2>/4\")\n  .anchor(\"<[B3 G3]!2 [C4 B3]!2>/4\")\n  .voicing().velocity(0.5)\n  ,\n  n(\"<[3@5.5 2@0.5 1@3 0@3] [3@3.5 [4 3 2 1 2]@2.5 1@3 0@3] [2@5.5 1@0.5 -3@6]!2>/4\")\n  .scale(\"a4:minor\")\n  \n).s(\"gm_harmonica\").lpf(4000).clip(1)\n  .attack(0.1).release(0.1)\n  .room(1.5)\n  .cpm(64).gain(.6)\n  .pianoroll()",
+      "description": "Waltz inspired by Amelie soundtrack using harmonica and minor scale",
+      "category": "classical",
+      "author": "eefano",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs-collection",
+      "tags": ["waltz", "classical", "soundtrack"]
+    },
+    {
+      "name": "Disto",
+      "code": "setcps(90/60)\ng: n(\"<[[0,4]]*3>\")\n  .scale(\"c#2:minor\").s(\"supersaw\").transpose(\"<0 2 [3 1]>/8\")\n  .lpa(0).lpe(10).lpd(0.2).lpr(1).lpf(\"<[10 10 100]>\").dist(\"8:0.18\")\ns: n(\"<[[5 ~]*3] 4 4b 3 [1 2 1] 0 [4 5 2] 4 >\")\n  .scale(\"c#4:minor\").transpose(\"<0 2 [3 1]>/8\")\n.s(\"supersaw\").lpf(500).dist(\"10:0.12\").room(0.2)\n  .mask(\"<0@3 1@4 >/8\").hush()\nd: \"[<bd*3 [~ bd bd] [sd ~ bd] [mt lt bd] [[sd,[~ sd@6]] sd mt] >,<oh!4 ~>,<cr>/5]\"\n  .pickOut({bd:s(\"EmuDrumulator_bd\").velocity(1).lpf(1000),\n           sd:s(\"EmuDrumulator_sd\").velocity(1),\n           oh:s(\"EmuDrumulator_oh\").pan(0.6).speed(0.7).velocity(0.2),\n           mt:s(\"EmuDrumulator_mt\").velocity(0.6),\n           lt:s(\"EmuDrumulator_lt\").velocity(0.6),\n           cr:s(\"SequentialCircuitsDrumtracks_cr\").speed(1.3).pan(0.4).velocity(0.5)})\n  .room(0.9).gain(0.5)\n  .mask(\"<0 1@5 0 1 >/8\")\n",
+      "description": "Distorted synth with complex drum patterns",
+      "category": "electronic",
+      "author": "eefano",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs-collection",
+      "tags": ["distortion", "synth", "drums"]
+    },
+    {
+      "name": "Everso Closely",
+      "code": "setCps(93.2/60*3/4/9)\nsetDefaultVoicings('legacy')\nconst epic = \"<D Dm Am D Gm C F Am A#>*9\";\nconst mels ={0:\"d4@2 a d4 g c4 f a d4\"\n            ,1:\"a@7 c4@3 d4@6 e4@2 c4@7 d4@2\"\n            ,2:\"a@7 e4 c4 [d4@3 e4]@2 f#4 ~ g4@2 [c4@3 d4]@2 e4 [c4@5 ~]@4 c5@2 ~ d5@2\"\n            ,3:\"a@2 f#4 f4@2 a ~ e4@2 d4@2 a ~ g4@2 c4@2 e4 ~ f4@2 c5@2 e4 ~ d4@2\"\n            ,4:\"a d4 f#4 [a4 e5 c5]@6 d5 a4 f#4 [a4 g4]@4 c5@3 a4 f4 [e4 c4]@4 d4@2\"\n            ,5:\"a d4 f#4 [a4 c5 a4]@6 d5 a4 f#4 [a4 g4]@4 c5@3 a4 f4 [e4 c4]@4 d4@2\"\n            ,6:\"f#4 f4 e4 f#4 g4 e4 f4 [a@2 c4] [[a#@3 c4]@2 d4]\"\n            ,7:\"[f#4 f4]@6 <e4 [e4 e4@2]>@3 [d4@3 e4]@2 f#4 [g4 a#4 c5 a4]@8 f4 e4 <[c5@2 ~ a#4@2] [c4@3 a#@2]>@5\"\n            ,8:\"[~@25 d4@29]/2\"\n            ,9:\"<0,1,2,3,4,5,6,7>*9\"}\nstack\n(\"<0 1 2 3 4 0 1 2 3 [4@26 ~] 0 1 2 3 [[4@25 ~@29],8]@2 >\".pickRestart(mels).sub(12).note().s(\"gm_overdriven_guitar\").gain(.8)\n,\"<~ ~ ~ ~ 5 5 6 7@2 [2@4 ~] 5 5 6 7 [[5@25 ~@29],8]@2>\".pickRestart(mels).note().s(\"gm_tenor_sax\").gain(.8).color(\"yellow\")\n,\"<1@14 [[4@25 ~@29],8]@2>\".pickRestart(mels).add(24).note().s(\"gm_ocarina\").gain(.3).color(\"red\")\n,\"<9@14 ~@2>\".pickRestart(mels).n().chord(epic).anchor(\"C4\").voicing().s(\"<gm_reed_organ@10 gm_church_organ:1@4 ~@2>\").gain(\"<.25@10 .45@4 ~@2>\").color(\"green\").midichan(3)\n,\"<0@14 [[4@25 ~@29],8]@2>\".pickRestart(mels).sub(24).note().s(\"gm_electric_bass_finger\").lpf(400).gain(.77).color(\"blue\")\n,\"<0 [0@2 1@2 0 2@4] 0!4 [0@2 1@2 0 2@4] 0!2 [0@26 ~] 0!2 [0@2 1@2 0 2@4] 0 3@2>\".pickRestart(\n  [\"<rd*3 , <<<bd!4 sd> sd> ~ bd>*3 , cr/9>*9\"\n  ,\"[[sd [bd,cr] ~]!2@3]*9/2\"\n  ,\"<[sd,[~ sd@10]] [[[bd,cr] ~]!2]@4 bd [sd,[~ sd@10]] mt lt >*9*3\"\n  ,\"< [<[sd,[~ sd@10]]!2 ~> <[bd,cr]!2 [sd,[~ sd@10]]> [bd,cr]!2 ~ [bd,cr] ~ [bd,cr,cr] ~]*3 ~*4 >\" \n  ]).pickOut({rd:s('rd').velocity(.12).hpf(9000).pan(.45),\n               bd:s('bd').velocity(.5).lpf(2500),\n                sd:s('sd').velocity(.5).hpf(200),\n                cr:s('cr').velocity(.1).pan(.55),\n                mt:s('mt').velocity(.3).pan(.6),\n                lt:s('lt').velocity(.3).pan(.7)\n}).bank(\"Linn9000\").speed(.95).gain(.7).color(\"cyan\").midichan(10) ).room(.8)\n ",
+      "description": "Alternative track with guitar, sax, and drums",
+      "category": "alternative",
+      "author": "eefano",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs-collection",
+      "tags": ["alternative", "rock", "multi-instrument"]
+    },
+    {
+      "name": "Happy Birthday",
+      "code": "setDefaultVoicings('legacy')\nconst chrds = \"F@3 C@6 F@6 Bb@3 F@2 C F@3\".slow(8);\nstack(\n\"[C4@3 C4] D4 C4 F4 E4@2 [C4@3 C4] D4 C4 G4 F4@2 [C4@3 C4] C5 A4 F4 E4 D4 [Bb4@3 Bb4] A4 F4 G4 F4@2\".slow(8).early(1/3).note().s(\"gm_harmonica\").gain(0.4).color('green'),\nchord(chrds).anchor(\"G4\").struct(\"x*3\").voicing().piano().gain(0.2).color('yellow'),\nn(\"2 ~ ~ 2 1 ~\").chord(chrds).anchor(chrds.rootNotes(2)).voicing().s(\"gm_electric_bass_finger\").lpf(190).gain(1).color('blue'),\ns(\"hh*3, <bd ~>, ~ ~ rim\").bank(\"KorgDDM110\").gain(0.2)\n              \n).cpm(120/4).room(0.3)//.pianoroll();\n",
+      "description": "Traditional birthday song with harmonica melody",
+      "category": "traditional",
+      "author": "eefano",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs-collection",
+      "tags": ["birthday", "traditional", "celebration"]
+    },
+    {
+      "name": "Jitterbug",
+      "code": "setDefaultVoicings('legacy')\nconst m1 = `f#4@3 d4@4 g4@6 g#4@4 f4@3 d#4@3 e4@4 c#4@6 b3@4 g#3@3 g#4@5 a4@4 f#4@3 d#4@3 f#4@4 g4@6 a4@4 a#4@6 d#4@3.9 ~@0.1 d#4@3`.slow(82/8);\nconst m2 = `f4@3 d4@4 d#4@5 e4@3 g4@4 e4@6 f#4@4 c4@2.9 ~@0.1 c4@3 g#3@4 a#3@4 b3@6 c#4@4 g4@6 a4@4 a#4@6 d#4@3.9 ~@0.1`.slow(73/8);\nconst m3 = `d#4@3 f#4@3.5 ~@0.5`.slow(7/8);\nconst m4 = `c#4@4 f#4@4 `.slow(8/8);\nconst m5 = `e4@4 g4@7.9 ~@0.1 f4@4 f#4@4.9 ~@0.1 d#4@3 e4@4 c#4@6.9 ~@0.1 f#4@2 f4@3.9 ~@0.1`.slow(41/8);\nconst melody = arrange([82/8,m1],[73/8,m2],[7/8,m3],[82/8,m1],[8/8,m4],[73/8,m2],[41/8,m5]);\nconst h1 = `D@2 G@2 C D#@2 G#@2 C# B@2 E@2 A F#m@2 B@2 G#@2 C#@2 A@2 D Cm@2 F#@2 D# Em@2 A@2 F# D#m@2 G#@2`.slow(40/4);\nconst h2 = `Cm F@2`.slow(3/4);\nconst h3 = `Bm@2 B@2 C@2 G@2 C A@2 D@2 Am C@2 G#@2 F#@2 E B@2 C#m@2 D# Em@2 A@2 F# D#m@2 G#@2`.slow(35/4);\nconst h4 = `Cm F#@2`.slow(3/4);\nconst h5 = `Cm F#@4 F@2`.slow(7/4);\nconst h6 = `C#m@2 D#@4 C#@2 F#@2 B@2 E@2 C#m@2 F#@2 A#@2`.slow(20/4);\nconst chords = arrange([40/4,h1],[3/4,h2],[35/4,h3],[3/4,h4],[40/4,h1],[7/4,h5],[35/4,h3],[20/4,h6]);\nstack(  \n n(stack(\"0\",\"1\".late(.1),\"2\".late(.2)).fast(4)).chord(chords).anchor(\"G5\").voicing().s(\"gm_pad_choir\").echo(2,1/6,.7).gain(0.8), \n chords.rootNotes(2).note().s(\"gm_lead_2_sawtooth\").attack(0.2).sustain(1.2).lpf(1000).gain(0.4),\n melody.note().s(\"gm_lead_1_square\").attack(0.02).sustain(1.5).lpf(1200).gain(0.75),\n s(\"<rd*4>\").bank('LinnDrum').gain(0.07)\n).cpm(115/4)\n.room(    slider(0.91,0,10))\n  .rsize(   slider(4,0,8,1))\n",
+      "description": "Energetic alternative track with layered synths and effects",
+      "category": "alternative",
+      "author": "eefano",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs-collection",
+      "tags": ["alternative", "energetic", "synth"]
+    },
+    {
+      "name": "Mouth Breather",
+      "code": "setcps(215/60*2)\nconst xposes = \"<0@9 -5 -7 0@4 ~ 0@2 -5 -7 ~@2>/48\"\ng:\"<0@5 1 0 1 0@3 ~@2 0 ~ 0@4 ~@2 >/48\".pickRestart(\n  [stack(\"<c3@9 c#3 c3@2>\",\"<g3 f3@2 g3@4 f3 g3 g#3 g3 f3>\".add(\"<0,5>\")).struct(\"<x!4 ~!2 x!9 x@3 x!6>\")\n  ,\"<[c3,g3,c4]@6 ~@42>\".add(-3).penv(-3).patt(1)\n  ]).note().transpose(xposes).s(\"gm_electric_guitar_clean:2\").distort(\"10:.17\").room(.1)\nb:\"<~@3 0@2 ~ 0 ~ 0@6 ~ 0@4 ~@2 >/48\".pickRestart([\"<c2!3 c2@2 ~ c2!3 <[c#2 f2 c#2] [c2 f2 g2]>@3>\"])\n  .note().transpose(xposes).s(\"gm_electric_bass_pick\").release(.06).distort(\"5:.3\").room(.2).color('green')\nd:\"<~ 0@14 ~ 0@6>/48\".pickRestart(\n  [stack(s(\"<bd ~ bd ~!2 bd!2 ~!2 bd ~!2 bd ~!2 bd ~ bd ~ bd ~!2 bd ~>\"),\n        s(\"<~!3 sd ~!6 sd ~!5 sd ~!3 sd ~!3>\").gain(1.4),\n        s(\"<oh>/2\").speed(1.03).gain(.3).pan(.4),\n        s(\"<cr>/12\").speed(1.1).gain(.2).pan(.6))])\n  .room(.8).color('cyan')\n// all((x)=>x.scope({scale:.05})) //._pianoroll({minMidi:10,maxMidi:60,autorange:false})\n",
+      "description": "Punk rock track with distorted guitar and intense drums",
+      "category": "punk",
+      "author": "eefano",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs-collection",
+      "tags": ["punk", "rock", "distorted"]
+    },
+    {
+      "name": "Pyramid Song",
+      "code": "setcps(104/60/4)\nconst split = register('split', (deflt, callback, pat) => callback(deflt.map((d,i)=> pat.withValue((v)=>{\n  const isobj = v.value !== undefined; const value = isobj ? v.value : v;\n  const result = Array.isArray(value)?(i<value.length?value[i]:d):(i==0?value:d);\n  return (i==0 && isobj) ? {...v,value:result} : result; })));\nlet chr = {X:\"f#2,c#3,a#3,c#4,f#4\", Y:\"g2,d3,b3,d4,f#4\", Z:\"a2,e3,a3,c#4,f#4\", J:\"g2,d3,b3,d4,g4\", K:\"f#2,c#3,a#3,c#4,g4\",\n           V:\"f#2,c#3,a3,c#4,f#4\", W:\"e2,b2,g#3,b3,f#4\"}\npiano: \"<[i1 i2 i3 i4] ooooh [v1 v2]!4 ooooh@2 [v1 v2]!3 [v1 v3] [v3 v2] [i1 i2 i3 i2] [i3 i2 i3 i2] end>/8\".pickRestart(\n {i1:`<[[X:.6 X:.8]@3 Y:.5@2 [Z:.5 Z:.5]@3]>/2`, i2: `<[[Z:.4 Y:.4]@3 Y:.3@2 [J:.6 J:.9]@3]>/2`, \n  i3:`<[[K:.8 X:.6]@3 Y:.5@2 [Z:.5 Z:.5]@3]>/2`, i4: `<[[Z:.4 Y:.4]@3 Y:.4@2 [Y:.4 Y:.7]@3]>/2`,\n  ooooh:`<[[X X]@3 Y@2 [Z Z]@3] [[Z Y]@3 Y@2 [X X]@3] [[X X]@3 Y@2 [Z Z]@3] [[Z Y]@3 Y@2 [Y Y]@3]>/2`,\n  v1:`<[[X X]@3 Y@2 [Z Z]@3] [[Z Y]@3 Y@2 [X X]@3]>/2`,\n  v2:`<[[V V]@3 W@2 [W W]@3] [[Y Y]@3 Y@2 [Y Y]@3]>/2`,\n  v3:`<[[V V]@3 W@2 [W W]@3] [[Y Y]@3 X@2 [X X]@3]>/2`,\n  end:`<X:1>/8`, \n }).split([0,.5],(x)=>x[0].pickOut(chr).velocity(x[1])).note().piano().gain(0.8).room(.6)\nooooh: \"<~ 0 ~@4 0@2 ~@8>/8\".pickRestart([\n  \"<f#5@11 e5:-2 g#5:4 e5:-4 [f#5:2 ~] [~ g#5 e5] f#5@4 g#5 f#5 e5 d5 c#5@5 ~@3>*4\"\n  ]).split([0,0],(x)=>x[0].penv(x[1])).patt(0.04).s(\"triangle\").attack(.08).release(.08).note().vmod(.1).vib(5).gain(0.3).lpf(2000).room(1.5)\ndrums: \"<~@6 [~@15 0@15 1@2] [2,3]@8 3>/8\".pick([\n  \"<[bd,rd] ~ [~ sf*3] [bd,rd] ~ [~ sf*3] [bd,rd] ~ ~ [~ sf*3] [bd,rd] ~ [~ sf*3] [bd,rd] ~ [~ sf*3]>*8\",\n  \"<[sd sf bd] [sf sd sd]>*4\",\n  \"<[rd*4],[<~ ~ ~ bd ~ bd ~ ~ bd ~ bd ~ ~ bd ~ bd> <~!14 sf!2> <~ sd bd ~ sd ~ sd bd ~ sd ~ ~ sd ~ sd sd>]*4>\",\n  \"<cr,bd>/8\",\n]).pickOut({\n  bd: s('bd').bank('Linn9000').lpf(1000),\n  sd: s('sd').bank('RolandMT32').velocity(.5),\n  sf: s('sd').bank('RolandMT32').velocity(.2),\n  rd: s('rd').bank('Linn9000').velocity(0.3).hpf(8000),\n  mt: s('mt').bank('RolandMT32'),\n  lt: s('lt').bank('RolandMT32'),\n  cr: s('cr').bank('Linn9000').speed(0.4).velocity(0.3).hpf(4000),\n}).room(.2).gain(0.5)\n",
+      "description": "Alternative track with piano and vocal effects",
+      "category": "alternative",
+      "author": "eefano",
+      "license": "CC BY-NC-SA 4.0",
+      "source": "strudel-songs-collection",
+      "tags": ["alternative", "piano", "vocal"]
+    },
+    {
+      "name": "Rhythm of the Night",
+      "code": "// Add code from rhythmofthenight.js",
+      "description": "Dance track with synth leads and rhythms",
+      "category": "dance"
+    },
+    {
+      "name": "Shedontusejelly",
+      "code": "// Add code from shedontusejelly.js",
+      "description": "Rock track with guitar and bass",
+      "category": "rock"
+    },
+    {
+      "name": "Stranger Things",
+      "code": "// Add code from strangerthings.js",
+      "description": "Ambient soundtrack theme",
+      "category": "ambient"
+    },
+    {
+      "name": "Swim and Sleep",
+      "code": "// Add code from swimandsleep.js",
+      "description": "Complex multi-instrument track",
+      "category": "experimental"
+    },
+    {
+      "name": "Vermin Mangle",
+      "code": "// Add code from verminmangle.js",
+      "description": "Experimental electronic piece",
+      "category": "experimental"
+    },
+    {
+      "name": "Vine",
+      "code": "// Add code from vine.js",
+      "description": "Funky groove with multiple layers",
+      "category": "funk"
     }
   ],
   "creativity_tips": [
@@ -804,15 +940,15 @@
     "Experiment with .iter() for iterative patterns"
   ],
   "metadata": {
-    "version": "1.0.0",
-    "lastUpdated": "2024-01-15T00:00:00Z",
-    "totalExamples": 85,
+    "version": "1.1.0",
+    "lastUpdated": "2024-01-16T00:00:00Z",
+    "totalExamples": 98,
     "categories": [
       "technique", "ambient", "techno", "jazz", "classical", "rock", "experimental",
       "electronic", "house", "breakbeat", "minimal", "jungle", "idm", "trance",
       "dnb", "acid", "future", "trap", "progressive", "breakcore", "chillout",
-      "neurofunk", "liquid", "hardcore", "downtempo", "psytrance", "deep",
-      "garage", "grime", "dub", "reggae", "ska", "funk", "disco", "soul",
+      "neurofunk", "liquid", "hardcore", "downtempo", "psytrance", "deep", "funk",
+      "garage", "grime", "dub", "reggae", "ska", "disco", "soul",
       "blues", "country", "folk", "world", "cinematic", "game", "chiptune",
       "synthwave", "vaporwave", "lofi", "bedroom", "indie", "postrock",
       "shoegaze", "dreampop", "noise", "drone", "field", "microsound",
@@ -821,13 +957,13 @@
       "workshop", "community"
     ],
     "authors": [
-      "strudel-core", "strudel-community"
+      "strudel-core", "strudel-community", "eddyflux", "froos"
     ],
     "licenses": [
-      "MIT"
+      "MIT", "CC BY-NC-SA 4.0"
     ],
     "sources": [
-      "strudel-docs", "community"
+      "strudel-docs", "community", "strudel-songs"
     ]
   }
 }
