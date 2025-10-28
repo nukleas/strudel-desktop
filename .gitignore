@@ -131,3 +131,21 @@ fabric.properties
 samples/*
 !samples/README.md
 .idea/
+
+# Additional cleanup - macOS, logs, personal files
+*.DS_Store
+.DS_Store
+log.txt
+*.log
+lg-*.xml
+
+# Personal music collections
+music/
+
+# Generated embeddings (regenerate as needed)
+embeddings.json
+src-tauri/embeddings.json
+
+# Validation modules (if experimental)
+packages/desktopbridge/validation.mjs
+website/src/validation.ts
