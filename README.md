@@ -11,6 +11,14 @@
 
 ---
 
+## 🎥 Demo Video
+
+[![Strudel Desktop Demo](https://img.youtube.com/vi/jivheA_U6uA/maxresdefault.jpg)](https://www.youtube.com/watch?v=jivheA_U6uA)
+
+**[Watch the Demo →](https://www.youtube.com/watch?v=jivheA_U6uA)**
+
+---
+
 ## About
 
 Strudel Desktop brings the power of [Strudel](https://strudel.cc) - the live coding pattern language - to your desktop. Write and perform music using JavaScript and mini notation, with full access to your local file system, MIDI devices, and desktop integrations.
