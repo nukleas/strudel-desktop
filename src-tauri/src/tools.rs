@@ -561,7 +561,7 @@ impl RigTool for RigApplyLiveEditTool {
                     },
                     "wait_cycles": {
                         "type": "integer",
-                        "description": "Optional: Number of cycles to wait before auto-applying this change (0 = immediate, 4 = wait 4 cycles). Only used in Queue Mode."
+                        "description": "Optional: Number of cycles to wait AFTER the previous change was applied (0 = immediate, 8 = wait 8 cycles after last change). Timing is RELATIVE/CUMULATIVE, not absolute. Only used in Queue Mode."
                     }
                 },
                 "required": ["mode", "code"]

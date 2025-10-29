@@ -585,8 +585,15 @@ impl ChatState {
             This creates two distinct musical moments with time to appreciate each.\n\n\
             **Parameters:**\n\
             - `description`: Brief label (\"Drums\", \"Add bass layer\")\n\
-            - `wait_cycles`: 0 for first change, 8-16 for subsequent (gives time to hear it)\n\
+            - `wait_cycles`: Cycles to wait AFTER the previous change was applied\n\
+              - 0 for first change (applies immediately)\n\
+              - 8-16 for subsequent changes (gives time to hear previous layer)\n\
+              - Each wait is RELATIVE to when the last change applied (cumulative timing)\n\
             - Combine related elements in one call\n\n\
+            **Timing Example:** If you queue 3 changes:\n\
+            - Change 1 (wait_cycles: 0)  → Applies immediately at cycle 0\n\
+            - Change 2 (wait_cycles: 8)  → Applies at cycle 8 (8 cycles AFTER Change 1)\n\
+            - Change 3 (wait_cycles: 16) → Applies at cycle 24 (16 cycles AFTER Change 2)\n\n\
             ## Common Syntax Errors to Avoid\n\
             ❌ Missing parentheses: `s \"bd sd\"` → ✅ `s(\"bd sd\")`\n\
             ❌ Unescaped quotes: `s(\"bd \"sd\"\")` → ✅ `s(\"bd sd\")` or `s(\"bd 'sd'\")`\n\
