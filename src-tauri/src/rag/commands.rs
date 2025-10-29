@@ -7,9 +7,9 @@ use tauri::State;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SemanticSearchRequest {
     #[serde(default)]
-    pub query: Option<String>,  // Text query (will be embedded)
+    pub query: Option<String>, // Text query (will be embedded)
     #[serde(default)]
-    pub query_embedding: Option<Vec<f32>>,  // Pre-computed embedding (alternative)
+    pub query_embedding: Option<Vec<f32>>, // Pre-computed embedding (alternative)
     pub limit: Option<usize>,
 }
 
@@ -25,6 +25,16 @@ pub async fn init_rag(
     embeddings_json: String,
     state: State<'_, RagState>,
 ) -> Result<String, String> {
+    // Validate size (e.g., 100MB limit)
+    const MAX_JSON_SIZE: usize = 100 * 1024 * 1024;
+    if embeddings_json.len() > MAX_JSON_SIZE {
+        return Err(format!(
+            "Embeddings JSON too large: {} bytes (max: {})",
+            embeddings_json.len(),
+            MAX_JSON_SIZE
+        ));
+    }
+
     state
         .load_from_json(&embeddings_json)
         .await

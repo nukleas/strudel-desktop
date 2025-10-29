@@ -44,6 +44,7 @@ Dirt-Samples
 tidal-drum-machines
 webaudiofontdata
 src-tauri/target
+target/
 
 # BEGIN JetBrains -> END JetBrains
 

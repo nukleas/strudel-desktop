@@ -161,9 +161,7 @@ export function useReplContext() {
   useEffect(() => {
     const handleInsertCode = (event) => {
       if (editorRef.current && event.detail) {
-        const { code, mode } = typeof event.detail === 'string'
-          ? { code: event.detail, mode: 'append' }
-          : event.detail;
+        const { code, mode } = typeof event.detail === 'string' ? { code: event.detail, mode: 'append' } : event.detail;
 
         if (mode === 'replace') {
           // Replace all code
@@ -254,6 +252,7 @@ export function useReplContext() {
   const [queueEnabled, setQueueEnabled] = useState(false);
   const [cyclesSinceLastChange, setCyclesSinceLastChange] = useState(0);
   const [lastChangeCycle, setLastChangeCycle] = useState(0);
+  const [pendingEvaluation, setPendingEvaluation] = useState(false);
 
   // Track cycles for timing using Strudel's native cycle counter
   useEffect(() => {
@@ -272,67 +271,81 @@ export function useReplContext() {
 
   // Queue actions
   const addToQueue = (items) => {
-    const queueItems = Array.isArray(items) ? items : [items];
+    setChangeQueue((prev) => {
+      const MAX_QUEUE_SIZE = 5;
+      const remainingSlots = MAX_QUEUE_SIZE - prev.length;
 
-    // Soft limit: max 5 items recommended (prevents excessive queuing)
-    const MAX_QUEUE_SIZE = 5;
-    const remainingSlots = MAX_QUEUE_SIZE - changeQueue.length;
+      if (remainingSlots <= 0) {
+        console.warn(`🎬 Queue full (${MAX_QUEUE_SIZE} items). Cannot add more. Apply or clear existing items first.`);
+        return prev;
+      }
 
-    if (remainingSlots <= 0) {
-      console.warn(`🎬 Queue full (${MAX_QUEUE_SIZE} items). Cannot add more. Apply or clear existing items first.`);
-      return;
-    }
+      const itemsToAdd = (Array.isArray(items) ? items : [items]).slice(0, remainingSlots);
 
-    const itemsToAdd = queueItems.slice(0, remainingSlots);
+      if (itemsToAdd.length < (Array.isArray(items) ? items : [items]).length) {
+        console.warn(
+          `🎬 Queue limit: adding ${itemsToAdd.length}/${(Array.isArray(items) ? items : [items]).length} items (${MAX_QUEUE_SIZE} max)`,
+        );
+      }
 
-    if (itemsToAdd.length < queueItems.length) {
-      console.warn(`🎬 Queue limit: adding ${itemsToAdd.length}/${queueItems.length} items (${MAX_QUEUE_SIZE} max)`);
-    }
+      // Initialize cycle tracking if this is the first item being added
+      if (prev.length === 0 && editorRef.current?.repl?.scheduler) {
+        setLastChangeCycle(Math.floor(editorRef.current.repl.scheduler.now()));
+        setCyclesSinceLastChange(0);
+      }
 
-    setChangeQueue(prev => [...prev, ...itemsToAdd]);
-
-    // Initialize cycle tracking if this is the first item
-    if (changeQueue.length === 0 && editorRef.current?.repl?.scheduler) {
-      const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
-      setLastChangeCycle(currentCycle);
-      setCyclesSinceLastChange(0);
-    }
+      return [...prev, ...itemsToAdd];
+    });
   };
 
-  const applyNextChange = () => {
-    if (changeQueue.length === 0) return;
+  const applyNextChange = useCallback(() => {
+    // Use functional state update to read and update queue atomically
+    setChangeQueue((prevQueue) => {
+      if (prevQueue.length === 0) return prevQueue;
 
-    const nextChange = changeQueue[0];
-    if (!nextChange) return;
+      const nextChange = prevQueue[0];
+      if (!nextChange) return prevQueue;
 
-    // Apply the change
-    if (nextChange.mode === 'replace') {
-      editorRef.current?.setCode(nextChange.code.trim());
-    } else {
-      const currentCode = editorRef.current?.code || '';
-      const newCode = currentCode.trim() + '\n\n' + nextChange.code.trim();
-      editorRef.current?.setCode(newCode);
+      // Apply the change to editor
+      if (nextChange.mode === 'replace') {
+        editorRef.current?.setCode(nextChange.code.trim());
+      } else {
+        const currentCode = editorRef.current?.code || '';
+        const newCode = currentCode.trim() + '\n\n' + nextChange.code.trim();
+        editorRef.current?.setCode(newCode);
+      }
+
+      // Update step counter functionally
+      setCurrentStep((prev) => prev + 1);
+
+      // Reset cycle counter using functional updates
+      if (editorRef.current?.repl?.scheduler) {
+        const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
+        setLastChangeCycle(currentCycle);
+        setCyclesSinceLastChange(0);
+      }
+
+      // Schedule evaluation deterministically via state flag
+      if (nextChange.autoEvaluate !== false) {
+        setPendingEvaluation(true);
+      }
+
+      // Return new queue with first item removed
+      return prevQueue.slice(1);
+    });
+  }, []);
+
+  // Deterministic evaluation trigger - watches pendingEvaluation flag
+  useEffect(() => {
+    if (pendingEvaluation) {
+      setPendingEvaluation(false);
+      // Use microtask to ensure state updates complete before evaluation
+      queueMicrotask(() => handleEvaluate());
     }
-
-    // Mark as applied and remove from queue
-    setChangeQueue(prev => prev.slice(1));
-    setCurrentStep(prev => prev + 1);
-
-    // Reset cycle counter using Strudel's current cycle
-    if (editorRef.current?.repl?.scheduler) {
-      const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
-      setLastChangeCycle(currentCycle);
-      setCyclesSinceLastChange(0);
-    }
-
-    // Auto-evaluate if requested
-    if (nextChange.autoEvaluate !== false) {
-      setTimeout(() => handleEvaluate(), 100);
-    }
-  };
+  }, [pendingEvaluation, handleEvaluate]);
 
   const skipNextChange = () => {
-    setChangeQueue(prev => prev.slice(1));
+    setChangeQueue((prev) => prev.slice(1));
   };
 
   const clearQueue = () => {
@@ -345,23 +358,28 @@ export function useReplContext() {
   };
 
   const applyAllChanges = () => {
-    if (changeQueue.length === 0) return;
+    setChangeQueue((prevQueue) => {
+      if (prevQueue.length === 0) return prevQueue;
 
-    let finalCode = editorRef.current?.code || '';
+      let finalCode = editorRef.current?.code || '';
 
-    changeQueue.forEach(change => {
-      if (change.mode === 'replace') {
-        finalCode = change.code.trim();
-      } else {
-        finalCode = finalCode.trim() + '\n\n' + change.code.trim();
-      }
+      prevQueue.forEach((change) => {
+        if (change.mode === 'replace') {
+          finalCode = change.code.trim();
+        } else {
+          finalCode = finalCode.trim() + '\n\n' + change.code.trim();
+        }
+      });
+
+      editorRef.current?.setCode(finalCode);
+      setCurrentStep((prev) => prev + prevQueue.length);
+
+      // Trigger evaluation deterministically
+      setPendingEvaluation(true);
+
+      // Clear queue by returning empty array
+      return [];
     });
-
-    editorRef.current?.setCode(finalCode);
-    setChangeQueue([]);
-    setCurrentStep(prev => prev + changeQueue.length);
-
-    setTimeout(() => handleEvaluate(), 100);
   };
 
   // Auto-advance: automatically apply next change when wait cycles elapsed
@@ -373,10 +391,12 @@ export function useReplContext() {
 
     // Check if we've waited long enough
     if (cyclesSinceLastChange >= waitCycles && waitCycles >= 0) {
-      console.log(`🎬 Auto-applying "${nextChange.description}" after ${cyclesSinceLastChange} cycles (waited ${waitCycles})`);
+      console.log(
+        `🎬 Auto-applying "${nextChange.description}" after ${cyclesSinceLastChange} cycles (waited ${waitCycles})`,
+      );
       applyNextChange();
     }
-  }, [cyclesSinceLastChange, changeQueue, queueEnabled]);
+  }, [cyclesSinceLastChange, changeQueue, queueEnabled, applyNextChange]);
 
   const context = {
     started,

@@ -1,8 +1,8 @@
 // Embedding generator using TF-IDF for pure Rust, offline embedding generation
 // This runs at build time to create embeddings from Strudel documentation
 
-use super::types::{ChunkMetadata, ChunkType, EmbeddingChunk};
 use super::embeddings::EmbeddingEntry;
+use super::types::{ChunkMetadata, ChunkType, EmbeddingChunk};
 use anyhow::Result;
 use std::collections::HashMap;
 
@@ -45,8 +45,12 @@ impl TfIdfEmbedder {
             .collect();
 
         // Sort by IDF and take top N words for vocabulary
-        vocab_idf.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        // Use total_cmp to avoid panics on NaN values
+        vocab_idf.sort_by(|a, b| b.1.total_cmp(&a.1));
         vocab_idf.truncate(dimension);
+
+        // Calculate actual dimension based on available vocabulary
+        let actual_dimension = usize::min(dimension, vocab_idf.len());
 
         let vocabulary: Vec<String> = vocab_idf.iter().map(|(w, _)| w.clone()).collect();
         let idf_scores: HashMap<String, f32> = vocab_idf.into_iter().collect();
@@ -54,7 +58,7 @@ impl TfIdfEmbedder {
         Ok(Self {
             vocabulary,
             idf_scores,
-            dimension,
+            dimension: actual_dimension,
         })
     }
 
@@ -64,9 +68,14 @@ impl TfIdfEmbedder {
             .to_lowercase()
             .split_whitespace()
             .map(|s| s.trim_matches(|c: char| !c.is_alphanumeric()))
-            .filter(|s| !s.is_empty())
+            .filter(|s| !s.is_empty() && s.len() > 2) // Filter short words (same as new())
             .map(String::from)
             .collect();
+
+        // Guard against empty token list - return all-zero vector
+        if words.is_empty() {
+            return vec![0.0; self.dimension];
+        }
 
         // Count term frequency
         let mut term_freq: HashMap<String, usize> = HashMap::new();
@@ -182,7 +191,10 @@ pub fn generate_from_strudel_docs(
     }
 
     // Build TF-IDF embedder from corpus
-    println!("Building TF-IDF vocabulary from {} documents...", texts.len());
+    println!(
+        "Building TF-IDF vocabulary from {} documents...",
+        texts.len()
+    );
     let embedder = TfIdfEmbedder::new(&texts, dimension)?;
 
     // Generate embeddings

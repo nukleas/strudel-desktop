@@ -8,6 +8,39 @@ const NOTE_NAMES: [&str; 12] = [
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
 ];
 
+/// Available scale types (canonical names only)
+/// Aliases like "aeolian" (minor) and "pentatonic_major" (pentatonic) are handled in get_scale_intervals
+const SCALE_TYPES: [&str; 16] = [
+    "major",
+    "minor",
+    "dorian",
+    "phrygian",
+    "lydian",
+    "mixolydian",
+    "aeolian",
+    "locrian",
+    "pentatonic",
+    "pentatonic_major",
+    "pentatonic_minor",
+    "blues",
+    "chromatic",
+    "wholetone",
+    "harmonic_minor",
+    "melodic_minor",
+];
+
+/// Available chord progression styles
+const PROGRESSION_STYLES: [&str; 8] = [
+    "pop",
+    "jazz",
+    "blues",
+    "folk",
+    "rock",
+    "classical",
+    "modal",
+    "edm",
+];
+
 /// Scale definitions as semitone intervals from root
 pub struct MusicTheory;
 
@@ -183,38 +216,13 @@ impl MusicTheory {
     /// List available scale types
     #[allow(dead_code)]
     pub fn available_scales() -> Vec<&'static str> {
-        vec![
-            "major",
-            "minor",
-            "dorian",
-            "phrygian",
-            "lydian",
-            "mixolydian",
-            "aeolian",
-            "locrian",
-            "pentatonic",
-            "pentatonic_minor",
-            "blues",
-            "chromatic",
-            "wholetone",
-            "harmonic_minor",
-            "melodic_minor",
-        ]
+        SCALE_TYPES.to_vec()
     }
 
     /// List available progression styles
     #[allow(dead_code)]
     pub fn available_progressions() -> Vec<&'static str> {
-        vec![
-            "pop",
-            "jazz",
-            "blues",
-            "folk",
-            "rock",
-            "classical",
-            "modal",
-            "edm",
-        ]
+        PROGRESSION_STYLES.to_vec()
     }
 }
 
@@ -279,5 +287,18 @@ mod tests {
         assert!(MusicTheory::generate_euclidean_rhythm(5, 3).is_err()); // hits > steps
         assert!(MusicTheory::generate_euclidean_rhythm(0, 8).is_ok()); // 0 hits
         assert!(MusicTheory::generate_euclidean_rhythm(8, 8).is_ok()); // all hits
+    }
+
+    #[test]
+    fn test_all_progression_styles_implemented() {
+        // Ensure all progression styles in PROGRESSION_STYLES have corresponding implementations
+        for style in PROGRESSION_STYLES.iter() {
+            let result = MusicTheory::generate_chord_progression("C", style);
+            assert!(
+                result.is_ok(),
+                "Progression style '{}' is listed in PROGRESSION_STYLES but not implemented in get_chord_progression_template",
+                style
+            );
+        }
     }
 }

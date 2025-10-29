@@ -13,14 +13,16 @@ pub struct StrudelRetriever {
 
 impl StrudelRetriever {
     /// Create a new retriever from pre-computed embeddings and chunks
-    pub fn new(
-        vector_store: VectorStore,
-        chunks: Vec<EmbeddingChunk>,
-    ) -> Result<Self> {
+    pub fn new(vector_store: VectorStore, chunks: Vec<EmbeddingChunk>) -> Result<Self> {
+        let expected_len = chunks.len();
         let chunks_map: HashMap<String, EmbeddingChunk> = chunks
             .into_iter()
             .map(|chunk| (chunk.id.clone(), chunk))
             .collect();
+
+        if chunks_map.len() != expected_len {
+            anyhow::bail!("Duplicate chunk IDs detected");
+        }
 
         Ok(Self {
             vector_store,
@@ -37,11 +39,13 @@ impl StrudelRetriever {
         let results: Vec<SearchResult> = similar_ids
             .into_iter()
             .filter_map(|(id, similarity)| {
-                self.chunks.get(&id).map(|chunk| SearchResult::new(
-                    chunk.clone(),
-                    similarity,
-                    1.0 - similarity, // distance = 1 - similarity for cosine
-                ))
+                self.chunks.get(&id).map(|chunk| {
+                    SearchResult::new(
+                        chunk.clone(),
+                        similarity,
+                        1.0 - similarity, // distance = 1 - similarity for cosine
+                    )
+                })
             })
             .collect();
 
@@ -154,7 +158,11 @@ mod tests {
             },
         ];
 
-        let vocabulary = vec!["word1".to_string(), "word2".to_string(), "word3".to_string()];
+        let vocabulary = vec![
+            "word1".to_string(),
+            "word2".to_string(),
+            "word3".to_string(),
+        ];
         let mut idf_scores = std::collections::HashMap::new();
         idf_scores.insert("word1".to_string(), 1.0);
 

@@ -71,7 +71,8 @@ impl VectorStore {
             .collect();
 
         // Count term frequency
-        let mut term_freq: std::collections::HashMap<String, usize> = std::collections::HashMap::new();
+        let mut term_freq: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
         for word in &words {
             *term_freq.entry(word.clone()).or_insert(0) += 1;
         }
@@ -119,7 +120,7 @@ impl VectorStore {
             .collect();
 
         // Sort by similarity (highest first)
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Return top k results
         Ok(similarities.into_iter().take(k).collect())
@@ -193,7 +194,11 @@ mod tests {
             },
         ];
 
-        let vocabulary = vec!["word1".to_string(), "word2".to_string(), "word3".to_string()];
+        let vocabulary = vec![
+            "word1".to_string(),
+            "word2".to_string(),
+            "word3".to_string(),
+        ];
         let mut idf_scores = std::collections::HashMap::new();
         idf_scores.insert("word1".to_string(), 1.0);
         idf_scores.insert("word2".to_string(), 1.5);
@@ -213,12 +218,10 @@ mod tests {
 
     #[test]
     fn test_embed_query() {
-        let embeddings = vec![
-            EmbeddingEntry {
-                id: "doc1".to_string(),
-                vector: vec![1.0, 0.0],
-            },
-        ];
+        let embeddings = vec![EmbeddingEntry {
+            id: "doc1".to_string(),
+            vector: vec![1.0, 0.0],
+        }];
 
         let vocabulary = vec!["drum".to_string(), "pattern".to_string()];
         let mut idf_scores = std::collections::HashMap::new();
