@@ -146,7 +146,3 @@ music/
 # Generated embeddings (regenerate as needed)
 embeddings.json
 src-tauri/embeddings.json
-
-# Validation modules (if experimental)
-packages/desktopbridge/validation.mjs
-website/src/validation.ts
