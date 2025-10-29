@@ -64,13 +64,23 @@ Strudel is a JavaScript port of [TidalCycles](https://tidalcycles.org/), running
 
 ## 📦 Installation
 
-### Prerequisites
+### Option 1: Download Pre-Built Binaries
+
+Download the latest build for your platform from [GitHub Actions](https://github.com/nukleas/strudel-desktop/actions) or [Releases](https://github.com/nukleas/strudel-desktop/releases):
+
+- **macOS**: `.dmg` or `.app` - See [INSTALL_MACOS.md](INSTALL_MACOS.md) for fixing "damaged app" errors
+- **Linux**: `.deb` or `.AppImage`
+- **Windows**: `.exe` or `.msi`
+
+### Option 2: Build from Source
+
+#### Prerequisites
 
 - [Node.js](https://nodejs.org/) >= 18
 - [pnpm](https://pnpm.io/) (recommended) or npm
-- [Rust](https://rustup.rs/) (for building from source)
+- [Rust](https://rustup.rs/)
 
-### Quick Start
+#### Quick Start
 
 1. **Clone the repository**
    ```bash
