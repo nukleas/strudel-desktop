@@ -96,6 +96,39 @@ Strudel is a JavaScript port of [TidalCycles](https://tidalcycles.org/), running
 
    Built app will be in `src-tauri/target/release/bundle/`
 
+### Building for Specific Platforms
+
+The project supports cross-platform builds for Windows, macOS, and Linux:
+
+**macOS (Apple Silicon):**
+```bash
+pnpm tauri:build -- --target aarch64-apple-darwin
+```
+
+**macOS (Intel):**
+```bash
+pnpm tauri:build -- --target x86_64-apple-darwin
+```
+
+**Linux (x86_64):**
+```bash
+pnpm tauri:build -- --target universal-linux-gnu
+```
+
+**Windows (x86_64):**
+```bash
+pnpm tauri:build
+```
+
+**Output Locations:**
+- **macOS**: `src-tauri/target/[arch]/release/bundle/dmg/` and `.app`
+- **Linux**: `src-tauri/target/release/bundle/deb/` and `.AppImage`
+- **Windows**: `src-tauri/target/release/bundle/nsis/` (`.exe`) and `.msi`
+
+### Automated Builds
+
+GitHub Actions automatically builds for all platforms on every push to `main` or `develop` branches. Download pre-built binaries from the [Actions](https://github.com/nukleas/strudel-desktop/actions) tab or [Releases](https://github.com/nukleas/strudel-desktop/releases) page.
+
 ---
 
 ## 🚀 Usage
