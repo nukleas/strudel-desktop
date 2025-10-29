@@ -1,9 +1,5 @@
 ---
 import HeadCommon from '../components/HeadCommon.astro';
-import Header from '../components/Header/Header.astro';
-import PageContent from '../components/PageContent/PageContent.astro';
-import LeftSidebar from '../components/LeftSidebar/LeftSidebar.astro';
-import RightSidebar from '../components/RightSidebar/RightSidebar.astro';
 ---
 
 <html lang="en" class="m-0 dark">
@@ -13,21 +9,18 @@ import RightSidebar from '../components/RightSidebar/RightSidebar.astro';
     <meta name="description" content="Discover what's possible with Strudel through 70+ real compositions by the community. These complete songs showcase the full power of live coding music." />
   </head>
   <body class="bg-slate-900 text-slate-100">
-    <Header />
-    <div class="flex">
-      <LeftSidebar />
-      <PageContent>
-        <h1>Strudel Community Songs Collection</h1>
-        
-        <p>Discover what's possible with Strudel through <strong>70+ real compositions</strong> by the community. These complete songs showcase the full power of live coding music, from classical waltzes to experimental electronic pieces.</p>
+    <div class="container mx-auto p-8">
+      <div class="mb-8">
+        <h1 class="text-4xl font-bold mb-4">Strudel Community Songs Collection</h1>
 
-        <h2>🎵 Real Community Compositions</h2>
+        <p class="text-lg mb-4">Discover what's possible with Strudel through <strong>70+ real compositions</strong> by the community. These complete songs showcase the full power of live coding music, from classical waltzes to experimental electronic pieces.</p>
 
-        <p>Each song below is a complete musical composition created with Strudel, demonstrating the platform's capabilities across different genres and styles. Click any song to copy the code and explore how it works.</p>
+        <h2 class="text-2xl font-bold mt-8 mb-4">🎵 Real Community Compositions</h2>
 
-        <div id="examples-browser"></div>
-      </PageContent>
-      <RightSidebar headings={[]} />
+        <p class="mb-4">Each song below is a complete musical composition created with Strudel, demonstrating the platform's capabilities across different genres and styles. Click any song to copy the code and explore how it works.</p>
+      </div>
+
+      <div id="examples-browser"></div>
     </div>
   </body>
 </html>
