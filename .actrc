@@ -1,0 +1,14 @@
+# act configuration file
+# This configures act to use appropriate Docker images for testing
+
+# Use medium-sized images (good balance of speed and compatibility)
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
+-P macos-latest=catthehacker/ubuntu:act-latest
+-P windows-latest=catthehacker/ubuntu:act-latest
+
+# Reuse containers for faster runs
+--reuse
+
+# Bind workspace to avoid permission issues
+--bind

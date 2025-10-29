@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '@src/settings.mjs';
-import { 
-  MusicalNoteIcon, 
-  SpeakerWaveIcon, 
+import {
+  MusicalNoteIcon,
+  SpeakerWaveIcon,
   SpeakerXMarkIcon,
   MusicalNoteIcon as NoteIcon,
   SpeakerWaveIcon as SynthIcon,
@@ -26,19 +26,51 @@ import {
   LightBulbIcon,
   ArrowDownTrayIcon,
   PlayIcon,
-  ClipboardDocumentIcon
+  ClipboardDocumentIcon,
 } from '@heroicons/react/16/solid';
 
-// Example categories with icons - showcasing Strudel's capabilities
+// Example categories with icons - ONLY categories that actually have examples
 const exampleCategories = {
-  classical: { name: 'Classical', icon: MusicalNoteIcon, description: 'Traditional and contemporary classical compositions' },
-  jazz: { name: 'Jazz', icon: JazzIcon, description: 'Jazz fusion and improvisational pieces' },
-  techno: { name: 'Techno', icon: ElectronicIcon, description: 'Electronic dance music and techno beats' },
-  rock: { name: 'Rock', icon: FireIcon, description: 'Rock and alternative music styles' },
-  experimental: { name: 'Experimental', icon: SparklesIcon, description: 'Avant-garde and experimental compositions' },
-  ambient: { name: 'Ambient', icon: CloudIcon, description: 'Atmospheric and ambient soundscapes' },
-  community: { name: 'Community', icon: UserIcon, description: 'Diverse community-created compositions' },
-  all: { name: 'All Songs', icon: CircleStackIcon, description: 'Complete collection of 70+ community songs' },
+  // Most Popular
+  technique: { name: 'Technique', icon: WrenchScrewdriverIcon },
+  progressive: { name: 'Progressive', icon: ElectronicIcon },
+  experimental: { name: 'Experimental', icon: SparklesIcon },
+
+  // Electronic & Dance
+  electronic: { name: 'Electronic', icon: ElectronicIcon },
+  techno: { name: 'Techno', icon: ElectronicIcon },
+  dance: { name: 'Dance', icon: ElectronicIcon },
+
+  // Rock & Alternative
+  alternative: { name: 'Alternative', icon: FireIcon },
+  rock: { name: 'Rock', icon: FireIcon },
+  indie: { name: 'Indie', icon: FireIcon },
+  punk: { name: 'Punk', icon: FireIcon },
+
+  // Ambient & Atmospheric
+  ambient: { name: 'Ambient', icon: CloudIcon },
+
+  // Classical & Cinematic
+  classical: { name: 'Classical', icon: MusicalNoteIcon },
+  cinematic: { name: 'Cinematic', icon: MusicalNoteIcon },
+  waltz: { name: 'Waltz', icon: MusicalNoteIcon },
+
+  // World & Traditional
+  folk: { name: 'Folk', icon: GlobeAltIcon },
+  traditional: { name: 'Traditional', icon: GlobeAltIcon },
+  latin: { name: 'Latin', icon: GlobeAltIcon },
+
+  // Jazz & Soul
+  funk: { name: 'Funk', icon: JazzIcon },
+
+  // Retro & Synth
+  chiptune: { name: 'Chiptune', icon: ComputerDesktopIcon },
+  synthpop: { name: 'Synth Pop', icon: SynthIcon },
+  newwave: { name: 'New Wave', icon: SynthIcon },
+
+  // Other
+  soundtrack: { name: 'Soundtrack', icon: MusicalNoteIcon },
+  guitar: { name: 'Guitar', icon: FireIcon },
 };
 
 export function ExamplesTab({ context }) {
@@ -68,11 +100,11 @@ export function ExamplesTab({ context }) {
         // Fallback to static examples.json
         response = await fetch('/examples.json');
       }
-      
+
       if (!response.ok) {
         throw new Error('Failed to load examples');
       }
-      
+
       const data = await response.json();
       setExamples(data.examples || data);
     } catch (err) {
@@ -168,45 +200,42 @@ export function ExamplesTab({ context }) {
 
   return (
     <div className="flex flex-col h-full" style={{ fontFamily }}>
-      
       <div className="p-3 border-b border-[var(--border-cyan)] bg-[rgba(34,211,238,0.05)]">
         <div className="mb-3">
           <h3 className="text-sm font-mono text-[var(--cyan-400)] mb-1">Community Songs Collection</h3>
           <p className="text-xs text-[var(--foreground)] opacity-60">
-            70+ real compositions by eefano • Licensed under CC BY-NC-SA
+            70+ real compositions by eefano • CC BY-NC-SA • Filter by genre below
           </p>
         </div>
         <input
           type="text"
-          placeholder="Search 70+ community songs..."
+          placeholder="Search by name, genre, or code..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-3 py-2 bg-[#0f172a] border border-[var(--border-cyan)] rounded-md text-[var(--foreground)] placeholder-[var(--cyan-400)] placeholder-opacity-30 focus:outline-none focus:border-[var(--cyan-400)] font-mono text-sm"
         />
-        <div className="flex gap-2 mt-2 flex-wrap">
+        <div className="flex gap-1 mt-2 flex-wrap max-h-32 overflow-y-auto">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-2 py-1 rounded text-xs font-mono uppercase tracking-wider transition-all ${
+            className={`px-2 py-1 rounded text-xs font-mono transition-all ${
               !selectedCategory
-                ? 'bg-[var(--cyan-400)] text-[#0f172a]'
+                ? 'bg-[var(--cyan-400)] text-[#0f172a] font-bold'
                 : 'bg-[rgba(34,211,238,0.1)] text-[var(--cyan-400)] hover:bg-[rgba(34,211,238,0.2)]'
             }`}
-            title="Show all 70+ community songs"
           >
-            All Songs
+            All
           </button>
           {Object.entries(exampleCategories).map(([key, category]) => (
             <button
               key={key}
               onClick={() => setSelectedCategory(selectedCategory === key ? null : key)}
-              className={`px-2 py-1 rounded text-xs font-mono uppercase tracking-wider transition-all flex items-center gap-1 ${
+              className={`px-2 py-1 rounded text-xs font-mono transition-all flex items-center gap-1 ${
                 selectedCategory === key
-                  ? 'bg-[var(--cyan-400)] text-[#0f172a]'
+                  ? 'bg-[var(--cyan-400)] text-[#0f172a] font-bold'
                   : 'bg-[rgba(34,211,238,0.1)] text-[var(--cyan-400)] hover:bg-[rgba(34,211,238,0.2)]'
               }`}
-              title={category.description}
             >
-              {React.createElement(category.icon, { className: "w-3 h-3" })}
+              {React.createElement(category.icon, { className: 'w-3 h-3' })}
               {category.name}
             </button>
           ))}
@@ -223,7 +252,7 @@ export function ExamplesTab({ context }) {
           Object.entries(groupedExamples).map(([categoryKey, categoryExamples]) => (
             <div key={categoryKey} className="mb-4">
               <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--cyan-400)] mb-2 flex items-center gap-2">
-                {React.createElement(exampleCategories[categoryKey]?.icon || MusicalNoteIcon, { className: "w-4 h-4" })}
+                {React.createElement(exampleCategories[categoryKey]?.icon || MusicalNoteIcon, { className: 'w-4 h-4' })}
                 <span>{exampleCategories[categoryKey]?.name || categoryKey}</span>
                 <span className="text-[var(--foreground)] opacity-30">({categoryExamples.length})</span>
               </h3>

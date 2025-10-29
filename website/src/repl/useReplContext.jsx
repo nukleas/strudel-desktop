@@ -36,6 +36,8 @@ import { getRandomTune, initCode, loadModules, shareCode } from './util.mjs';
 import './Repl.css';
 import { setInterval, clearInterval } from 'worker-timers';
 import { getMetadata } from '../metadata_parser';
+// Register validation handler for Tauri
+import '../validation';
 
 const { latestCode, maxPolyphony, audioDeviceName, multiChannelOrbits } = settingsMap.get();
 let modulesLoading, presets, drawContext, clearCanvas, audioReady;
@@ -159,9 +161,7 @@ export function useReplContext() {
   useEffect(() => {
     const handleInsertCode = (event) => {
       if (editorRef.current && event.detail) {
-        const { code, mode } = typeof event.detail === 'string'
-          ? { code: event.detail, mode: 'append' }
-          : event.detail;
+        const { code, mode } = typeof event.detail === 'string' ? { code: event.detail, mode: 'append' } : event.detail;
 
         if (mode === 'replace') {
           // Replace all code
@@ -246,6 +246,158 @@ export function useReplContext() {
     return editorRef.current?.code || activeCode || '';
   };
 
+  // Queue system state
+  const [changeQueue, setChangeQueue] = useState([]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [queueEnabled, setQueueEnabled] = useState(false);
+  const [cyclesSinceLastChange, setCyclesSinceLastChange] = useState(0);
+  const [lastChangeCycle, setLastChangeCycle] = useState(0);
+  const [pendingEvaluation, setPendingEvaluation] = useState(false);
+
+  // Track cycles for timing using Strudel's native cycle counter
+  useEffect(() => {
+    if (!queueEnabled || !started) return;
+
+    const interval = setInterval(() => {
+      if (editorRef.current?.repl?.scheduler) {
+        const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
+        const cyclesElapsed = currentCycle - lastChangeCycle;
+        setCyclesSinceLastChange(cyclesElapsed);
+      }
+    }, 100); // Check 10 times per second for accuracy
+
+    return () => clearInterval(interval);
+  }, [queueEnabled, started, lastChangeCycle]);
+
+  // Queue actions
+  const addToQueue = (items) => {
+    setChangeQueue((prev) => {
+      const MAX_QUEUE_SIZE = 5;
+      const remainingSlots = MAX_QUEUE_SIZE - prev.length;
+
+      if (remainingSlots <= 0) {
+        console.warn(`🎬 Queue full (${MAX_QUEUE_SIZE} items). Cannot add more. Apply or clear existing items first.`);
+        return prev;
+      }
+
+      const itemsToAdd = (Array.isArray(items) ? items : [items]).slice(0, remainingSlots);
+
+      if (itemsToAdd.length < (Array.isArray(items) ? items : [items]).length) {
+        console.warn(
+          `🎬 Queue limit: adding ${itemsToAdd.length}/${(Array.isArray(items) ? items : [items]).length} items (${MAX_QUEUE_SIZE} max)`,
+        );
+      }
+
+      // Initialize cycle tracking if this is the first item being added
+      if (prev.length === 0 && editorRef.current?.repl?.scheduler) {
+        setLastChangeCycle(Math.floor(editorRef.current.repl.scheduler.now()));
+        setCyclesSinceLastChange(0);
+      }
+
+      return [...prev, ...itemsToAdd];
+    });
+  };
+
+  const applyNextChange = useCallback(() => {
+    // Use functional state update to read and update queue atomically
+    setChangeQueue((prevQueue) => {
+      if (prevQueue.length === 0) return prevQueue;
+
+      const nextChange = prevQueue[0];
+      if (!nextChange) return prevQueue;
+
+      // Apply the change to editor
+      if (nextChange.mode === 'replace') {
+        editorRef.current?.setCode(nextChange.code.trim());
+      } else {
+        const currentCode = editorRef.current?.code || '';
+        const newCode = currentCode.trim() + '\n\n' + nextChange.code.trim();
+        editorRef.current?.setCode(newCode);
+      }
+
+      // Update step counter functionally
+      setCurrentStep((prev) => prev + 1);
+
+      // Reset cycle counter using functional updates
+      if (editorRef.current?.repl?.scheduler) {
+        const currentCycle = Math.floor(editorRef.current.repl.scheduler.now());
+        setLastChangeCycle(currentCycle);
+        setCyclesSinceLastChange(0);
+      }
+
+      // Schedule evaluation deterministically via state flag
+      if (nextChange.autoEvaluate !== false) {
+        setPendingEvaluation(true);
+      }
+
+      // Return new queue with first item removed
+      return prevQueue.slice(1);
+    });
+  }, []);
+
+  // Deterministic evaluation trigger - watches pendingEvaluation flag
+  useEffect(() => {
+    if (pendingEvaluation) {
+      setPendingEvaluation(false);
+      // Use microtask to ensure state updates complete before evaluation
+      queueMicrotask(() => handleEvaluate());
+    }
+  }, [pendingEvaluation, handleEvaluate]);
+
+  const skipNextChange = () => {
+    setChangeQueue((prev) => prev.slice(1));
+  };
+
+  const clearQueue = () => {
+    setChangeQueue([]);
+    setCurrentStep(0);
+  };
+
+  const previewNextChange = () => {
+    return changeQueue[0] || null;
+  };
+
+  const applyAllChanges = () => {
+    setChangeQueue((prevQueue) => {
+      if (prevQueue.length === 0) return prevQueue;
+
+      let finalCode = editorRef.current?.code || '';
+
+      prevQueue.forEach((change) => {
+        if (change.mode === 'replace') {
+          finalCode = change.code.trim();
+        } else {
+          finalCode = finalCode.trim() + '\n\n' + change.code.trim();
+        }
+      });
+
+      editorRef.current?.setCode(finalCode);
+      setCurrentStep((prev) => prev + prevQueue.length);
+
+      // Trigger evaluation deterministically
+      setPendingEvaluation(true);
+
+      // Clear queue by returning empty array
+      return [];
+    });
+  };
+
+  // Auto-advance: automatically apply next change when wait cycles elapsed
+  useEffect(() => {
+    if (!queueEnabled || changeQueue.length === 0) return;
+
+    const nextChange = changeQueue[0];
+    const waitCycles = nextChange.waitCycles || 0;
+
+    // Check if we've waited long enough
+    if (cyclesSinceLastChange >= waitCycles && waitCycles >= 0) {
+      console.log(
+        `🎬 Auto-applying "${nextChange.description}" after ${cyclesSinceLastChange} cycles (waited ${waitCycles})`,
+      );
+      applyNextChange();
+    }
+  }, [cyclesSinceLastChange, changeQueue, queueEnabled, applyNextChange]);
+
   const context = {
     started,
     pending,
@@ -262,6 +414,18 @@ export function useReplContext() {
     error,
     editorRef,
     containerRef,
+    // Queue system
+    changeQueue,
+    queueEnabled,
+    setQueueEnabled,
+    addToQueue,
+    applyNextChange,
+    skipNextChange,
+    clearQueue,
+    previewNextChange,
+    applyAllChanges,
+    currentStep,
+    cyclesSinceLastChange,
   };
   return context;
 }

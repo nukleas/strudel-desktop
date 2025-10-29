@@ -73,7 +73,8 @@ pub fn init(
                 let result = sock.send(&message.msg_buf);
                 if result.is_err() {
                     logger.log(
-                        "OSC Message failed to send, the server might no longer be available".to_string(),
+                        "OSC Message failed to send, the server might no longer be available"
+                            .to_string(),
                         "error".to_string(),
                     );
                 }
@@ -127,8 +128,7 @@ pub async fn sendosc(
         // let start = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
 
         let time_delay = Duration::from_secs_f64(m.timestamp);
-        let duration_since_epoch =
-        time_delay + Duration::new(UNIX_OFFSET, 0);
+        let duration_since_epoch = time_delay + Duration::new(UNIX_OFFSET, 0);
 
         let seconds = u32::try_from(duration_since_epoch.as_secs())
             .map_err(|_| "bit conversion failed for osc message timetag")?;

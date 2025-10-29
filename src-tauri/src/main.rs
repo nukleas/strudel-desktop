@@ -5,7 +5,9 @@ mod audioexport;
 mod chatbridge;
 mod loggerbridge;
 mod midibridge;
+mod music_theory;
 mod oscbridge;
+mod rag;
 mod tools;
 use std::sync::Arc;
 
@@ -22,6 +24,9 @@ fn main() {
     // Initialize chat state
     let chat_state = chatbridge::init();
 
+    // Initialize RAG state
+    let rag_state = rag::RagState::new();
+
     let mut builder = tauri::Builder::default()
         .manage(midibridge::AsyncInputTransmit {
             inner: Mutex::new(async_input_transmitter_midi),
@@ -29,7 +34,8 @@ fn main() {
         .manage(oscbridge::AsyncInputTransmit {
             inner: Mutex::new(async_input_transmitter_osc),
         })
-        .manage(chat_state);
+        .manage(chat_state)
+        .manage(rag_state);
 
     // Add DevTools plugin for debugging JavaScript features (debug builds only)
     #[cfg(debug_assertions)]
@@ -50,7 +56,10 @@ fn main() {
             chatbridge::clear_code_context,
             chatbridge::get_chat_history,
             chatbridge::clear_chat_history,
-            audioexport::export_pattern_audio
+            audioexport::export_pattern_audio,
+            rag::init_rag,
+            rag::semantic_search,
+            rag::rag_status
         ])
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())
