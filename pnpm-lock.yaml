@@ -367,9 +367,6 @@ importers:
       '@strudel/core':
         specifier: workspace:*
         version: link:../core
-      '@strudel/transpiler':
-        specifier: workspace:*
-        version: link:../transpiler
       '@tauri-apps/api':
         specifier: ^2.2.0
         version: 2.2.0
