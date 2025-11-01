@@ -11,6 +11,7 @@ pub struct NoteEvent {
     pub note: String,
     pub velocity: u8,
     pub duration_sec: Option<f64>,
+    pub channel: u8,  // Store channel for each note event
 }
 
 #[derive(Debug, Clone)]
@@ -114,6 +115,7 @@ impl MidiData {
                                         note: note_num_to_str(key.as_int()),
                                         velocity: vel.as_int(),
                                         duration_sec: None,
+                                        channel: ch.as_int(),  // Store the channel for this note
                                     });
 
                                     // Track as active note

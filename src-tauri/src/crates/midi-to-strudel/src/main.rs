@@ -77,6 +77,16 @@ struct Args {
     /// Maximum number of tracks to include (keeps busiest tracks)
     #[arg(long)]
     max_tracks: Option<usize>,
+
+    /// Detect drums by track name patterns (kick, snare, hat, etc.)
+    /// This will treat tracks with drum-related names as drums even if they're not on channel 10
+    #[arg(long)]
+    detect_drum_names: bool,
+
+    /// Force specific channels to be treated as drums (comma-separated, e.g., "0,1,2")
+    /// Use this for MIDI files where drums are on non-standard channels
+    #[arg(long)]
+    force_drums: Option<String>,
 }
 
 fn filter_tracks(mut tracks: Vec<midi_to_strudel::track::ProcessedTrack>, args: &Args) -> Vec<midi_to_strudel::track::ProcessedTrack> {
@@ -168,12 +178,24 @@ fn main() -> Result<()> {
     // Parse MIDI file
     let midi_data = MidiData::from_file(&midi_path)?;
 
+    // Parse forced drum channels if provided
+    let forced_drum_channels = if let Some(ref force_drums) = args.force_drums {
+        force_drums
+            .split(',')
+            .filter_map(|s| s.trim().parse().ok())
+            .collect()
+    } else {
+        Vec::new()
+    };
+
     // Build tracks
     let track_builder = TrackBuilder::new(
         midi_data.cycle_len,
         args.bar_limit,
         args.flat_sequences,
         args.notes_per_bar,
+        args.detect_drum_names,
+        forced_drum_channels,
     );
     let mut tracks = track_builder.build_tracks(&midi_data.track_info);
 

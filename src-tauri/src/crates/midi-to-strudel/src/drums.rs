@@ -136,6 +136,31 @@ pub fn gm_drum_name(note_num: u8) -> &'static str {
     }
 }
 
+/// Detect if a track name suggests it's a drum track
+/// Checks for common drum-related keywords
+pub fn is_drum_track_name(track_name: &str) -> bool {
+    let name_lower = track_name.to_lowercase();
+
+    // Common drum keywords
+    let drum_keywords = [
+        "kick", "bd", "bass drum",
+        "snare", "sd",
+        "hat", "hh", "hihat", "hi-hat",
+        "cymbal", "crash", "ride",
+        "tom", "toms",
+        "perc", "percussion",
+        "drum", "drums",
+        "clap", "snap",
+        "rim", "rimshot",
+        "cowbell", "clave",
+        "shaker", "tambourine", "maracas",
+        "bongo", "conga", "timbale",
+    ];
+
+    // Check if any keyword is present in the track name
+    drum_keywords.iter().any(|&keyword| name_lower.contains(keyword))
+}
+
 /// Convert a note name (from note conversion) back to MIDI note number for drum conversion
 /// This is needed because we already converted notes to names like "c2", "d2", etc.
 pub fn note_name_to_midi_num(note_name: &str) -> Option<u8> {

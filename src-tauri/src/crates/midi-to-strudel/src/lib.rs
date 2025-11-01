@@ -12,6 +12,7 @@ pub mod track;
 
 // Re-export main types for convenience
 pub use ast::{Bar, ModifierValue, Pattern};
+pub use drums::is_drum_track_name;
 pub use midi::MidiData;
 pub use output::OutputFormatter;
 pub use track::{ProcessedTrack, TrackBuilder};

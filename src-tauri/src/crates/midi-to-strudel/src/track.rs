@@ -22,6 +22,8 @@ pub struct TrackBuilder {
     bar_limit: usize,
     flat_sequences: bool,
     notes_per_bar: usize,
+    detect_drum_names: bool,
+    forced_drum_channels: Vec<u8>,
 }
 
 impl TrackBuilder {
@@ -30,12 +32,16 @@ impl TrackBuilder {
         bar_limit: usize,
         flat_sequences: bool,
         notes_per_bar: usize,
+        detect_drum_names: bool,
+        forced_drum_channels: Vec<u8>,
     ) -> Self {
         Self {
             cycle_len,
             bar_limit,
             flat_sequences,
             notes_per_bar,
+            detect_drum_names,
+            forced_drum_channels,
         }
     }
 
@@ -54,31 +60,47 @@ impl TrackBuilder {
                 continue;
             }
 
-            // Check if this is a drum track (channel 10 = index 9)
-            let is_drum = info.channel == Some(9);
+            // Group events by channel (since a single MIDI track can have multiple channels)
+            let mut events_by_channel: HashMap<u8, Vec<NoteEvent>> = HashMap::new();
+            for event in adjusted {
+                events_by_channel.entry(event.channel).or_default().push(event);
+            }
 
-            let max_time = adjusted.iter().map(|e| e.time_sec).fold(0.0, f64::max);
-            let num_cycles = ((max_time / self.cycle_len) as usize + 1).min(
-                if self.bar_limit > 0 {
-                    self.bar_limit
-                } else {
-                    usize::MAX
-                },
-            );
+            // Create a ProcessedTrack for each channel
+            for (channel, channel_events) in events_by_channel {
+                // Check if this is a drum track using multiple methods:
+                // 1. Standard MIDI channel 10 (index 9)
+                // 2. Forced drum channels from --force-drums flag
+                // 3. Track name detection if --detect-drum-names flag is set
+                let is_drum = channel == 9
+                    || self.forced_drum_channels.contains(&channel)
+                    || (self.detect_drum_names
+                        && info.name.as_ref().map_or(false, |name| {
+                            crate::drums::is_drum_track_name(name)
+                        }));
 
-            let mut bars = Vec::new();
-            let mut gains = Vec::new();
-            let mut sustains = Vec::new();
+                let max_time = channel_events.iter().map(|e| e.time_sec).fold(0.0, f64::max);
+                let num_cycles = ((max_time / self.cycle_len) as usize + 1).min(
+                    if self.bar_limit > 0 {
+                        self.bar_limit
+                    } else {
+                        usize::MAX
+                    },
+                );
 
-            for cycle in 0..num_cycles {
-                let start = cycle as f64 * self.cycle_len;
-                let end = start + self.cycle_len;
+                let mut bars = Vec::new();
+                let mut gains = Vec::new();
+                let mut sustains = Vec::new();
 
-                let notes_in_cycle: Vec<_> = adjusted
-                    .iter()
-                    .filter(|e| e.time_sec >= start && e.time_sec < end)
-                    .cloned()
-                    .collect();
+                for cycle in 0..num_cycles {
+                    let start = cycle as f64 * self.cycle_len;
+                    let end = start + self.cycle_len;
+
+                    let notes_in_cycle: Vec<_> = channel_events
+                        .iter()
+                        .filter(|e| e.time_sec >= start && e.time_sec < end)
+                        .cloned()
+                        .collect();
 
                 if notes_in_cycle.is_empty() {
                     bars.push(Bar::Rest); // Use - for rests (same as Python version)
@@ -124,28 +146,39 @@ impl TrackBuilder {
                     self.get_poly_mode_bar(&notes_in_cycle, start)
                 };
 
-                bars.push(bar);
-                gains.push(gain);
-                sustains.push(sustain);
-            }
+                    bars.push(bar);
+                    gains.push(gain);
+                    sustains.push(sustain);
+                }
 
-            if !bars.is_empty() {
-                // Convert MIDI pan (0-127) to Strudel pan (0.0-1.0)
-                // MIDI: 0=left, 64=center, 127=right
-                // Strudel: 0.0=left, 0.5=center, 1.0=right
-                let pan = info.pan.map(|midi_pan| midi_pan as f32 / 127.0);
+                if !bars.is_empty() {
+                    // Convert MIDI pan (0-127) to Strudel pan (0.0-1.0)
+                    // MIDI: 0=left, 64=center, 127=right
+                    // Strudel: 0.0=left, 0.5=center, 1.0=right
+                    let pan = info.pan.map(|midi_pan| midi_pan as f32 / 127.0);
 
-                tracks.push(ProcessedTrack {
-                    bars,
-                    gains,
-                    sustains,
-                    pan,
-                    channel: info.channel,
-                    program: info.program,
-                    name: info.name.clone(),
-                    is_drum,
-                });
-            }
+                    // Use channel-specific name if available
+                    let track_name = info.name.clone().map(|name| {
+                        // If this is a drum track, add "(Drums)" suffix
+                        if is_drum && !name.to_lowercase().contains("drum") {
+                            format!("{} (Drums)", name)
+                        } else {
+                            name
+                        }
+                    });
+
+                    tracks.push(ProcessedTrack {
+                        bars,
+                        gains,
+                        sustains,
+                        pan,
+                        channel: Some(channel),
+                        program: info.program,
+                        name: track_name,
+                        is_drum,
+                    });
+                }
+            }  // End of channel loop
         }
 
         tracks
@@ -162,6 +195,7 @@ impl TrackBuilder {
                         note: event.note.clone(),
                         velocity: event.velocity,
                         duration_sec: event.duration_sec,
+                        channel: event.channel,
                     }
                 } else {
                     event.clone()
