@@ -44,6 +44,7 @@ export default [
       'packages/hs2js/src/hs2js.mjs',
       'packages/supradough/dough-export.mjs',
       '**/samples',
+      'music/**/*',
     ],
   },
   ...compat.extends('eslint:recommended').map((config) => ({

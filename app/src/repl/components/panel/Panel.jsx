@@ -115,7 +115,10 @@ function PanelNav({ children, className, settings, ...props }) {
         }
       }}
       aria-label="Menu Panel"
-      className={cx('bg-gradient-to-br from-[#1e293b] to-[#0f172a] border-t border-[var(--border-cyan)] group overflow-x-auto', className)}
+      className={cx(
+        'bg-gradient-to-br from-[#1e293b] to-[#0f172a] border-t border-[var(--border-cyan)] group overflow-x-auto',
+        className,
+      )}
       {...props}
     >
       {children}

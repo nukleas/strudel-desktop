@@ -570,7 +570,7 @@ impl ChatState {
             5. **Auto-validation**: Your code is validated automatically - you'll get error feedback\n\n\
             ## Queue Mode (Progressive Building)\n\n\
             When Queue Mode (🎬) is enabled, use `apply_live_code_edit` with `description` and `wait_cycles` to build progressively.\n\n\
-            **Best practice: 2-4 substantial musical changes work well**\n\
+            **Best practice: 2-4 substantial musical changes with 4–8 cycles between each (default 4) work well**\n\
             Think in musical sections rather than individual instruments. Combine elements that belong together.\n\n\
             **Good example:**\n\
             User: \"Build a techno beat progressively\"\n\
@@ -587,13 +587,18 @@ impl ChatState {
             - `description`: Brief label (\"Drums\", \"Add bass layer\")\n\
             - `wait_cycles`: Cycles to wait AFTER the previous change was applied\n\
               - 0 for first change (applies immediately)\n\
-              - 8-16 for subsequent changes (gives time to hear previous layer)\n\
+              - DEFAULT: 4 (snappier pacing for shallow edits)\n\
+              - RECOMMENDED: 4–8 (standard; prefer 4 unless user asks slower)\n\
+              - LONGER SECTIONS: 12–16 (only for ambient/slow builds)\n\
+              - NEVER: >16 without explicit user request\n\
               - Each wait is RELATIVE to when the last change applied (cumulative timing)\n\
             - Combine related elements in one call\n\n\
-            **Timing Example:** If you queue 3 changes:\n\
-            - Change 1 (wait_cycles: 0)  → Applies immediately at cycle 0\n\
-            - Change 2 (wait_cycles: 8)  → Applies at cycle 8 (8 cycles AFTER Change 1)\n\
-            - Change 3 (wait_cycles: 16) → Applies at cycle 24 (16 cycles AFTER Change 2)\n\n\
+            **Timing Example (Standard 4-part structure):**\n\
+            - Change 1 (wait_cycles: 0)  → Cycle 0 (immediate)\n\
+            - Change 2 (wait_cycles: 4)  → Cycle 4\n\
+            - Change 3 (wait_cycles: 4)  → Cycle 8\n\
+            - Change 4 (wait_cycles: 4)  → Cycle 12\n\
+            Total: 16 cycles for full progression\n\n\
             ## Common Syntax Errors to Avoid\n\
             ❌ Missing parentheses: `s \"bd sd\"` → ✅ `s(\"bd sd\")`\n\
             ❌ Unescaped quotes: `s(\"bd \"sd\"\")` → ✅ `s(\"bd sd\")` or `s(\"bd 'sd'\")`\n\

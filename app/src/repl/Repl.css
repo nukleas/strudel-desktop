@@ -242,7 +242,8 @@
 
 /* Pulse animation for status indicators */
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 8px currentColor;
   }

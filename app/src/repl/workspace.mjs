@@ -18,7 +18,7 @@ async function ensureTauriAPIs() {
   try {
     const [tauriCore, tauriDialog] = await Promise.all([
       import('@tauri-apps/api/core'),
-      import('@tauri-apps/plugin-dialog')
+      import('@tauri-apps/plugin-dialog'),
     ]);
     _invoke = tauriCore.invoke;
     _open = tauriDialog.open;
@@ -37,9 +37,8 @@ async function ensureTauriAPIs() {
 const isTauriContext = () => {
   if (_tauriInitialized) return _isTauri;
   // Check for Tauri-injected globals as a quick check
-  return typeof window !== 'undefined' && (
-    window.__TAURI_INTERNALS__ !== undefined ||
-    window.__TAURI_INVOKE__ !== undefined
+  return (
+    typeof window !== 'undefined' && (window.__TAURI_INTERNALS__ !== undefined || window.__TAURI_INVOKE__ !== undefined)
   );
 };
 

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useSettings } from '@src/settings.mjs';
-import { 
-  MusicalNoteIcon, 
-  SpeakerWaveIcon, 
+import {
+  MusicalNoteIcon,
+  SpeakerWaveIcon,
   SpeakerXMarkIcon,
   MusicalNoteIcon as NoteIcon,
   SpeakerWaveIcon as SynthIcon,
@@ -20,7 +20,7 @@ import {
   ComputerDesktopIcon,
   MusicalNoteIcon as JazzIcon,
   SpeakerWaveIcon as ElectronicIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
 } from '@heroicons/react/16/solid';
 
 // Snippet categories inspired by strudel-desktop
@@ -1181,7 +1181,7 @@ note("A5 [F5@2 C5] [D5@2 F5] F5")
   {
     id: 'vgm-zelda-rescue',
     category: 'videogame',
-    name: 'Zelda\'s Rescue',
+    name: "Zelda's Rescue",
     description: 'Koji Kondo',
     code: `// Koji Kondo - Princess Zelda's Rescue (simplified)
 note("[B3@2 D4] [A3@2 [G3 A3]] [B3@2 D4] [A3]")
@@ -1394,7 +1394,7 @@ export function SnippetsTab({ context }) {
                   : 'bg-[rgba(34,211,238,0.1)] text-[var(--cyan-400)] hover:bg-[rgba(34,211,238,0.2)]'
               }`}
             >
-              {React.createElement(category.icon, { className: "w-3 h-3" })}
+              {React.createElement(category.icon, { className: 'w-3 h-3' })}
               {category.name}
             </button>
           ))}
@@ -1411,7 +1411,7 @@ export function SnippetsTab({ context }) {
           Object.entries(groupedSnippets).map(([categoryKey, categorySnippets]) => (
             <div key={categoryKey} className="mb-4">
               <h3 className="text-xs font-mono uppercase tracking-widest text-[var(--cyan-400)] mb-2 flex items-center gap-2">
-                {React.createElement(snippetCategories[categoryKey].icon, { className: "w-4 h-4" })}
+                {React.createElement(snippetCategories[categoryKey].icon, { className: 'w-4 h-4' })}
                 <span>{snippetCategories[categoryKey].name}</span>
                 <span className="text-[var(--foreground)] opacity-30">({categorySnippets.length})</span>
               </h3>

@@ -48,6 +48,26 @@ pnpm tauri:build     # Build desktop app for production
 pnpm tauri:info      # Show Tauri environment info
 ```
 
+## Desktop App Features
+
+### Queue Mode
+
+The desktop app includes a Queue Mode feature for progressive pattern building via the AI chat assistant. Key points:
+
+- **Location**: `docs/features/queue-system.md` and `docs/features/WAIT_CYCLES_CLARIFICATION.md`
+- **Tool**: `apply_live_code_edit` in `src-tauri/src/tools.rs`
+- **Timing Behavior**: `wait_cycles` is **RELATIVE/CUMULATIVE** - each change waits N cycles AFTER the previous change was applied, NOT absolute from session start
+- **Implementation**: Frontend state in `website/src/repl/useReplContext.jsx`, Rust backend in `src-tauri/src/`
+
+**Example Timeline:**
+```javascript
+apply_live_code_edit({ wait_cycles: 0, ... })  // Cycle 0
+apply_live_code_edit({ wait_cycles: 8, ... })  // Cycle 8 (8 after first)
+apply_live_code_edit({ wait_cycles: 16, ... }) // Cycle 24 (16 after second)
+```
+
+See `docs/features/WAIT_CYCLES_CLARIFICATION.md` for detailed explanation.
+
 ## Architecture
 
 ### Core Concepts

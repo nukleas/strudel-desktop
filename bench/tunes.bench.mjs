@@ -1,5 +1,5 @@
 import { queryCode, testCycles } from '../test/runtime.mjs';
-import * as tunes from '../website/src/repl/tunes.mjs';
+import * as tunes from '../app/src/repl/tunes.mjs';
 import { describe, bench } from 'vitest';
 import { calculateSteps } from '../packages/core/index.mjs';
 

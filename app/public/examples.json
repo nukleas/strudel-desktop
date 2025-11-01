@@ -272,7 +272,7 @@
     },
     {
       "name": "Magic And Ecstasy",
-      "code": "stack(\n  note(\"<[a2 [a2 b2] a2 [a2 c3] a2 [a2 d3] [d#3 d3] [c#3 d3]>\")\n    .release(.05)\n    .layer(\n      x => x.s(\"gm_overdriven_guitar:6\").hpf(500).lpf(2500).gain(1.2),\n      x => x.s(\"gm_electric_bass_finger\").transpose(-12).lpf(400).gain(.9)\n    ),\n  note(\"<[~ c4] [a3 b3] c4 d4 d#4 f4 f#4 f4 g#4 f#4 f4 d#4>\")\n    .layer(\n      x => x.piano().gain(.7),\n      x => x.s(\"gm_piccolo\").gain(.25).transpose(12)\n    ).transpose(12),\n  s(\"tambourine*2\").velocity(.8)\n).cpm(145).room(.3)",
+      "code": "stack(\n  note(\"a2 [a2 b2] a2 [a2 c3] a2 [a2 d3] [d#3 d3] [c#3 d3]\")\n    .release(.05)\n    .layer(\n      x => x.s(\"gm_overdriven_guitar:6\").hpf(500).lpf(2500).gain(1.2).pan(.51),\n      x => x.s(\"gm_electric_bass_finger\").transpose(-12).lpf(400).gain(.9).pan(.49)\n    ),\n  note(\"[~ c4] [a3 b3] c4 d4 d#4 f4 f#4 f4 g#4 f#4 f4 d#4\")\n    .layer(\n      x => x.piano().gain(.7),\n      x => x.s(\"gm_piccolo\").gain(.25).transpose(12),\n      x => x.s(\"gm_violin\").gain(.40)\n    ).transpose(12),\n  s(\"tambourine*2\").velocity(.8)\n).cpm(145).room(.3)",
       "description": "Film soundtrack with overdrive guitar and orchestral layers (Magic And Ecstasy by Ennio Morricone)",
       "category": "soundtrack",
       "author": "eefano",

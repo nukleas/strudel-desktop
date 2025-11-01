@@ -1,5 +1,5 @@
 import { queryCode, testCycles } from './runtime.mjs';
-import * as tunes from '../website/src/repl/tunes.mjs';
+import * as tunes from '../app/src/repl/tunes.mjs';
 import { describe, it } from 'vitest';
 
 const tuneKeys = Object.keys(tunes);

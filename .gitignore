@@ -146,3 +146,11 @@ music/
 # Generated embeddings (regenerate as needed)
 embeddings.json
 src-tauri/embeddings.json
+
+# Apple signing credentials (NEVER commit these!)
+.env.signing
+*.p12
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile

@@ -1,7 +1,7 @@
-# Strudel Website
+# Strudel Desktop App
 
-This is the website for Strudel, deployed at [strudel.cc](https://strudel.cc).
-It includes the REPL live coding editor and the documentation site.
+This is the frontend for Strudel Desktop, built with Astro and React.
+It includes the REPL live coding editor and the desktop app UI.
 
 ## Run locally
 
@@ -14,7 +14,7 @@ npm run repl
 ## Build
 
 ```bash
-cd website
+cd app
 npm run build # <- builds repl + tutorial to ../docs
 npm run preview # <- test static build
 ```
@@ -22,7 +22,7 @@ npm run preview # <- test static build
 ## Generate PWA icons
 
 ```sh
-cd website/public
+cd app/public
 npx pwa-asset-generator icon.png icons
 ```
 

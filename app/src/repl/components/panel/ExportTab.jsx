@@ -18,11 +18,13 @@ export function ExportTab({ code }) {
 
       // Show save dialog
       const outputPath = await save({
-        filters: [{
-          name: format.toUpperCase() + ' Audio',
-          extensions: [format]
-        }],
-        defaultPath: `pattern.${format}`
+        filters: [
+          {
+            name: format.toUpperCase() + ' Audio',
+            extensions: [format],
+          },
+        ],
+        defaultPath: `pattern.${format}`,
       });
 
       if (!outputPath) {
@@ -47,7 +49,7 @@ export function ExportTab({ code }) {
           durationCycles: duration,
           bitDepth: format === 'wav' ? bitDepth : null,
           mp3Bitrate: format === 'mp3' ? mp3Bitrate : null,
-        }
+        },
       });
 
       setStatus(`✅ Export successful: ${result}`);
@@ -65,12 +67,10 @@ export function ExportTab({ code }) {
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Format
-          </label>
+          <label className="block text-sm font-medium mb-1">Format</label>
           <select
             value={format}
-            onChange={e => setFormat(e.target.value)}
+            onChange={(e) => setFormat(e.target.value)}
             className="w-full p-2 border rounded"
             disabled={exporting}
           >
@@ -80,13 +80,11 @@ export function ExportTab({ code }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Duration (cycles)
-          </label>
+          <label className="block text-sm font-medium mb-1">Duration (cycles)</label>
           <input
             type="number"
             value={duration}
-            onChange={e => setDuration(Number(e.target.value))}
+            onChange={(e) => setDuration(Number(e.target.value))}
             className="w-full p-2 border rounded"
             min="1"
             max="300"
@@ -95,12 +93,10 @@ export function ExportTab({ code }) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Sample Rate
-          </label>
+          <label className="block text-sm font-medium mb-1">Sample Rate</label>
           <select
             value={sampleRate}
-            onChange={e => setSampleRate(Number(e.target.value))}
+            onChange={(e) => setSampleRate(Number(e.target.value))}
             className="w-full p-2 border rounded"
             disabled={exporting}
           >
@@ -112,12 +108,10 @@ export function ExportTab({ code }) {
 
         {format === 'wav' && (
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Bit Depth
-            </label>
+            <label className="block text-sm font-medium mb-1">Bit Depth</label>
             <select
               value={bitDepth}
-              onChange={e => setBitDepth(Number(e.target.value))}
+              onChange={(e) => setBitDepth(Number(e.target.value))}
               className="w-full p-2 border rounded"
               disabled={exporting}
             >
@@ -130,12 +124,10 @@ export function ExportTab({ code }) {
 
         {format === 'mp3' && (
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Bitrate
-            </label>
+            <label className="block text-sm font-medium mb-1">Bitrate</label>
             <select
               value={mp3Bitrate}
-              onChange={e => setMp3Bitrate(Number(e.target.value))}
+              onChange={(e) => setMp3Bitrate(Number(e.target.value))}
               className="w-full p-2 border rounded"
               disabled={exporting}
             >
@@ -150,7 +142,8 @@ export function ExportTab({ code }) {
         <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm">
           <strong>Info:</strong> Exports your current pattern using the Dough audio engine.
           <br />
-          <strong>Note:</strong> Visualization methods like <code>.pianoroll()</code> are automatically removed during export.
+          <strong>Note:</strong> Visualization methods like <code>.pianoroll()</code> are automatically removed during
+          export.
           <br />
           Leave the editor empty to export a test tone (440 Hz).
         </div>
@@ -159,19 +152,13 @@ export function ExportTab({ code }) {
           onClick={handleExport}
           disabled={exporting}
           className={`w-full p-3 rounded font-medium ${
-            exporting
-              ? 'bg-gray-300 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
+            exporting ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 text-white'
           }`}
         >
           {exporting ? 'Exporting...' : `Export as ${format.toUpperCase()}`}
         </button>
 
-        {status && (
-          <div className="p-3 bg-gray-100 border rounded text-sm">
-            {status}
-          </div>
-        )}
+        {status && <div className="p-3 bg-gray-100 border rounded text-sm">{status}</div>}
       </div>
     </div>
   );

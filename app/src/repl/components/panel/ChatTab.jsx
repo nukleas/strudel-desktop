@@ -10,7 +10,7 @@ import {
   ForwardIcon,
   XMarkIcon,
   EyeIcon,
-  ClockIcon
+  ClockIcon,
 } from '@heroicons/react/16/solid';
 
 const TAURI = typeof window !== 'undefined' && window.__TAURI_INTERNALS__;
@@ -85,7 +85,9 @@ function QueuePanel({ context }) {
           {canApply ? (
             <span className="text-green-400">Ready to apply (waited {cyclesWaited} cycles)</span>
           ) : (
-            <span>Waiting... ({cyclesWaited}/{waitCycles} cycles)</span>
+            <span>
+              Waiting... ({cyclesWaited}/{waitCycles} cycles)
+            </span>
           )}
         </div>
       )}
@@ -96,10 +98,10 @@ function QueuePanel({ context }) {
           onClick={() => context.applyNextChange()}
           disabled={!canApply && waitCycles > 0}
           className={cx(
-            "flex-1 px-3 py-1.5 rounded text-xs font-bold flex items-center justify-center gap-1",
+            'flex-1 px-3 py-1.5 rounded text-xs font-bold flex items-center justify-center gap-1',
             canApply || waitCycles === 0
-              ? "bg-purple-500 text-white hover:bg-purple-600"
-              : "bg-lineHighlight text-foreground opacity-50 cursor-not-allowed"
+              ? 'bg-purple-500 text-white hover:bg-purple-600'
+              : 'bg-lineHighlight text-foreground opacity-50 cursor-not-allowed',
           )}
         >
           <PlayIcon className="w-3 h-3" />
@@ -171,7 +173,7 @@ function parseAndQueueChanges(content, addToQueue) {
         code: code,
         mode: modeMatch ? modeMatch[1].toLowerCase() : 'replace',
         waitCycles: waitMatch ? parseInt(waitMatch[1]) : 0,
-        autoEvaluate: true
+        autoEvaluate: true,
       };
 
       queueItems.push(item);
@@ -195,7 +197,6 @@ function parseAndQueueChanges(content, addToQueue) {
       console.log('✅ Adding', queueItems.length, 'items to queue');
       addToQueue(queueItems);
     }
-
   } catch (error) {
     console.error('Failed to parse queue:', error);
   }
@@ -288,7 +289,7 @@ export function ChatTab({ context }) {
         // Fetch doc.json and examples.json in parallel
         const [docsResponse, examplesResponse] = await Promise.all([
           fetch('/doc.json'),
-          fetch('/examples-safe.json').catch(() => null) // Safe examples, optional
+          fetch('/examples-safe.json').catch(() => null), // Safe examples, optional
         ]);
 
         // Check if docs response is ok before parsing
@@ -302,138 +303,138 @@ export function ChatTab({ context }) {
         // Send both to backend
         await invoke('load_strudel_docs', {
           docsJson: JSON.stringify(docsJson),
-          examplesJson: JSON.stringify(examplesJson)
+          examplesJson: JSON.stringify(examplesJson),
         });
 
         setDocsLoaded(true);
         console.log('✅ Strudel docs and examples loaded into chat agent');
       } catch (error) {
         console.error('❌ Failed to load Strudel docs:', error);
-        
+
         // Fallback: Create minimal docs from Context7 data
         const fallbackDocs = {
           docs: [
             {
-              name: "note",
-              description: "Create musical note patterns",
-              examples: ['note("c3 eb3 g3")', 'note("c3 [e3 g3]*2")']
+              name: 'note',
+              description: 'Create musical note patterns',
+              examples: ['note("c3 eb3 g3")', 'note("c3 [e3 g3]*2")'],
             },
             {
-              name: "s",
-              description: "Select sounds/samples by name",
-              examples: ['s("bd hh")', 's("bd sd [- bd] sd")']
+              name: 's',
+              description: 'Select sounds/samples by name',
+              examples: ['s("bd hh")', 's("bd sd [- bd] sd")'],
             },
             {
-              name: "sound",
-              description: "Play sounds with optional bank selection",
-              examples: ['sound("bd sd")', 'sound("bd sd").bank("RolandTR909")']
+              name: 'sound',
+              description: 'Play sounds with optional bank selection',
+              examples: ['sound("bd sd")', 'sound("bd sd").bank("RolandTR909")'],
             },
             {
-              name: "stack",
-              description: "Layer patterns vertically",
-              examples: ['stack(note("c2"), s("bd"))']
+              name: 'stack',
+              description: 'Layer patterns vertically',
+              examples: ['stack(note("c2"), s("bd"))'],
             },
             {
-              name: "cat",
-              description: "Concatenate patterns horizontally",
-              examples: ['cat("g3,b3,e4", "a3,c3,e4")']
+              name: 'cat',
+              description: 'Concatenate patterns horizontally',
+              examples: ['cat("g3,b3,e4", "a3,c3,e4")'],
             },
             {
-              name: "fast",
-              description: "Speed up patterns",
-              examples: ['fast(2)', 'fast("<1 2 4>")']
+              name: 'fast',
+              description: 'Speed up patterns',
+              examples: ['fast(2)', 'fast("<1 2 4>")'],
             },
             {
-              name: "slow",
-              description: "Slow down patterns",
-              examples: ['slow(2)', 'slow("<1 2 4>")']
+              name: 'slow',
+              description: 'Slow down patterns',
+              examples: ['slow(2)', 'slow("<1 2 4>")'],
             },
             {
-              name: "scale",
-              description: "Apply musical scales to notes",
-              examples: ['scale("C:major")', 'scale("C4:minor")']
+              name: 'scale',
+              description: 'Apply musical scales to notes',
+              examples: ['scale("C:major")', 'scale("C4:minor")'],
             },
             {
-              name: "gain",
-              description: "Control volume/amplitude",
-              examples: ['gain(0.5)', 'gain("<0.3 0.7>")']
+              name: 'gain',
+              description: 'Control volume/amplitude',
+              examples: ['gain(0.5)', 'gain("<0.3 0.7>")'],
             },
             {
-              name: "pan",
-              description: "Control stereo panning",
-              examples: ['pan(0.5)', 'pan("<0 1>")']
+              name: 'pan',
+              description: 'Control stereo panning',
+              examples: ['pan(0.5)', 'pan("<0 1>")'],
             },
             {
-              name: "lpf",
-              description: "Low-pass filter",
-              examples: ['lpf(800)', 'lpf("<400 1200>")']
+              name: 'lpf',
+              description: 'Low-pass filter',
+              examples: ['lpf(800)', 'lpf("<400 1200>")'],
             },
             {
-              name: "hpf",
-              description: "High-pass filter",
-              examples: ['hpf(200)', 'hpf("<100 500>")']
+              name: 'hpf',
+              description: 'High-pass filter',
+              examples: ['hpf(200)', 'hpf("<100 500>")'],
             },
             {
-              name: "room",
-              description: "Reverb effect",
-              examples: ['room(0.5)', 'room("<0.2 0.8>")']
+              name: 'room',
+              description: 'Reverb effect',
+              examples: ['room(0.5)', 'room("<0.2 0.8>")'],
             },
             {
-              name: "delay",
-              description: "Delay effect",
-              examples: ['delay(0.5)', 'delay("<0.2 0.8>")']
+              name: 'delay',
+              description: 'Delay effect',
+              examples: ['delay(0.5)', 'delay("<0.2 0.8>")'],
             },
             {
-              name: "sometimes",
-              description: "Apply function with probability",
-              examples: ['sometimes(x => x.fast(2))', 'sometimes(x => x.rev())']
+              name: 'sometimes',
+              description: 'Apply function with probability',
+              examples: ['sometimes(x => x.fast(2))', 'sometimes(x => x.rev())'],
             },
             {
-              name: "often",
-              description: "Apply function often (80% chance)",
-              examples: ['often(x => x.fast(2))']
+              name: 'often',
+              description: 'Apply function often (80% chance)',
+              examples: ['often(x => x.fast(2))'],
             },
             {
-              name: "rarely",
-              description: "Apply function rarely (20% chance)",
-              examples: ['rarely(x => x.fast(2))']
-            }
-          ]
+              name: 'rarely',
+              description: 'Apply function rarely (20% chance)',
+              examples: ['rarely(x => x.fast(2))'],
+            },
+          ],
         };
-        
+
         const fallbackExamples = {
           examples: [
             {
-              name: "Basic Beat",
+              name: 'Basic Beat',
               code: 's("bd hh sd hh")',
-              description: "Simple four-on-the-floor beat"
+              description: 'Simple four-on-the-floor beat',
             },
             {
-              name: "Melodic Pattern",
+              name: 'Melodic Pattern',
               code: 'note("c3 eb3 g3 bb3").scale("C:minor")',
-              description: "Minor scale melody"
+              description: 'Minor scale melody',
             },
             {
-              name: "Layered Pattern",
+              name: 'Layered Pattern',
               code: 'stack(s("bd sd"), note("c2 eb2 g2"))',
-              description: "Drums and bass together"
-            }
+              description: 'Drums and bass together',
+            },
           ],
           creativity_tips: [
-            "Use mini-notation for quick pattern creation",
-            "Layer different elements with stack()",
-            "Add variation with sometimes() and often()",
-            "Experiment with scales and chords",
-            "Use effects like reverb and delay for atmosphere"
-          ]
+            'Use mini-notation for quick pattern creation',
+            'Layer different elements with stack()',
+            'Add variation with sometimes() and often()',
+            'Experiment with scales and chords',
+            'Use effects like reverb and delay for atmosphere',
+          ],
         };
-        
+
         // Send fallback docs to backend
         await invoke('load_strudel_docs', {
           docsJson: JSON.stringify(fallbackDocs),
-          examplesJson: JSON.stringify(fallbackExamples)
+          examplesJson: JSON.stringify(fallbackExamples),
         });
-        
+
         console.log('✅ Fallback Strudel docs loaded');
         setDocsLoaded(true);
       }
@@ -468,11 +469,7 @@ export function ChatTab({ context }) {
               break;
             case 'delta': {
               streamingBufferRef.current += payload.content || '';
-              setStreamingMessage((prev) =>
-                prev
-                  ? { ...prev, content: streamingBufferRef.current }
-                  : prev
-              );
+              setStreamingMessage((prev) => (prev ? { ...prev, content: streamingBufferRef.current } : prev));
               break;
             }
             case 'reasoning': {
@@ -484,13 +481,12 @@ export function ChatTab({ context }) {
                       ...prev,
                       reasoning: [...(prev.reasoning || []), thought],
                     }
-                  : prev
+                  : prev,
               );
               break;
             }
             case 'done': {
-              const finalContent =
-                payload.content || streamingBufferRef.current || '';
+              const finalContent = payload.content || streamingBufferRef.current || '';
               streamingBufferRef.current = '';
               if (finalContent) {
                 const assistantMessage = {
@@ -513,9 +509,7 @@ export function ChatTab({ context }) {
               break;
             }
             case 'error': {
-              const errorText =
-                payload.content ||
-                'Streaming error. Check your model settings and try again.';
+              const errorText = payload.content || 'Streaming error. Check your model settings and try again.';
               setMessages((prev) => [
                 ...prev,
                 {
@@ -559,9 +553,11 @@ export function ChatTab({ context }) {
         unlisten = await listen('chat-live-edit', ({ payload }) => {
           if (!payload || !payload.mode || typeof payload.code !== 'string') return;
 
-          window.dispatchEvent(new CustomEvent('insert-code', {
-            detail: { code: payload.code, mode: payload.mode }
-          }));
+          window.dispatchEvent(
+            new CustomEvent('insert-code', {
+              detail: { code: payload.code, mode: payload.mode },
+            }),
+          );
 
           setMessages((prev) => [
             ...prev,
@@ -614,7 +610,7 @@ export function ChatTab({ context }) {
               code: payload.code,
               mode: payload.mode,
               waitCycles: payload.wait_cycles || 0,
-              autoEvaluate: true
+              autoEvaluate: true,
             };
             contextRef.current.addToQueue(queueItem);
 
@@ -662,8 +658,12 @@ export function ChatTab({ context }) {
 
         try {
           await invoke('set_code_context', { code: liveCode });
-          console.log('💻 Code context updated -', liveCode.length, 'chars',
-                     prevLength === 0 ? '(initial)' : `(+${liveCode.length - prevLength})`);
+          console.log(
+            '💻 Code context updated -',
+            liveCode.length,
+            'chars',
+            prevLength === 0 ? '(initial)' : `(+${liveCode.length - prevLength})`,
+          );
         } catch (error) {
           console.error('❌ Failed to update code context:', error);
         }
@@ -732,12 +732,12 @@ export function ChatTab({ context }) {
     const invoke = await getInvoke();
     if (!invoke) return;
 
-      try {
-        await invoke('set_chat_config', {
-          provider,
-          apiKey: apiKey.trim() ? apiKey : null,
-          liveEditEnabled: allowLiveEdit,
-        });
+    try {
+      await invoke('set_chat_config', {
+        provider,
+        apiKey: apiKey.trim() ? apiKey : null,
+        liveEditEnabled: allowLiveEdit,
+      });
       setShowSettings(false);
       alert('Settings saved! You can now start chatting.');
     } catch (error) {
@@ -767,9 +767,11 @@ export function ChatTab({ context }) {
     const codeToInsert = codeMatch ? codeMatch[1] : code;
 
     // Emit custom event to insert code into editor
-    window.dispatchEvent(new CustomEvent('insert-code', {
-      detail: { code: codeToInsert, mode }
-    }));
+    window.dispatchEvent(
+      new CustomEvent('insert-code', {
+        detail: { code: codeToInsert, mode },
+      }),
+    );
   };
 
   if (!TAURI) {
@@ -874,7 +876,7 @@ export function ChatTab({ context }) {
   // Queue toggle button in header
   const handleToggleQueue = () => {
     if (context?.setQueueEnabled) {
-      context.setQueueEnabled(prev => !prev);
+      context.setQueueEnabled((prev) => !prev);
     }
   };
 
@@ -894,10 +896,8 @@ export function ChatTab({ context }) {
           <button
             onClick={handleToggleQueue}
             className={cx(
-              "text-xs px-2 py-1 rounded",
-              context?.queueEnabled
-                ? "bg-purple-500 text-white"
-                : "text-foreground hover:bg-lineHighlight"
+              'text-xs px-2 py-1 rounded',
+              context?.queueEnabled ? 'bg-purple-500 text-white' : 'text-foreground hover:bg-lineHighlight',
             )}
             title="Toggle Queue Mode"
           >
@@ -934,20 +934,31 @@ export function ChatTab({ context }) {
             <div className="mt-4 text-left max-w-md mx-auto text-xs">
               <p className="font-bold mb-1">💡 Pro tips:</p>
               <ul className="list-disc list-inside space-y-1">
-                <li>Type <code className="bg-lineBackground px-1">/search function_name</code> to search docs</li>
+                <li>
+                  Type <code className="bg-lineBackground px-1">/search function_name</code> to search docs
+                </li>
                 <li>Your code is automatically tracked every 2 seconds</li>
-                <li>I use {provider.includes('claude') ? 'Claude' : provider.includes('gpt') || provider.includes('o') ? 'OpenAI' : 'Gemini'} {provider.includes('4.5') || provider.includes('5') || provider.includes('o3') || provider.includes('o4') ? 'with extended reasoning' : ''}</li>
+                <li>
+                  I use{' '}
+                  {provider.includes('claude')
+                    ? 'Claude'
+                    : provider.includes('gpt') || provider.includes('o')
+                      ? 'OpenAI'
+                      : 'Gemini'}{' '}
+                  {provider.includes('4.5') ||
+                  provider.includes('5') ||
+                  provider.includes('o3') ||
+                  provider.includes('o4')
+                    ? 'with extended reasoning'
+                    : ''}
+                </li>
               </ul>
             </div>
           </div>
         )}
 
         {messages.map((msg, idx) => (
-          <MessageBubble
-            key={idx}
-            message={msg}
-            onInsertCode={handleInsertCode}
-          />
+          <MessageBubble key={idx} message={msg} onInsertCode={handleInsertCode} />
         ))}
 
         {streamingMessage && (
@@ -964,9 +975,7 @@ export function ChatTab({ context }) {
 
         {isLoading && !streamingMessage && (
           <div className="flex justify-start">
-            <div className="px-4 py-2 rounded-lg bg-lineHighlight text-foreground animate-pulse">
-              Thinking...
-            </div>
+            <div className="px-4 py-2 rounded-lg bg-lineHighlight text-foreground animate-pulse">Thinking...</div>
           </div>
         )}
 
@@ -992,7 +1001,7 @@ export function ChatTab({ context }) {
               'px-4 py-2 rounded',
               isLoading || !input.trim()
                 ? 'bg-lineHighlight text-foreground opacity-50 cursor-not-allowed'
-                : 'bg-[var(--cyan-400)] text-background hover:bg-[var(--cyan-500)]'
+                : 'bg-[var(--cyan-400)] text-background hover:bg-[var(--cyan-500)]',
             )}
           >
             Send
@@ -1010,11 +1019,7 @@ function MessageBubble({ message, onInsertCode }) {
 
   const renderContent = () => {
     if (!content) {
-      return (
-        <p className="whitespace-pre-wrap opacity-70">
-          {message.streaming ? '…' : ''}
-        </p>
-      );
+      return <p className="whitespace-pre-wrap opacity-70">{message.streaming ? '…' : ''}</p>;
     }
 
     if (!hasCodeBlock) {
@@ -1054,7 +1059,11 @@ function MessageBubble({ message, onInsertCode }) {
           </div>
         );
       }
-      return <p key={idx} className="whitespace-pre-wrap">{part}</p>;
+      return (
+        <p key={idx} className="whitespace-pre-wrap">
+          {part}
+        </p>
+      );
     });
   };
 
@@ -1063,17 +1072,13 @@ function MessageBubble({ message, onInsertCode }) {
       <div
         className={cx(
           'max-w-[80%] px-4 py-2 rounded-lg',
-          isUser
-            ? 'bg-[var(--cyan-400)] text-background'
-            : 'bg-lineHighlight text-foreground',
-          message.streaming && !isUser && 'opacity-80'
+          isUser ? 'bg-[var(--cyan-400)] text-background' : 'bg-lineHighlight text-foreground',
+          message.streaming && !isUser && 'opacity-80',
         )}
       >
         {renderContent()}
         {message.reasoning && message.reasoning.length > 0 && (
-          <div className="text-xs opacity-60 italic mt-2">
-            {message.reasoning.slice(-3).join(' ')}
-          </div>
+          <div className="text-xs opacity-60 italic mt-2">{message.reasoning.slice(-3).join(' ')}</div>
         )}
       </div>
     </div>

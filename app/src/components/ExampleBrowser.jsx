@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 /**
  * Example Browser Component
- * 
+ *
  * A component for browsing and managing Strudel examples
  * with filtering, search, and preview capabilities.
  */
@@ -40,16 +40,17 @@ export const ExampleBrowser = () => {
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(ex => ex.category === selectedCategory);
+      filtered = filtered.filter((ex) => ex.category === selectedCategory);
     }
 
     // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(ex => 
-        ex.name.toLowerCase().includes(term) ||
-        ex.description.toLowerCase().includes(term) ||
-        ex.code.toLowerCase().includes(term)
+      filtered = filtered.filter(
+        (ex) =>
+          ex.name.toLowerCase().includes(term) ||
+          ex.description.toLowerCase().includes(term) ||
+          ex.code.toLowerCase().includes(term),
       );
     }
 
@@ -57,7 +58,7 @@ export const ExampleBrowser = () => {
   };
 
   const getCategories = () => {
-    const categories = new Set(examples.map(ex => ex.category));
+    const categories = new Set(examples.map((ex) => ex.category));
     return Array.from(categories).sort();
   };
 
@@ -98,7 +99,7 @@ export const ExampleBrowser = () => {
             className="category-select"
           >
             <option value="all">All Categories</option>
-            {getCategories().map(category => (
+            {getCategories().map((category) => (
               <option key={category} value={category}>
                 {category.charAt(0).toUpperCase() + category.slice(1)}
               </option>
@@ -109,10 +110,8 @@ export const ExampleBrowser = () => {
 
       <div className="browser-content">
         <div className="examples-list">
-          <div className="examples-count">
-            {filteredExamples.length} examples found
-          </div>
-          
+          <div className="examples-count">{filteredExamples.length} examples found</div>
+
           {filteredExamples.map((example, index) => (
             <div
               key={index}
@@ -152,10 +151,7 @@ export const ExampleBrowser = () => {
           <div className="example-detail">
             <div className="detail-header">
               <h3>{selectedExample.name}</h3>
-              <button
-                onClick={() => setSelectedExample(null)}
-                className="close-btn"
-              >
+              <button onClick={() => setSelectedExample(null)} className="close-btn">
                 ×
               </button>
             </div>
@@ -164,23 +160,17 @@ export const ExampleBrowser = () => {
                 <h4>Description</h4>
                 <p>{selectedExample.description}</p>
               </div>
-              
+
               <div className="detail-section">
                 <h4>Code</h4>
                 <pre className="code-preview">
                   <code>{selectedExample.code}</code>
                 </pre>
                 <div className="code-actions">
-                  <button
-                    onClick={() => copyToClipboard(selectedExample.code)}
-                    className="action-btn copy-btn"
-                  >
+                  <button onClick={() => copyToClipboard(selectedExample.code)} className="action-btn copy-btn">
                     Copy Code
                   </button>
-                  <button
-                    onClick={() => runExample(selectedExample.code)}
-                    className="action-btn run-btn"
-                  >
+                  <button onClick={() => runExample(selectedExample.code)} className="action-btn run-btn">
                     Run in REPL
                   </button>
                 </div>
@@ -213,7 +203,7 @@ export const ExampleBrowser = () => {
 
         .browser-header h2 {
           margin: 0 0 1rem 0;
-          color: #4CAF50;
+          color: #4caf50;
         }
 
         .controls {
@@ -221,7 +211,8 @@ export const ExampleBrowser = () => {
           gap: 1rem;
         }
 
-        .search-input, .category-select {
+        .search-input,
+        .category-select {
           padding: 0.5rem;
           border: 1px solid #555;
           border-radius: 4px;
@@ -262,12 +253,12 @@ export const ExampleBrowser = () => {
         }
 
         .example-card:hover {
-          border-color: #4CAF50;
+          border-color: #4caf50;
           transform: translateY(-2px);
         }
 
         .example-card.selected {
-          border-color: #4CAF50;
+          border-color: #4caf50;
           background: #2d4a2d;
         }
 
@@ -280,7 +271,7 @@ export const ExampleBrowser = () => {
 
         .example-header h3 {
           margin: 0;
-          color: #4CAF50;
+          color: #4caf50;
         }
 
         .category-badge {
@@ -312,16 +303,16 @@ export const ExampleBrowser = () => {
         }
 
         .copy-btn {
-          background: #2196F3;
+          background: #2196f3;
           color: white;
         }
 
         .copy-btn:hover {
-          background: #1976D2;
+          background: #1976d2;
         }
 
         .run-btn {
-          background: #4CAF50;
+          background: #4caf50;
           color: white;
         }
 
@@ -347,7 +338,7 @@ export const ExampleBrowser = () => {
 
         .detail-header h3 {
           margin: 0;
-          color: #4CAF50;
+          color: #4caf50;
         }
 
         .close-btn {
@@ -380,7 +371,7 @@ export const ExampleBrowser = () => {
 
         .detail-section h4 {
           margin: 0 0 0.5rem 0;
-          color: #4CAF50;
+          color: #4caf50;
           font-size: 1rem;
         }
 

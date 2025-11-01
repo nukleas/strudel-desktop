@@ -7,7 +7,7 @@
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:4321",
-    "frontendDist": "../website/dist"
+    "frontendDist": "../app/dist"
   },
   "app": {
     "windows": [
@@ -37,7 +37,7 @@
   "bundle": {
     "active": true,
     "category": "DeveloperTool",
-    "copyright": "",
+    "copyright": "Copyright © 2024 Editorial Automation Systems LLC",
     "externalBin": [],
     "icon": [
       "icons/32x32.png",
@@ -47,16 +47,17 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "longDescription": "",
+    "longDescription": "Strudel Desktop - A live coding environment for making music in the browser using the Strudel pattern language, a JavaScript port of TidalCycles.",
     "macOS": {
       "entitlements": null,
       "exceptionDomain": "",
       "frameworks": [],
-      "providerShortName": null,
-      "signingIdentity": null
+      "providerShortName": "8832K8LBLC",
+      "signingIdentity": "Developer ID Application: Editorial Automation Systems LLC (8832K8LBLC)",
+      "minimumSystemVersion": "10.13"
     },
     "resources": [],
-    "shortDescription": "",
+    "shortDescription": "Live coding music patterns",
     "targets": "all",
     "windows": {
       "certificateThumbprint": null,

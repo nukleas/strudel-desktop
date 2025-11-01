@@ -23,18 +23,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-            name: 'macOS (Apple Silicon)'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-            name: 'macOS (Intel)'
-          - platform: 'ubuntu-22.04'
-            args: ''
-            name: 'Linux (x86_64)'
-          - platform: 'windows-latest'
-            args: ''
-            name: 'Windows (x86_64)'
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+            name: "macOS (Apple Silicon)"
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
+            name: "macOS (Intel)"
+          - platform: "ubuntu-22.04"
+            args: ""
+            name: "Linux (x86_64)"
+          - platform: "windows-latest"
+            args: ""
+            name: "Windows (x86_64)"
 
     runs-on: ${{ matrix.platform }}
     name: Build for ${{ matrix.name }}
@@ -46,7 +46,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -130,7 +130,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -142,7 +142,7 @@ jobs:
 
       - name: Run tests
         run: pnpm test
-        continue-on-error: true  # Allow minor test failures
+        continue-on-error: true # Allow minor test failures
 
   lint:
     runs-on: ubuntu-latest
@@ -155,7 +155,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v2
@@ -167,4 +167,4 @@ jobs:
 
       - name: Run lint (core packages only)
         run: pnpm eslint packages/core packages/mini packages/webaudio packages/superdough website/src --quiet || true
-        continue-on-error: true  # Don't fail builds on lint errors
+        continue-on-error: true # Don't fail builds on lint errors

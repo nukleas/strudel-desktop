@@ -1,8 +1,11 @@
 packages:
   - packages/*
-  - examples/*
   - tools/dbpatch
-  - website/
+  - app/
+  # Examples temporarily excluded (some depend on archived packages)
+  # - examples/*
+  # Archived packages (not used in desktop app)
+  # - archived-packages/*
 
 onlyBuiltDependencies:
   - esbuild
