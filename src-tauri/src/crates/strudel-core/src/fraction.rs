@@ -94,7 +94,9 @@ impl Fraction {
 
     /// Floor - round down to nearest integer
     pub fn floor(self) -> Self {
-        let result = self.numerator / self.denominator;
+        // Use div_euclid for correct floor division with negative numbers.
+        // This is safe because simplify() ensures denominator is always positive.
+        let result = self.numerator.div_euclid(self.denominator);
         Fraction::from_int(result)
     }
 

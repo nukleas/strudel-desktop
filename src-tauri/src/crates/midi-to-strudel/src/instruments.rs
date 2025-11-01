@@ -13,25 +13,28 @@ pub fn gm_program_to_sound(program: u8) -> String {
         // Organ (16-23) - use square wave (organ-like timbre)
         16..=23 => "square",
 
-        // Guitar (24-31) - use sawtooth (guitar-like timbre)
+        // Guitar (24-31) - use sawtooth (guitar-like timbre with more harmonics)
         24..=31 => "sawtooth",
 
-        // Bass (32-39) - use sawtooth (bass-like, rich harmonics)
-        32..=39 => "sawtooth",
+        // Bass (32-39) - use sine for smoother bass tone
+        32..=39 => "sine",
 
         // Strings (40-47) - use sawtooth (string-like timbre)
         40..=47 => "sawtooth",
 
-        // Ensemble (48-55) - use sawtooth (ensemble strings)
-        48..=55 => "sawtooth",
+        // Ensemble (48-55) - differentiate choir from strings
+        48..=51 => "sawtooth",  // String Ensemble
+        52..=54 => "sine",      // Choir Aahs, Voice Oohs, Synth Voice (smoother for vocals)
+        55 => "triangle",       // Orchestra Hit (percussive)
 
         // Brass (56-63) - use square wave (brass-like)
         56..=63 => "square",
 
-        // Reed (64-71) - use sawtooth (reed instruments)
-        64..=71 => "sawtooth",
+        // Reed (64-71) - use sine for smoother, more melodic tone
+        // Includes: Soprano/Alto/Tenor/Baritone Sax, Oboe, English Horn, Bassoon, Clarinet
+        64..=71 => "sine",
 
-        // Pipe (72-79) - use sine/triangle (flute-like, pure tone)
+        // Pipe (72-79) - use sine for pure, flute-like tone
         72..=79 => "sine",
 
         // Synth Lead (80-87) - use sawtooth/square
@@ -58,6 +61,92 @@ pub fn gm_program_to_sound(program: u8) -> String {
         _ => "piano",
     }
     .to_string()
+}
+
+/// Detect instrument type from track name using keyword matching
+/// Returns a Strudel sound name if a clear match is found, otherwise None
+pub fn detect_instrument_from_name(track_name: &str) -> Option<&'static str> {
+    let name_lower = track_name.to_lowercase();
+
+    // Check for bass instruments first (common and distinctive)
+    if name_lower.contains("bass") || name_lower.contains("low") {
+        return Some("sine");  // Smooth bass tone
+    }
+
+    // Check for vocal tracks
+    if name_lower.contains("vocal")
+        || name_lower.contains("voice")
+        || name_lower.contains("choir")
+        || name_lower.contains("aahs")
+        || name_lower.contains("oohs") {
+        return Some("sine");  // Smooth for vocals
+    }
+
+    // Check for lead instruments
+    if name_lower.contains("lead") || name_lower.contains("solo") {
+        return Some("sawtooth");  // Bright lead sound
+    }
+
+    // Check for pad/strings
+    if name_lower.contains("pad")
+        || name_lower.contains("string")
+        || name_lower.contains("str ") {
+        return Some("sawtooth");  // Rich pad/string sound
+    }
+
+    // Check for organ
+    if name_lower.contains("organ") || name_lower.contains("org ") {
+        return Some("square");  // Organ-like
+    }
+
+    // Check for piano/keys
+    if name_lower.contains("piano")
+        || name_lower.contains("key")
+        || name_lower.contains("rhodes")
+        || name_lower.contains("ep ") {
+        return Some("piano");
+    }
+
+    // Check for brass
+    if name_lower.contains("brass")
+        || name_lower.contains("trumpet")
+        || name_lower.contains("trombone")
+        || name_lower.contains("horn") {
+        return Some("square");
+    }
+
+    // Check for flute/woodwinds
+    if name_lower.contains("flute")
+        || name_lower.contains("pipe")
+        || name_lower.contains("whistle") {
+        return Some("sine");  // Pure tone for woodwinds
+    }
+
+    // Check for guitar (after bass to avoid bass guitar matching)
+    if name_lower.contains("guitar") || name_lower.contains("gtr") {
+        return Some("sawtooth");
+    }
+
+    None
+}
+
+/// Get the best sound for a track, considering both track name and GM program
+/// Track name hints take precedence over program number
+pub fn get_track_sound(track_name: Option<&str>, program: Option<u8>) -> String {
+    // Try track name first
+    if let Some(name) = track_name {
+        if let Some(sound) = detect_instrument_from_name(name) {
+            return sound.to_string();
+        }
+    }
+
+    // Fall back to GM program mapping
+    if let Some(prog) = program {
+        return gm_program_to_sound(prog);
+    }
+
+    // Ultimate fallback
+    "piano".to_string()
 }
 
 /// Get a human-readable name for a GM program number

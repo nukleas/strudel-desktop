@@ -18,6 +18,39 @@ Native audio playback engine for Strudel patterns in Rust.
 - **Voice**: Individual sample playback with speed/gain control
 - **Player**: High-level API for playing Strudel patterns
 
+## Getting Started
+
+### Installation
+
+Add `strudel-audio` to your `Cargo.toml`:
+
+```toml
+[dependencies]
+strudel-audio = "0.1.0"
+strudel-core = "0.1.0"  # Required dependency
+```
+
+### Runtime Setup
+
+No special initialization is required. The audio engine will automatically use the default audio device via `cpal`. Simply create a player instance:
+
+```rust
+use strudel_audio::Player;
+
+let player = Player::with_defaults()?;
+```
+
+The player is ready to use immediately. It will:
+- Detect and use the default audio output device
+- Initialize the audio engine with default settings (120 BPM, 44.1 kHz sample rate)
+- Set up HTTP fallback for sample loading if samples aren't bundled
+
+### Requirements
+
+- **Rust edition**: 2021
+- **Minimum Rust version**: 1.60
+- **Audio backend**: `cpal` automatically selects the best available backend for your platform (CoreAudio on macOS, ALSA/PulseAudio on Linux, WASAPI on Windows)
+
 ## Usage
 
 ```rust

@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 
+use crate::ast::Bar;
 use crate::drums::{gm_drum_to_sample, note_name_to_midi_num};
 use crate::midi::{NoteEvent, TrackInfo};
 
 #[derive(Debug, Clone)]
 pub struct ProcessedTrack {
-    pub bars: Vec<String>,
+    pub bars: Vec<Bar>,
     pub gains: Vec<f32>,  // Gain value for each bar (0.0 to 1.0)
+    pub sustains: Vec<f32>,  // Sustain value for each bar (relative to cycle_len)
+    pub pan: Option<f32>,  // Pan value (0.0=left, 0.5=center, 1.0=right)
     #[allow(dead_code)]
     pub channel: Option<u8>,
     pub program: Option<u8>,
@@ -65,6 +68,7 @@ impl TrackBuilder {
 
             let mut bars = Vec::new();
             let mut gains = Vec::new();
+            let mut sustains = Vec::new();
 
             for cycle in 0..num_cycles {
                 let start = cycle as f64 * self.cycle_len;
@@ -77,8 +81,9 @@ impl TrackBuilder {
                     .collect();
 
                 if notes_in_cycle.is_empty() {
-                    bars.push("-".to_string()); // Use - for rests (same as Python version)
+                    bars.push(Bar::Rest); // Use - for rests (same as Python version)
                     gains.push(0.0); // No gain for empty bars
+                    sustains.push(0.0); // No sustain for empty bars
                     continue;
                 }
 
@@ -98,6 +103,18 @@ impl TrackBuilder {
                 // Reduce drum gain by 40% since drum samples are naturally louder
                 let gain = if is_drum { base_gain * 0.6 } else { base_gain };
 
+                // Calculate sustain from note durations
+                // Use maximum duration to preserve sustained notes (not average, which gets
+                // pulled down by short articulation notes like grace notes or ornaments)
+                // Normalize to cycle_len (1.0 = full cycle duration)
+                let max_duration: f32 = notes_in_cycle
+                    .iter()
+                    .filter_map(|e| e.duration_sec.map(|d| d as f32))
+                    .fold(0.0, |a, b| a.max(b));
+
+                // Normalize to cycle length and clamp to reasonable range
+                let sustain = (max_duration / self.cycle_len as f32).clamp(0.01, 2.0);
+
                 let bar = if is_drum {
                     // Convert drum notes to samples with proper timing
                     self.get_drum_bar(&notes_in_cycle, start)
@@ -109,12 +126,20 @@ impl TrackBuilder {
 
                 bars.push(bar);
                 gains.push(gain);
+                sustains.push(sustain);
             }
 
             if !bars.is_empty() {
+                // Convert MIDI pan (0-127) to Strudel pan (0.0-1.0)
+                // MIDI: 0=left, 64=center, 127=right
+                // Strudel: 0.0=left, 0.5=center, 1.0=right
+                let pan = info.pan.map(|midi_pan| midi_pan as f32 / 127.0);
+
                 tracks.push(ProcessedTrack {
                     bars,
                     gains,
+                    sustains,
+                    pan,
                     channel: info.channel,
                     program: info.program,
                     name: info.name.clone(),
@@ -136,6 +161,7 @@ impl TrackBuilder {
                         time_sec: (event.time_sec / self.cycle_len).ceil() * self.cycle_len,
                         note: event.note.clone(),
                         velocity: event.velocity,
+                        duration_sec: event.duration_sec,
                     }
                 } else {
                     event.clone()
@@ -144,9 +170,9 @@ impl TrackBuilder {
             .collect()
     }
 
-    fn get_drum_bar(&self, events: &[NoteEvent], start: f64) -> String {
+    fn get_drum_bar(&self, events: &[NoteEvent], start: f64) -> Bar {
         // Use subdivision logic like melodic tracks for proper timing
-        let mut subdivisions = vec!["-".to_string(); self.notes_per_bar];
+        let mut subdivisions = vec![Bar::Rest; self.notes_per_bar];
         let mut time_groups: std::collections::HashMap<usize, Vec<String>> = std::collections::HashMap::new();
 
         for event in events {
@@ -177,17 +203,17 @@ impl TrackBuilder {
         for (idx, samples) in time_groups {
             if idx < self.notes_per_bar {
                 subdivisions[idx] = if samples.len() == 1 {
-                    samples[0].clone()
+                    Bar::Note(samples[0].clone())
                 } else {
                     // Multiple drums at same time - use commas (layered)
-                    format!("[{}]", samples.join(","))
+                    Bar::Chord(samples)
                 };
             }
         }
 
         // Check if all are rests
-        if subdivisions.iter().all(|s| s == "-") {
-            return "-".to_string();
+        if subdivisions.iter().all(|s| s.is_silent()) {
+            return Bar::Rest;
         }
 
         // Simplify subdivisions
@@ -196,24 +222,24 @@ impl TrackBuilder {
         if simplified.len() == 1 {
             simplified[0].clone()
         } else {
-            format!("[{}]", simplified.join(" "))
+            Bar::Subdivision(simplified)
         }
     }
 
-    fn get_flat_mode_bar(&self, events: &[NoteEvent]) -> String {
+    fn get_flat_mode_bar(&self, events: &[NoteEvent]) -> Bar {
         let mut sorted = events.to_vec();
         sorted.sort_by(|a, b| a.time_sec.partial_cmp(&b.time_sec).unwrap());
 
-        let notes: Vec<_> = sorted.iter().map(|e| e.note.as_str()).collect();
+        let notes: Vec<String> = sorted.iter().map(|e| e.note.clone()).collect();
 
         if notes.len() == 1 {
-            notes[0].to_string()
+            Bar::Note(notes[0].clone())
         } else {
-            format!("[{}]", notes.join(" "))
+            Bar::Sequence(notes)
         }
     }
 
-    fn get_poly_mode_bar(&self, events: &[NoteEvent], cycle_start: f64) -> String {
+    fn get_poly_mode_bar(&self, events: &[NoteEvent], cycle_start: f64) -> Bar {
         // Group notes by their quantized time position
         let mut time_groups: HashMap<usize, Vec<String>> = HashMap::new();
 
@@ -237,25 +263,25 @@ impl TrackBuilder {
         }
 
         if time_groups.is_empty() {
-            return "-".to_string();
+            return Bar::Rest;
         }
 
         // Build subdivisions array
-        let mut subdivisions = vec!["-".to_string(); self.notes_per_bar];
+        let mut subdivisions = vec![Bar::Rest; self.notes_per_bar];
 
         for (idx, notes) in time_groups {
             if idx < self.notes_per_bar {
                 subdivisions[idx] = if notes.len() == 1 {
-                    notes[0].clone()
+                    Bar::Note(notes[0].clone())
                 } else {
-                    format!("[{}]", notes.join(","))
+                    Bar::Chord(notes)
                 };
             }
         }
 
         // Check if all are rests
-        if subdivisions.iter().all(|s| s == "-") {
-            return "-".to_string();
+        if subdivisions.iter().all(|s| s.is_silent()) {
+            return Bar::Rest;
         }
 
         // Simplify subdivisions
@@ -264,7 +290,7 @@ impl TrackBuilder {
         if simplified.len() == 1 {
             simplified[0].clone()
         } else {
-            format!("[{}]", simplified.join(" "))
+            Bar::Subdivision(simplified)
         }
     }
 
@@ -274,14 +300,42 @@ impl TrackBuilder {
         quantized.min(1.0 - 1e-9)
     }
 
-    fn simplify_subdivisions(&self, subdivs: &[String]) -> Vec<String> {
+    fn simplify_subdivisions(&self, subdivs: &[Bar]) -> Vec<Bar> {
         let mut current = subdivs.to_vec();
 
+        // Count how sparse the pattern is
+        let rest_count = current.iter().filter(|s| s.is_silent()).count();
+        let sparsity = rest_count as f32 / current.len() as f32;
+
+        // For very sparse patterns (>80% rests), simplify more aggressively
+        if sparsity > 0.8 && current.len() > 8 {
+            // Try to simplify to 1/4 length for very sparse patterns
+            while current.len() > 4 && current.len().is_multiple_of(4) {
+                let mut can_simplify = true;
+                for i in (0..current.len()).step_by(4) {
+                    // Check if 3 out of 4 are rests
+                    let chunk = &current[i..i.min(current.len()).min(i+4)];
+                    let chunk_rests = chunk.iter().filter(|s| s.is_silent()).count();
+                    if chunk_rests < 3 {
+                        can_simplify = false;
+                        break;
+                    }
+                }
+
+                if can_simplify {
+                    // Take every 4th element
+                    current = current.iter().step_by(4).cloned().collect();
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // Standard simplification - remove pairs where second is always rest
         while current.len().is_multiple_of(2) {
-            // Check if any second element in pairs is not a rest
             let mut has_second = false;
             for i in (1..current.len()).step_by(2) {
-                if current[i] != "-" {
+                if !current[i].is_silent() {
                     has_second = true;
                     break;
                 }

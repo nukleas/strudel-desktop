@@ -185,12 +185,10 @@ export class SuperdoughAudioController {
     const depthArr = [depth].flat();
 
     targetArr.forEach((target, idx) => {
-      const orbit = this.nodes[target];
+      // Auto-create orbit if it doesn't exist (lazy initialization)
+      // Use default stereo channels [0, 1] when auto-creating for ducking
+      const orbit = this.getOrbit(target, [0, 1]);
 
-      if (orbit == null) {
-        errorLogger(new Error(`duck target orbit ${target} does not exist`), 'superdough');
-        return;
-      }
       const onset = onsetArr[idx] ?? onsetArr[0];
       const attack = Math.max(attackArr[idx] ?? attackArr[0], 0.002);
       const depth = depthArr[idx] ?? depthArr[0];

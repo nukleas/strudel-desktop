@@ -10,6 +10,7 @@ pub struct NoteEvent {
     pub time_sec: f64,
     pub note: String,
     pub velocity: u8,
+    pub duration_sec: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -18,6 +19,7 @@ pub struct TrackInfo {
     pub channel: Option<u8>,
     pub program: Option<u8>,
     pub name: Option<String>,
+    pub pan: Option<u8>,  // MIDI pan value (0=left, 64=center, 127=right)
 }
 
 pub struct MidiData {
@@ -82,6 +84,10 @@ impl MidiData {
             let mut channel: Option<u8> = None;
             let mut program: Option<u8> = None;
             let mut track_name: Option<String> = None;
+            let mut pan_values: Vec<u8> = Vec::new();  // Collect all pan CC messages
+
+            // Track active notes: (channel, note_num) -> (start_time, velocity, event_index)
+            let mut active_notes: HashMap<(u8, u8), (f64, u8, usize)> = HashMap::new();
 
             for event in track {
                 // Convert delta time to seconds
@@ -98,17 +104,49 @@ impl MidiData {
                         match message {
                             // Collect note_on events with velocity > 0
                             MidiMessage::NoteOn { key, vel } => {
+                                let note_key = (ch.as_int(), key.as_int());
+
                                 if vel.as_int() > 0 {
+                                    // Add event without duration initially
+                                    let event_idx = events.len();
                                     events.push(NoteEvent {
                                         time_sec,
                                         note: note_num_to_str(key.as_int()),
                                         velocity: vel.as_int(),
+                                        duration_sec: None,
                                     });
+
+                                    // Track as active note
+                                    active_notes.insert(note_key, (time_sec, vel.as_int(), event_idx));
+                                } else {
+                                    // NoteOn with velocity 0 = NoteOff
+                                    if let Some((start_time, _, event_idx)) = active_notes.remove(&note_key) {
+                                        let duration = time_sec - start_time;
+                                        if let Some(note_event) = events.get_mut(event_idx) {
+                                            note_event.duration_sec = Some(duration);
+                                        }
+                                    }
+                                }
+                            }
+                            // Handle explicit NoteOff events
+                            MidiMessage::NoteOff { key, vel: _ } => {
+                                let note_key = (ch.as_int(), key.as_int());
+                                if let Some((start_time, _, event_idx)) = active_notes.remove(&note_key) {
+                                    let duration = time_sec - start_time;
+                                    if let Some(note_event) = events.get_mut(event_idx) {
+                                        note_event.duration_sec = Some(duration);
+                                    }
                                 }
                             }
                             // Extract program change (instrument)
                             MidiMessage::ProgramChange { program: prog } => {
                                 program = Some(prog.as_int());
+                            }
+                            // Extract pan (CC10)
+                            MidiMessage::Controller { controller, value } => {
+                                if controller.as_int() == 10 {
+                                    pan_values.push(value.as_int());
+                                }
                             }
                             _ => {}
                         }
@@ -127,7 +165,26 @@ impl MidiData {
                 }
             }
 
+            // For any notes still active (missing NoteOff), set a default duration
+            // Use 10% of a beat as default (short note)
+            let default_duration = (tempo as f64 / 1_000_000.0) * 0.1;
+            for (_, (_, _, event_idx)) in active_notes {
+                if let Some(note_event) = events.get_mut(event_idx) {
+                    if note_event.duration_sec.is_none() {
+                        note_event.duration_sec = Some(default_duration);
+                    }
+                }
+            }
+
             if !events.is_empty() {
+                // Calculate average pan value if we have any pan messages
+                let pan = if !pan_values.is_empty() {
+                    let sum: u32 = pan_values.iter().map(|&v| v as u32).sum();
+                    Some((sum / pan_values.len() as u32) as u8)
+                } else {
+                    None
+                };
+
                 track_info_map.insert(
                     track_idx,
                     TrackInfo {
@@ -135,6 +192,7 @@ impl MidiData {
                         channel,
                         program,
                         name: track_name,
+                        pan,
                     },
                 );
             }

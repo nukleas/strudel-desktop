@@ -2875,6 +2875,8 @@ dependencies = [
  "anyhow",
  "clap",
  "midly",
+ "serde",
+ "serde_json",
  "strudel-core",
 ]
 
