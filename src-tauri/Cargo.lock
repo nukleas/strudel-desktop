@@ -141,6 +141,7 @@ dependencies = [
  "futures",
  "genai",
  "hound",
+ "midi-to-strudel",
  "midir",
  "midly",
  "mp3lame-encoder",

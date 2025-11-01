@@ -72,7 +72,7 @@ mp3lame-encoder = "0.2"
 strudel-core = { path = "src/crates/strudel-core" }
 strudel-mini = { path = "src/crates/strudel-mini" }
 strudel-audio = { path = "src/crates/strudel-audio" }
-# midi-to-strudel is a CLI tool (binary only), not a library
+midi-to-strudel = { path = "src/crates/midi-to-strudel" }
 
 # MIDI parsing for import feature
 midly = { workspace = true }

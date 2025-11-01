@@ -7,6 +7,10 @@ authors.workspace = true
 repository.workspace = true
 description = "Convert MIDI files to Strudel patterns"
 
+[lib]
+name = "midi_to_strudel"
+path = "src/lib.rs"
+
 [[bin]]
 name = "midi-to-strudel"
 path = "src/main.rs"

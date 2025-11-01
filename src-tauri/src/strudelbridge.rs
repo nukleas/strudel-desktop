@@ -164,8 +164,8 @@ pub struct PatternMetrics {
 // MIDI Import Functionality
 // ============================================================================
 
-use midly::{MetaMessage, MidiMessage, Smf, Timing, TrackEventKind};
-use std::collections::HashMap;
+use midi_to_strudel::{MidiData, OutputFormatter, TrackBuilder};
+use std::path::Path;
 
 /// Options for MIDI to Strudel conversion
 #[derive(Debug, Serialize, Deserialize)]
@@ -214,207 +214,27 @@ pub fn import_midi_file(
     options: Option<MidiConversionOptions>,
 ) -> Result<String, StrudelError> {
     let opts = options.unwrap_or_default();
+    let path = Path::new(&file_path);
 
-    // Read MIDI file
-    let bytes = std::fs::read(&file_path)
-        .map_err(|e| StrudelError::from(format!("Failed to read MIDI file: {}", e)))?;
-
-    // Convert to Strudel code
-    convert_midi_bytes(&bytes, opts)
-}
-
-/// Convert MIDI bytes to Strudel code
-fn convert_midi_bytes(bytes: &[u8], options: MidiConversionOptions) -> Result<String, StrudelError> {
-    // Parse MIDI file
-    let smf = Smf::parse(bytes)
+    // Parse MIDI file using the full midi-to-strudel library
+    let midi_data = MidiData::from_file(path)
         .map_err(|e| StrudelError::from(format!("Failed to parse MIDI file: {}", e)))?;
 
-    let ticks_per_beat = match smf.header.timing {
-        Timing::Metrical(tpb) => tpb.as_int() as u32,
-        Timing::Timecode(fps, subframe) => {
-            (fps.as_f32() * subframe as f32 * 4.0) as u32
-        }
-    };
+    // Build tracks using the proper TrackBuilder
+    let track_builder = TrackBuilder::new(
+        midi_data.cycle_len,
+        opts.bar_limit,
+        false, // flat_sequences = false for full polyphonic patterns
+        opts.notes_per_bar,
+    );
+    let tracks = track_builder.build_tracks(&midi_data.track_info);
 
-    // Extract tempo and calculate BPM
-    let tempo = extract_tempo(&smf);
-    let bpm = 60_000_000.0 / tempo as f64;
-    let scaled_bpm = bpm * options.tempo_scale;
-    let cycle_len = 60.0 / scaled_bpm * 4.0;
+    // Format output using the proper OutputFormatter
+    let formatter = OutputFormatter::new(opts.tab_size, opts.compact);
+    let scaled_bpm = midi_data.bpm * opts.tempo_scale;
+    let output = formatter.build_output(&tracks, scaled_bpm);
 
-    // Collect track information
-    let track_info = collect_track_info(&smf, ticks_per_beat, tempo);
-
-    // Build Strudel code
-    let mut output = Vec::new();
-    output.push(format!("setcpm({}/4)\n", scaled_bpm as i32));
-
-    for (idx, (_, track)) in track_info.iter().enumerate() {
-        // Add track name comment
-        if let Some(name) = &track.name {
-            output.push(format!("// Track {}: {}", idx + 1, name));
-        }
-
-        // Convert track to pattern string
-        let pattern = build_track_pattern(track, cycle_len, &options);
-        output.push(pattern);
-    }
-
-    Ok(output.join("\n"))
-}
-
-fn extract_tempo(smf: &Smf) -> u32 {
-    for track in &smf.tracks {
-        for event in track {
-            if let TrackEventKind::Meta(MetaMessage::Tempo(tempo)) = event.kind {
-                return tempo.as_int();
-            }
-        }
-    }
-    500000 // Default: 120 BPM
-}
-
-#[derive(Debug, Clone)]
-struct NoteEvent {
-    _time_sec: f64,  // Will be used for advanced timing in future
-    note: String,
-    _velocity: u8,   // Will be used for gain/dynamics in future
-}
-
-#[derive(Debug, Clone)]
-struct TrackInfo {
-    events: Vec<NoteEvent>,
-    channel: Option<u8>,
-    program: Option<u8>,
-    name: Option<String>,
-}
-
-fn collect_track_info(smf: &Smf, ticks_per_beat: u32, tempo: u32) -> HashMap<usize, TrackInfo> {
-    let mut track_info_map = HashMap::new();
-
-    for (track_idx, track) in smf.tracks.iter().enumerate() {
-        let mut time_sec = 0.0;
-        let mut events = Vec::new();
-        let mut channel: Option<u8> = None;
-        let mut program: Option<u8> = None;
-        let mut track_name: Option<String> = None;
-
-        for event in track {
-            let delta_sec = tick_to_second(event.delta.as_int(), ticks_per_beat, tempo);
-            time_sec += delta_sec;
-
-            match event.kind {
-                TrackEventKind::Midi { channel: ch, message } => {
-                    if channel.is_none() {
-                        channel = Some(ch.as_int());
-                    }
-
-                    match message {
-                        MidiMessage::NoteOn { key, vel } => {
-                            if vel.as_int() > 0 {
-                                events.push(NoteEvent {
-                                    _time_sec: time_sec,
-                                    note: note_num_to_str(key.as_int()),
-                                    _velocity: vel.as_int(),
-                                });
-                            }
-                        }
-                        MidiMessage::ProgramChange { program: prog } => {
-                            program = Some(prog.as_int());
-                        }
-                        _ => {}
-                    }
-                }
-                TrackEventKind::Meta(MetaMessage::TrackName(name)) => {
-                    if let Ok(name_str) = std::str::from_utf8(name) {
-                        let cleaned = name_str.trim_end_matches('\0').trim();
-                        if !cleaned.is_empty() {
-                            track_name = Some(cleaned.to_string());
-                        }
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        if !events.is_empty() {
-            track_info_map.insert(track_idx, TrackInfo {
-                events,
-                channel,
-                program,
-                name: track_name,
-            });
-        }
-    }
-
-    track_info_map
-}
-
-fn tick_to_second(ticks: u32, ticks_per_beat: u32, tempo: u32) -> f64 {
-    let seconds_per_tick = (tempo as f64 / 1_000_000.0) / ticks_per_beat as f64;
-    ticks as f64 * seconds_per_tick
-}
-
-fn note_num_to_str(note_num: u8) -> String {
-    let note_names = ["c", "cs", "d", "ds", "e", "f", "fs", "g", "gs", "a", "as", "b"];
-    let octave = (note_num / 12) as i32 - 1;
-    let note_idx = (note_num % 12) as usize;
-    format!("{}{}", note_names[note_idx], octave)
-}
-
-fn build_track_pattern(track: &TrackInfo, _cycle_len: f64, _options: &MidiConversionOptions) -> String {
-    // Simplified pattern builder - creates a basic note sequence
-    // For a full implementation, we'd need the complete track building logic
-
-    let is_drum = track.channel == Some(9); // MIDI channel 10 (0-indexed: 9) is drums
-
-    if is_drum {
-        // Drum pattern
-        let samples: Vec<String> = track.events.iter()
-            .map(|e| drum_note_to_sample(&e.note))
-            .collect();
-
-        format!("$: s(`{}`)", samples.join(" "))
-    } else {
-        // Melodic pattern
-        let notes: Vec<String> = track.events.iter()
-            .map(|e| e.note.clone())
-            .collect();
-
-        let instrument = program_to_instrument(track.program.unwrap_or(0));
-        format!("$: note(`{}`).sound(\"{}\")", notes.join(" "), instrument)
-    }
-}
-
-fn drum_note_to_sample(note: &str) -> String {
-    // Map MIDI drum notes to Strudel sample names
-    // This is a simplified mapping
-    match note {
-        "c1" => "bd".to_string(),
-        "d1" | "e1" => "sd".to_string(),
-        "fs1" | "gs1" => "hh".to_string(),
-        "a1" => "oh".to_string(),
-        _ => "perc".to_string(),
-    }
-}
-
-fn program_to_instrument(program: u8) -> String {
-    // Map General MIDI program numbers to Strudel instruments
-    match program {
-        0..=7 => "piano",
-        8..=15 => "glockenspiel",
-        16..=23 => "organ",
-        24..=31 => "guitar",
-        32..=39 => "bass",
-        40..=47 => "strings",
-        48..=55 => "ensemble",
-        56..=63 => "brass",
-        64..=71 => "reed",
-        72..=79 => "pipe",
-        80..=87 => "lead",
-        88..=95 => "pad",
-        _ => "piano",
-    }.to_string()
+    Ok(output)
 }
 
 #[cfg(test)]

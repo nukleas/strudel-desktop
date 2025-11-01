@@ -18,6 +18,7 @@ import { Pagination } from '../pagination/Pagination.jsx';
 import { useState } from 'react';
 import { useDebounce } from '../usedebounce.jsx';
 import cx from '@src/cx.mjs';
+import { MidiImportButton } from './MidiImportButton.jsx';
 
 export function PatternLabel({ pattern } /* : { pattern: Tables<'code'> } */) {
   const meta = useMemo(() => getMetadata(pattern.code), [pattern]);
@@ -121,6 +122,7 @@ function UserPatterns({ context }) {
           />
           import
         </label>
+        <MidiImportButton context={context} />
         <ActionButton label="export" onClick={exportPatterns} />
 
         <ActionButton
