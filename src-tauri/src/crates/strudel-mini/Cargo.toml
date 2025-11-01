@@ -1,0 +1,29 @@
+[package]
+name = "strudel-mini"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Mini notation parser and validator for Strudel"
+
+[[bin]]
+name = "strudel-mini"
+path = "src/main.rs"
+
+[dependencies]
+strudel-core = { path = "../strudel-core" }
+strudel-audio = { path = "../strudel-audio", optional = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+logos = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[features]
+default = []
+audio = ["strudel-audio"]
+
+[dev-dependencies]
+proptest = { workspace = true }

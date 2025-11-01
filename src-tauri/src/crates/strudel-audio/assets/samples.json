@@ -1,0 +1,23 @@
+{
+  "_base": "bundled://",
+  "bd": [
+    "bd/BT0A0A7.wav",
+    "bd/BT0A0D0.wav",
+    "bd/BT0A0D3.wav",
+    "bd/BT0A0DA.wav",
+    "bd/BT0AAD0.wav"
+  ],
+  "sd": [
+    "sd/rytm-00-hard.wav",
+    "sd/rytm-01-classic.wav"
+  ],
+  "hh": [
+    "hh/000_hh3closedhh.wav",
+    "hh/001_hh3crash.wav",
+    "hh/002_hh3hit1.wav"
+  ],
+  "cp": [
+    "cp/HANDCLP0.wav",
+    "cp/HANDCLPA.wav"
+  ]
+}

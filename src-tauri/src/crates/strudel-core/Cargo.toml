@@ -1,0 +1,18 @@
+[package]
+name = "strudel-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Core types and utilities for Strudel Rust tools"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+rand = "0.8"
+
+[dev-dependencies]
+proptest = { workspace = true }

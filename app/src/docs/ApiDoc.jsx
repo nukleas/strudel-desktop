@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
 import { docs } from '../../../doc.json';
-import { MiniRepl } from '../../../tutorial/MiniRepl';
+import { MiniRepl } from './MiniRepl';
 
 const visible = window.location.href.includes('?api=true');
 

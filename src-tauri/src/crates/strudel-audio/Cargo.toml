@@ -1,0 +1,36 @@
+[package]
+name = "strudel-audio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Native audio playback engine for Strudel patterns"
+
+[dependencies]
+strudel-core = { path = "../strudel-core" }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Audio I/O
+cpal = "0.15"
+
+# Audio decoding
+symphonia = { version = "0.5", features = ["all"] }
+
+# HTTP loading (fallback)
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Utilities
+parking_lot = "0.12"
+
+[dev-dependencies]
+proptest = { workspace = true }
+
+[[example]]
+name = "play_pattern"
+path = "examples/play_pattern.rs"

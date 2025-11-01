@@ -8,6 +8,7 @@ mod midibridge;
 mod music_theory;
 mod oscbridge;
 mod rag;
+mod strudelbridge;
 mod tools;
 use std::sync::Arc;
 
@@ -59,7 +60,12 @@ fn main() {
             audioexport::export_pattern_audio,
             rag::init_rag,
             rag::semantic_search,
-            rag::rag_status
+            rag::rag_status,
+            strudelbridge::validate_pattern,
+            strudelbridge::format_pattern,
+            strudelbridge::evaluate_pattern,
+            strudelbridge::analyze_pattern,
+            strudelbridge::import_midi_file
         ])
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_clipboard_manager::init())

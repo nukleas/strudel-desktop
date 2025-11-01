@@ -1,0 +1,18 @@
+[package]
+name = "midi-to-strudel"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Convert MIDI files to Strudel patterns"
+
+[[bin]]
+name = "midi-to-strudel"
+path = "src/main.rs"
+
+[dependencies]
+strudel-core = { path = "../strudel-core" }
+clap = { workspace = true }
+midly = { workspace = true }
+anyhow = { workspace = true }

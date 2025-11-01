@@ -1,3 +1,23 @@
+[workspace]
+members = [".", "src/crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0"
+authors = ["nukleas"]
+repository = "https://github.com/nukleas/strudel-desktop"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+thiserror = "1.0"
+clap = { version = "4", features = ["derive"] }
+logos = "0.14"
+midly = "0.5"
+proptest = "1.4"
+
 [package]
 name = "app"
 version = "0.1.0"
@@ -47,6 +67,15 @@ rig = { package = "rig-core", version = "0.21" }
 # Audio export dependencies
 hound = "3.5"
 mp3lame-encoder = "0.2"
+
+# Strudel Rust crates
+strudel-core = { path = "src/crates/strudel-core" }
+strudel-mini = { path = "src/crates/strudel-mini" }
+strudel-audio = { path = "src/crates/strudel-audio" }
+# midi-to-strudel is a CLI tool (binary only), not a library
+
+# MIDI parsing for import feature
+midly = { workspace = true }
 
 # RAG (Retrieval-Augmented Generation) dependencies
 # Using pre-computed embeddings + in-memory search for offline capability
